@@ -11,10 +11,10 @@ import scipy.misc as scm
 def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr):
     print(image_file)
     path = 'C:\\users\\bmanderson\\desktop\\images_LiTs\\'
-    index = (image_file.split('volume-')[1]).split('.nii')[0]
+    index = int((image_file.split('volume-')[1]).split('.nii')[0])
     if os.path.exists(os.path.join(out_path, 'Overall_mask_LiTs_y' + str(index))):
         return None
-    label_handle = sitk.ReadImage(os.path.join(base_path, 'segmentation-' + index + '.nii'))
+    label_handle = sitk.ReadImage(os.path.join(base_path, 'segmentation-{}.nii'.format(index)))
     label = sitk.GetArrayFromImage(label_handle)
     if np.max(label) == 1:
         return None
@@ -50,16 +50,15 @@ default to two rotations and a flip LR
 '''
 
 no_rotations = list(np.arange(53,68))+list(np.arange(83,131))
-no_flip_lr = list(np.arange(68,83))
-
+no_flip_lr = list(np.arange(53,68))+list(np.arange(68,83))
 data_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Fuentes_Data\LiTs\Images'
 out_path = '\\\\mymdafiles\\di_data1\\Morfeus\\BMAnderson\\CNN\\Data\\Data_Liver\\Fuentes_Data\\LiTs\\Numpy\\All_Data\\'
 files = [i for i in os.listdir(data_path) if i.find('volume') == 0]
 files.sort(key=lambda x: int(x.split('volume-')[1][:-4]))
 for file in files:
     index = file.split('volume-')[1][:-4]
-    # if os.path.exists(r'C:\Users\bmanderson\Desktop\images_LiTs\combined_{}.png'.format(index)):
-    #     continue
+    if os.path.exists(r'C:\Users\bmanderson\Desktop\images_LiTs\combined_{}.png'.format(index)):
+        continue
     write_image(data_path,file,out_path, no_rotations,no_flip_lr)
     continue
     segmentation_path = os.path.join(data_path,file)
