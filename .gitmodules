@@ -1,15 +1,3 @@
-[submodule "Make_Single_Images"]
-	path = Make_Single_Images
-	url = https://github.com/brianmanderson/Make_Single_Images.git
-[submodule "Dicom_Data_to_Numpy_Arrays"]
-	path = Dicom_Data_to_Numpy_Arrays
-	url = https://github.com/brianmanderson/Dicom_Data_to_Numpy_Arrays.git
-[submodule "Plot_And_Scroll_Images"]
-	path = Plot_And_Scroll_Images
-	url = https://github.com/brianmanderson/Plot_And_Scroll_Images.git
-[submodule "Dicom_RT_and_Images_to_Mask"]
-	path = Dicom_RT_and_Images_to_Mask
-	url = https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask.git
 [submodule "Deep_Learning/Base_Deeplearning_Code"]
 	path = Deep_Learning/Base_Deeplearning_Code
 	url = https://github.com/brianmanderson/Base_Deeplearning_Code.git
