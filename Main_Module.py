@@ -8,7 +8,7 @@ import numpy as np
 import scipy.misc as scm
 
 
-def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr):
+def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr, images_description='LiTs'):
     print(image_file)
     path = 'C:\\users\\bmanderson\\desktop\\images_LiTs\\'
     index = int((image_file.split('volume-')[1]).split('.nii')[0])
@@ -34,13 +34,23 @@ def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr):
     i = locations[len(locations)//2]
     out = np.zeros([512, 512 * 2])
     out[:, 0:512] = img[i]
-    # out[out>300] = 300
-    # out[out<-100] = -100
     max_val = img[i].max()
     out[:, 512:] = label[i] * max_val
     scm.imsave(os.path.join(path, 'combined_' + str(index) + '.png'), out)
-    # np.save(os.path.join(out_path, 'Overall_Data_LiTs_' + str(index)+'.npy'), img)
-    # np.save(os.path.join(out_path, 'Overall_mask_LiTs_y' + str(index)+'.npy'), label)
+    out_image_handle = sitk.GetImageFromArray(img)
+    out_image_handle.SetSpacing(image_handle.GetSpacing())
+    out_image_handle.SetOrigin(image_handle.GetOrigin())
+    out_image_handle.SetDirection(image_handle.GetDirection())
+
+    out_annotation_handle = sitk.GetImageFromArray(label)
+    out_annotation_handle.SetSpacing(label_handle.GetSpacing())
+    out_annotation_handle.SetOrigin(label_handle.GetOrigin())
+    out_annotation_handle.SetDirection(label_handle.GetDirection())
+
+    image_path = os.path.join(out_path, 'Overall_Data_' + images_description + '_' + str(index) + '.nii.gz')
+    annotation_path = os.path.join(out_path, 'Overall_mask_' + images_description + '_y' + str(index) + '.nii.gz')
+    sitk.WriteImage(out_annotation_handle, annotation_path)
+    sitk.WriteImage(out_image_handle, image_path)
     return None
 
 
@@ -49,20 +59,20 @@ def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr):
 default to two rotations and a flip LR
 '''
 
-no_rotations = list(np.arange(53,68))+list(np.arange(83,131))
-no_flip_lr = list(np.arange(53,68))+list(np.arange(68,83))
-data_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Fuentes_Data\LiTs\Images'
-out_path = '\\\\mymdafiles\\di_data1\\Morfeus\\BMAnderson\\CNN\\Data\\Data_Liver\\Fuentes_Data\\LiTs\\Numpy\\All_Data\\'
-files = [i for i in os.listdir(data_path) if i.find('volume') == 0]
-files.sort(key=lambda x: int(x.split('volume-')[1][:-4]))
-for file in files:
-    index = file.split('volume-')[1][:-4]
-    if os.path.exists(r'C:\Users\bmanderson\Desktop\images_LiTs\combined_{}.png'.format(index)):
-        continue
-    write_image(data_path,file,out_path, no_rotations,no_flip_lr)
-    continue
-    segmentation_path = os.path.join(data_path,file)
-    image_path = os.path.join(data_path,file.replace('volume','segmentation'))
-    image = sitk.ReadImage(image_path)
-    annotation = sitk.ReadImage(segmentation_path)
-    xxx = 1
+def create_NIFTI_images(data_path,out_path, images_description='LiTs'):
+    no_rotations = list(np.arange(53,68))+list(np.arange(83,131))
+    no_flip_lr = list(np.arange(53,131))
+    files = [i for i in os.listdir(data_path) if i.find('volume') == 0]
+    files.sort(key=lambda x: int(x.split('volume-')[1][:-4]))
+    for file in files:
+        index = file.split('volume-')[1][:-4]
+        # if os.path.exists(r'C:\Users\bmanderson\Desktop\images_LiTs\combined_{}.png'.format(index)):
+        #     continue
+        write_image(data_path,file,out_path, no_rotations,no_flip_lr)
+
+
+def main():
+    data_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Fuentes_Data\LiTs\Images'
+    out_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
+    images_desc = 'LiTs'
+    create_NIFTI_images(data_path, out_path)
