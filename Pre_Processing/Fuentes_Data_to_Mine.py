@@ -1,5 +1,4 @@
 import numpy as np
-from matplotlib import pyplot
 import os, glob
 import nibabel as nib
 import scipy.misc as scm

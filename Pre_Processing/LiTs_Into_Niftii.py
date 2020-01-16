@@ -1,8 +1,8 @@
 __author__ = 'Brian M Anderson'
 # Created on 1/16/2020
 
-from Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
-from Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack, sitk
+from Pre_Processing.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
+from Pre_Processing.Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack, sitk
 import os
 import numpy as np
 import scipy.misc as scm

@@ -2,7 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 1/15/2020
 
 from Pre_Processing.LiTs_Into_Niftii import create_NIFTI_images
-from Make_Single_Images.Make_Single_Images_Class import run_main
+from Pre_Processing.Make_Single_Images.Make_Single_Images_Class import run_main
 
 
 def run_LiTs_to_NIFTII():

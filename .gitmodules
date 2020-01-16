@@ -1,3 +1,12 @@
 [submodule "Deep_Learning/Base_Deeplearning_Code"]
 	path = Deep_Learning/Base_Deeplearning_Code
 	url = https://github.com/brianmanderson/Base_Deeplearning_Code.git
+[submodule "Pre_Processing/Make_Single_Images"]
+	path = Pre_Processing/Make_Single_Images
+	url = https://github.com/brianmanderson/Make_Single_Images.git
+[submodule "Pre_Processing/Plot_And_Scroll_Images"]
+	path = Pre_Processing/Plot_And_Scroll_Images
+	url = https://github.com/brianmanderson/Plot_And_Scroll_Images.git
+[submodule "Pre_Processing/Dicom_RT_and_Images_to_Mask"]
+	path = Pre_Processing/Dicom_RT_and_Images_to_Mask
+	url = https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask.git
