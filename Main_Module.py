@@ -42,12 +42,12 @@ def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr, images_
     out_image_handle = sitk.GetImageFromArray(img)
     out_image_handle.SetSpacing(image_handle.GetSpacing())
     out_image_handle.SetOrigin(image_handle.GetOrigin())
-    out_image_handle.SetDirection(image_handle.GetDirection())
+    # out_image_handle.SetDirection(image_handle.GetDirection()) Do not set direction! We rotated images
 
     out_annotation_handle = sitk.GetImageFromArray(label)
     out_annotation_handle.SetSpacing(label_handle.GetSpacing())
     out_annotation_handle.SetOrigin(label_handle.GetOrigin())
-    out_annotation_handle.SetDirection(label_handle.GetDirection())
+    # out_annotation_handle.SetDirection(label_handle.GetDirection()) Do not set direction! We rotated images
 
     image_path = os.path.join(out_path, 'Overall_Data_' + images_description + '_' + str(index) + '.nii.gz')
     annotation_path = os.path.join(out_path, 'Overall_mask_' + images_description + '_y' + str(index) + '.nii.gz')
@@ -81,3 +81,6 @@ def main():
     out_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
     images_desc = 'LiTs'
     create_NIFTI_images(data_path, out_path, images_desc)
+
+if __name__ == '__main__':
+    main()
