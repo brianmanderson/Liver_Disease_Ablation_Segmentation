@@ -1,8 +1,7 @@
 __author__ = 'Brian M Anderson'
 # Created on 1/15/2020
 
-from Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
-from LiTs_Into_Niftii import create_NIFTI_images
+from Pre_Processing.LiTs_Into_Niftii import create_NIFTI_images
 from Make_Single_Images.Make_Single_Images_Class import run_main
 
 
