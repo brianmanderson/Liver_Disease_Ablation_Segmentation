@@ -3,6 +3,7 @@ __author__ = 'Brian M Anderson'
 
 from Pre_Processing.LiTs_Into_Niftii import create_NIFTI_images
 from Pre_Processing.Make_Single_Images.Make_Single_Images_Class import run_main
+from Pre_Processing.Separate_Into_Train_Validation_Test import separate_files
 
 
 def run_LiTs_to_NIFTII():
@@ -12,9 +13,13 @@ def run_LiTs_to_NIFTII():
     create_NIFTI_images(data_path, out_path, images_desc)
 
 def main():
-    create_niftii_images = True
+    create_niftii_images = False
     if create_niftii_images:
         run_LiTs_to_NIFTII()
+    separate_to_train_etc = False
+    if separate_to_train_etc:
+        path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
+        separate_files(path)
     make_single_images = False
     if make_single_images:
         path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
@@ -22,8 +27,7 @@ def main():
         extension = 16
         write_images = True
         re_write_pickle = False
-        thread_count = 1
-        run_main(path,desired_output_spacing,extension, write_images, re_write_pickle, thread_count)
+        run_main(path,desired_output_spacing,extension, write_images, re_write_pickle)
 
 if __name__ == '__main__':
     main()
