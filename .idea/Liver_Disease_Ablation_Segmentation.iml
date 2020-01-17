@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Deep_Learning/Base_Deeplearning_Code" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Deep_Learning" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Pre_Processing" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
