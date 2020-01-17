@@ -14,14 +14,14 @@ def run_LiTs_to_NIFTII():
 
 
 def main():
-    create_niftii_images = True
+    create_niftii_images = False
     if create_niftii_images:
         run_LiTs_to_NIFTII()
     separate_to_train_etc = False
     if separate_to_train_etc:
         path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
         separate_files(path)
-    make_single_images = False
+    make_single_images = True
     if make_single_images:
         path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
         desired_output_spacing = (0.89648, 0.89648, 3)
