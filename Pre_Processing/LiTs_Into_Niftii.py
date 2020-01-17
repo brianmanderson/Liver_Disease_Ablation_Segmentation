@@ -39,14 +39,16 @@ def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr, images_
         max_val = img[i].max()
         out[:, 512:] = label[i] * max_val
         scm.imsave(os.path.join(path, 'combined_' + str(index) + '.png'), out)
+    img = img.astype('int16')
     out_image_handle = sitk.GetImageFromArray(img)
     out_image_handle.SetSpacing(image_handle.GetSpacing())
     out_image_handle.SetOrigin(image_handle.GetOrigin())
     # out_image_handle.SetDirection(image_handle.GetDirection()) Do not set direction! We rotated images
     label = label.astype('uint8')
     out_annotation_handle = sitk.GetImageFromArray(label)
-    out_annotation_handle.SetSpacing(label_handle.GetSpacing())
-    out_annotation_handle.SetOrigin(label_handle.GetOrigin())
+    out_annotation_handle.SetSpacing(out_image_handle.GetSpacing())
+    out_annotation_handle.SetOrigin(out_image_handle.GetOrigin())
+    out_annotation_handle.SetDirection(out_image_handle.GetDirection())
     # out_annotation_handle.SetDirection(label_handle.GetDirection()) Do not set direction! We rotated images
 
     image_path = os.path.join(out_path, 'Overall_Data_' + images_description + '_' + str(index) + '.nii.gz')
@@ -67,7 +69,7 @@ def create_NIFTI_images(data_path,out_path, images_description='LiTs'):
     files = [i for i in os.listdir(data_path) if i.find('volume') == 0]
     files.sort(key=lambda x: int(x.split('volume-')[1][:-4]))
     for file in files:
-        # file = file.replace('0','69')
+        # file = file.replace('0','52')
         index = file.split('volume-')[1][:-4]
         # if os.path.exists(r'C:\Users\bmanderson\Desktop\images_LiTs\combined_{}.png'.format(index)):
         #     continue
@@ -75,7 +77,6 @@ def create_NIFTI_images(data_path,out_path, images_description='LiTs'):
         if os.path.exists(annotation_path):
             continue
         write_image(data_path,file,out_path, no_rotations,no_flip_lr, images_description=images_description)
-        break
 
 
 def main():
