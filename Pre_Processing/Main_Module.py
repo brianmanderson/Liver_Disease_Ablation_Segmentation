@@ -12,6 +12,7 @@ def run_LiTs_to_NIFTII():
     images_desc = 'LiTs'
     create_NIFTI_images(data_path, out_path, images_desc)
 
+
 def main():
     create_niftii_images = True
     if create_niftii_images:
@@ -28,6 +29,7 @@ def main():
         write_images = True
         re_write_pickle = False
         run_main(path,desired_output_spacing,extension, write_images, re_write_pickle)
+
 
 if __name__ == '__main__':
     main()

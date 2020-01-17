@@ -58,10 +58,10 @@ def write_image(base_path,image_file,out_path, no_rotations, no_flip_lr, images_
     return None
 
 
-
 '''
 default to two rotations and a flip LR
 '''
+
 
 def create_NIFTI_images(data_path,out_path, images_description='LiTs'):
     no_rotations = list(np.arange(53,68))+list(np.arange(83,131))
