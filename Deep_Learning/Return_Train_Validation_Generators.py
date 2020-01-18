@@ -6,7 +6,7 @@ from Base_Deeplearning_Code.Data_Generators.Generators import Train_Data_Generat
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 
 
-def return_generators(get_mean_std=False):
+def return_generators(get_mean_std=False, get_size=False):
     try:
         base = r'\\mymdafiles\di_data1'
         base_path = os.path.join(base,r'Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data')
@@ -14,7 +14,7 @@ def return_generators(get_mean_std=False):
     except:
         base = os.path.join('..', '..', '..', '..', '..', '..', '..')
         base_path = os.path.join(base, 'Liver_GTV_Ablation')
-    morfeus_drive = os.path.abspath(os.path.join(base,'Morfeus','BMAnderson','CNN','Data','Data_Liver','Liver_Segments'))
+    morfeus_drive = os.path.abspath(os.path.join(base,'Morfeus','BMAnderson','CNN','Data','Data_Liver','Liver_Disease_Ablation_Segmentation'))
     paths = [os.path.join(base_path, 'Train', 'Single_Images3D')]
     paths_validation_generator = [os.path.join(base_path, 'Validation', 'Single_Images3D')]
 
@@ -53,7 +53,20 @@ def return_generators(get_mean_std=False):
         print(np.mean(output, axis=0))
         print(np.std(output, axis=0))
         print(np.median(output, axis=0))
-    return train_generator, validation_generator
+    if get_size:
+        background = 0
+        thing = 0
+        for i in range(len(train_generator)):
+            print(i)
+            # print(train_generator.generator.image_list)
+            x, y = train_generator.__getitem__(i)
+            indexes = np.where(y[...,-1]==1)
+            thing += len(indexes[0])
+            indexes = np.where(y[...,0]==1)
+            background += len(indexes[0])
+        print(thing/(thing+background))
+        print(background/(thing+background))
+    return base_path, morfeus_drive, train_generator, validation_generator
 
 
 if __name__ == '__main__':

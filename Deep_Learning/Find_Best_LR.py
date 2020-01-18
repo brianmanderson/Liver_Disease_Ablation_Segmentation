@@ -104,14 +104,14 @@ def get_class_weights(train_generator, class_num=9, out_file_name=os.path.join('
 
 
 def main():
-    train_generator, validation_generator = return_generators()
+    _, _, train_generator, validation_generator = return_generators()
     x,y = train_generator.__getitem__(0)
     get_weights = False
     gpu = 1
     mask_image = True
     mask_pred = False
     batch_norm = False
-    desc = 'Learning_Rates_Liver_Disease_GTV'
+    desc = 'Learning_Rates_Liver_Disease_GTV_weighted100'
     for max_blocks in [1,2]:
         for layers in [3,4,5]:
             for filters in [16,32]:
