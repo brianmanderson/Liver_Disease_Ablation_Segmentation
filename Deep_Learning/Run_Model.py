@@ -136,9 +136,10 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=5,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=False)
-        early_stopping = EarlyStopping(monitor=monitor, patience=10, verbose=1, mode='min')
+        early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode='min')
         callbacks = [early_stopping, lrate, tensorboard]
-        loss = weighted_categorical_crossentropy(np.ones((2,))) #categorical_crossentropy
+        loss = weighted_categorical_crossentropy(np.asarray([1,200])) #categorical_crossentropy
+        loss = 'categorical_crossentropy'
         # else:
         #     loss = weighted_categorical_crossentropy_masked(np.load(os.path.join('.','new_class_weights.npy')))
         model = my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
@@ -155,14 +156,13 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
 
 
 def train_model():
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators(get_size=True)
-    return None
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators()
     mask_image = True
     mask_pred = False
     batch_norm = False
     write_images = False
     pre_cycle = 0
-    gpu = 1
+    gpu = 3
     step_size_factor = 5
     num_cycles = 5
     step_size = len(train_generator)
@@ -187,8 +187,8 @@ def train_model():
                 # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
                 train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred,
                                                                 liver_box=True, mask_image=mask_image,
-                                                                remove_liver_layer=True)
-                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                                                                remove_liver_layer=True, threshold_value=3.55)
+                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator, threshold_value=3.55,
                                                                      return_mask=mask_pred,liver_box=True,
                                                                      mask_image=mask_image, remove_liver_layer=True)
                 paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive)

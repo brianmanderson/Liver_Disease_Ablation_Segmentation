@@ -28,7 +28,7 @@ def run_model(gpu=1,layers_dict=None, out_path='', train_generator=None, get_wei
         gpu_options = tf.GPUOptions(allow_growth=True)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         K.set_session(sess)
-        loss = weighted_categorical_crossentropy(np.ones((2,))) #categorical_crossentropy
+        loss = weighted_categorical_crossentropy(np.asarray([1,200])) #categorical_crossentropy
         Model_class = my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
                                  activation='elu', pool_type='Max',out_classes=2, mask_loss=False,mask_output=mask_pred)
         Model_val = Model_class.created_model
@@ -107,11 +107,11 @@ def main():
     _, _, train_generator, validation_generator = return_generators()
     x,y = train_generator.__getitem__(0)
     get_weights = False
-    gpu = 1
+    gpu = 3
     mask_image = True
     mask_pred = False
     batch_norm = False
-    desc = 'Learning_Rates_Liver_Disease_GTV_weighted100'
+    desc = 'Learning_Rates_Liver_Disease_GTV_weighted200'
     for max_blocks in [1,2]:
         for layers in [3,4,5]:
             for filters in [16,32]:

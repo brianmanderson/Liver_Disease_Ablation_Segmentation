@@ -56,16 +56,18 @@ def return_generators(get_mean_std=False, get_size=False):
     if get_size:
         background = 0
         thing = 0
+        total = 0
         for i in range(len(train_generator)):
             print(i)
             # print(train_generator.generator.image_list)
             x, y = train_generator.__getitem__(i)
+            total += np.prod(y[...,0].shape)
             indexes = np.where(y[...,-1]==1)
             thing += len(indexes[0])
-            indexes = np.where(y[...,0]==1)
+            indexes = np.where(y[...,-1]!=1)
             background += len(indexes[0])
-        print(thing/(thing+background))
-        print(background/(thing+background))
+        print(thing/total)
+        print(background/total)
     return base_path, morfeus_drive, train_generator, validation_generator
 
 
