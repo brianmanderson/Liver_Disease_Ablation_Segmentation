@@ -64,7 +64,7 @@ def return_things(run_data):
     return things
 
 
-def return_dictionary(base_dict):
+def return_dictionary_all(base_dict):
     dictionary = {
         3: [
             base_dict(1.5e-7, 4e-5, 32, 64, 1),
@@ -100,9 +100,18 @@ def return_dictionary(base_dict):
     return dictionary
 
 
+def return_dictionary(base_dict):
+    dictionary = {
+        5: [
+            base_dict(2.1e-7, 2e-5, 16, 32, 1)
+        ]
+    }
+    return dictionary
+
+
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,
-              morfeus_drive='',base_path='', **kwargs):
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -138,8 +147,11 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
                                            max_delta=1.0,baseline=2.2,restore_best_weights=False)
         early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode='min')
         callbacks = [early_stopping, lrate, tensorboard]
-        loss = weighted_categorical_crossentropy(np.asarray([1,200])) #categorical_crossentropy
+        if save_a_model:
+            callbacks = [checkpoint] + callbacks
         loss = 'categorical_crossentropy'
+        if weighted:
+            loss = weighted_categorical_crossentropy(np.asarray([1,200])) #categorical_crossentropy
         # else:
         #     loss = weighted_categorical_crossentropy_masked(np.load(os.path.join('.','new_class_weights.npy')))
         model = my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
@@ -161,8 +173,10 @@ def train_model():
     mask_pred = False
     batch_norm = False
     write_images = False
+    save_a_model = False
+    weighted = False
     pre_cycle = 0
-    gpu = 3
+    gpu = 1
     step_size_factor = 5
     num_cycles = 5
     step_size = len(train_generator)
@@ -170,14 +184,14 @@ def train_model():
                    'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle':pre_cycle}
     base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
     model_name = '3D_Atrous'  # change this
-    overall_dictionary = return_dictionary(base_dict)  # change this
+    overall_dictionary = return_dictionary_all(base_dict)  # change this
     epochs = step_size_factor * 2 * num_cycles
     base_things['batch_norm'] = batch_norm
     base_things['mask_image'] = mask_image
     base_things['mask_pred'] = mask_pred
     base_things['write_images'] = write_images
     for iteration in range(3):
-        for layer in [5]:
+        for layer in [3,4]:
             data = overall_dictionary[layer]
             for run_data in data:
                 run_data.update(base_things)  # Change this
@@ -200,9 +214,9 @@ def train_model():
                 print(tensorboard_output)
                 try:
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                              validation_generator=validation_generator_3D,
+                              validation_generator=validation_generator_3D,save_a_model=save_a_model,
                               paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
-                              epochs=epochs, model_name=model_name, **run_data)
+                              epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
                     K.clear_session()
                 except:
                     print('failed here')
