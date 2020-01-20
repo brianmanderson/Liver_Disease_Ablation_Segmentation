@@ -24,18 +24,25 @@ def return_generators(get_mean_std=False, get_size=False):
     std_val = 36.72
     image_num = 1
     expansion = 5
+    lower_bound = -3.55
+    upper_bound = 3.55
+    if get_mean_std:
+        mean_val = 0
+        std_val = 1
+        lower_bound = -np.inf
+        upper_bound = np.inf
 
     image_processors_train = [Normalize_Images(mean_val=mean_val, std_val=std_val), Ensure_Image_Proportions(512, 512),
                               Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.3, step=0.01)),
-                              Threshold_Images(lower_bound=-3.55, upper_bound=3.55),
+                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound),
                               Annotations_To_Categorical(num_of_classes=num_classes)]
     image_processors_test = [Normalize_Images(mean_val=mean_val, std_val=std_val), Ensure_Image_Proportions(512, 512),
-                             Threshold_Images(lower_bound=-3.55, upper_bound=3.55),
+                             Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound),
                              Annotations_To_Categorical(num_of_classes=num_classes)]
     train_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
-                                            num_patients=batch_size, data_paths=paths, expansion=expansion,
-                                            three_layer=False, is_test_set=True,
-                                            image_processors=image_processors_train)
+                                             num_patients=batch_size, data_paths=paths, expansion=expansion,
+                                             three_layer=False, is_test_set=True,
+                                             image_processors=image_processors_train)
     validation_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
                                                   num_patients=batch_size, data_paths=paths_validation_generator,
                                                   expansion=expansion, three_layer=False, is_test_set=True,
@@ -46,6 +53,7 @@ def return_generators(get_mean_std=False, get_size=False):
             # print(train_generator.generator.image_list)
             x, y = train_generator.__getitem__(i)
             data = x[y[..., 2] == 1][..., 0]
+            print(np.mean(data))
             if i == 0:
                 output = data
             else:
