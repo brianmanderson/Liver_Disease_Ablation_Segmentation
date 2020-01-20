@@ -20,8 +20,8 @@ def return_generators(get_mean_std=False, get_size=False):
 
     num_classes = 3
     batch_size = 1
-    mean_val = 67.47
-    std_val = 36.72
+    mean_val = 40 #67.47
+    std_val = 30 #36.72
     image_num = 1
     expansion = 5
     lower_bound = -3.55
@@ -34,10 +34,10 @@ def return_generators(get_mean_std=False, get_size=False):
 
     image_processors_train = [Normalize_Images(mean_val=mean_val, std_val=std_val), Ensure_Image_Proportions(512, 512),
                               Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.3, step=0.01)),
-                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound),
+                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound, inverse_image=True),
                               Annotations_To_Categorical(num_of_classes=num_classes)]
     image_processors_test = [Normalize_Images(mean_val=mean_val, std_val=std_val), Ensure_Image_Proportions(512, 512),
-                             Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound),
+                             Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound, inverse_image=True),
                              Annotations_To_Categorical(num_of_classes=num_classes)]
     train_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
                                              num_patients=batch_size, data_paths=paths, expansion=expansion,
@@ -80,4 +80,5 @@ def return_generators(get_mean_std=False, get_size=False):
 
 
 if __name__ == '__main__':
+    return_generators(True)
     pass

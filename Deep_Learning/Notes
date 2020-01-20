@@ -1,2 +1,3 @@
 Looks like weighting is not improving output...
 
+Noticed that Maxpooling was predicting the entire liver, inverting images
