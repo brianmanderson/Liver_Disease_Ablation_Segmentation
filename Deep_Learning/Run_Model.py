@@ -164,6 +164,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         train = True
         if train:
             Model_val.compile(optimizer, loss=loss, metrics=['accuracy', dice_coef_3D])
+            # x,y = train_generator.__getitem__(0)
+            # pred = Model_val.predict(x)
             Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
                                     shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
                                     validation_data=validation_generator,steps_per_epoch=len(train_generator))
@@ -176,14 +178,14 @@ def train_model():
     batch_norm = False
     write_images = True
     save_a_model = False
-    weighted = False
-    inverse_images = False
+    weighted = True
+    inverse_images = True
     threshold_mask = 3.55
     if inverse_images:
         threshold_mask = -3.55
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images)
     pre_cycle = 0
-    gpu = 3
+    gpu = 2
     step_size_factor = 5
     num_cycles = 5
     step_size = len(train_generator)
@@ -191,7 +193,9 @@ def train_model():
                    'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle':pre_cycle}
     base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
     model_name = '3D_Atrous_inversed'  # change this
-    overall_dictionary = return_dictionary(base_dict)  # change this
+    if weighted:
+        model_name += '_weighted'
+    overall_dictionary = return_dictionary_all(base_dict)  # change this
     epochs = step_size_factor * 2 * num_cycles
     base_things['batch_norm'] = batch_norm
     base_things['mask_image'] = mask_image
@@ -199,7 +203,7 @@ def train_model():
     base_things['write_images'] = write_images
     base_things['mask_loss'] = mask_loss
     for iteration in range(3):
-        for layer in [3]:
+        for layer in [3,4,5]:
             data = overall_dictionary[layer]
             for run_data in data:
                 run_data.update(base_things)  # Change this
@@ -214,7 +218,7 @@ def train_model():
                                                                      threshold_value=threshold_mask,
                                                                      return_mask=mask_pred or mask_loss,liver_box=True,
                                                                      mask_image=mask_image, remove_liver_layer=True)
-                # x,y = train_generator_3D.__getitem__(0)
+                x,y = train_generator_3D.__getitem__(0)
                 paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive)
                 things = return_things(run_data)
                 paths_class.define_model_things(model_name, things)
