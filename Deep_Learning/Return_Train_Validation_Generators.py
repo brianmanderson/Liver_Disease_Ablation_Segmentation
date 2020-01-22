@@ -36,26 +36,32 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False):
                               Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.3, step=0.01)),
                               Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                                inverse_image=inverse_images),
-                              Annotations_To_Categorical(num_of_classes=num_classes)]
+                              Annotations_To_Categorical(num_of_classes=num_classes)
+                              ]
     image_processors_test = [Normalize_Images(mean_val=mean_val, std_val=std_val), Ensure_Image_Proportions(512, 512),
                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                               inverse_image=inverse_images),
-                             Annotations_To_Categorical(num_of_classes=num_classes)]
+                             Annotations_To_Categorical(num_of_classes=num_classes)
+                             ]
     train_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
                                              num_patients=batch_size, data_paths=paths, expansion=expansion,
-                                             three_layer=False, is_test_set=True,
+                                             is_test_set=True,
                                              image_processors=image_processors_train)
     validation_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
                                                   num_patients=batch_size, data_paths=paths_validation_generator,
-                                                  expansion=expansion, three_layer=False, is_test_set=True,
+                                                  expansion=expansion, is_test_set=True,
                                                   image_processors=image_processors_test)
     if get_mean_std:
+        livers = []
+        diseases = []
         for i in range(len(train_generator)):
             print(i)
             # print(train_generator.generator.image_list)
             x, y = train_generator.__getitem__(i)
             data = x[y[..., 2] == 1][..., 0]
-            print(np.mean(data))
+            livers.append(np.mean(x[y[...,1]==1]))
+            diseases.append(np.mean(x[y[...,2]==1]))
+            # print(np.mean(data))
             if i == 0:
                 output = data
             else:
@@ -63,6 +69,11 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False):
         print(np.mean(output, axis=0))
         print(np.std(output, axis=0))
         print(np.median(output, axis=0))
+        fid = open(os.path.join('.','output.txt'),'w+')
+        fid.write('Liver,disease\n')
+        for i in range(len(livers)):
+            fid.write('{},{}\n'.format(livers[i],diseases[i]))
+        fid.close()
     if get_size:
         background = 0
         thing = 0
@@ -82,5 +93,5 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False):
 
 
 if __name__ == '__main__':
-    return_generators(True)
+    # return_generators(True)
     pass

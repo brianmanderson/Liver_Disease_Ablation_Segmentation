@@ -1,6 +1,6 @@
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import make_plot, os
 
-out_path = os.path.join('..','..','Learning_Rates_Liver_Disease_GTV_weighted200')
+out_path = os.path.join('..','..','Learning_Rates_Liver_Disease_GTV','Learning_Rates_Liver_Disease_GTV_weighted500_inverted')
 all_lrs, all_metrics = [], []
 path = out_path
 for _, folders, _ in os.walk(path):

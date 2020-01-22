@@ -101,6 +101,32 @@ def return_dictionary_all(base_dict):
     return dictionary
 
 
+def return_dictionary_all_weighted(base_dict):
+    dictionary = {
+        3: [base_dict(5e-7, 5e-6, 32, 32, 1),
+            base_dict(1e-6, 2e-5, 32, 32, 2),
+            base_dict(1e-6, 5e-6, 32, 64, 2),
+            base_dict(1e-6, 5e-6, 32, 64, 1),
+            base_dict(1e-6, 5e-6, 16, 64, 2),
+            base_dict(1e-6, 5e-6, 16, 64, 1),
+            base_dict(5e-7, 5e-6, 16, 32, 1),
+            base_dict(1e-6, 2e-5, 16, 32, 2),
+            ]
+        ,
+        4: [base_dict(1e-6, 2e-5, 16, 32, 1),
+            base_dict(1e-6, 2e-5, 16, 32, 2),
+            base_dict(1e-6, 2e-5, 32, 32, 1),
+            base_dict(1e-6, 2e-5, 32, 32, 2),
+            base_dict(5e-7, 5e-6, 32, 64, 2),
+            base_dict(1e-6, 5e-6, 32, 64, 1),
+            base_dict(5e-7, 5e-6, 16, 64, 2),
+            base_dict(1e-6, 5e-6, 16, 64, 1)
+            ],
+        5: [base_dict(1.5e-7, 4e-5, 32, 64, 1)]
+    }
+    return dictionary
+
+
 def return_dictionary(base_dict):
     dictionary = {
         3: [
@@ -136,8 +162,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         epoch_i = 0
         optimizer = Adam(lr=min_lr)
         period = 5
-        monitor = 'val_loss'
-        mode = 'min'
+        monitor = 'val_dice_coef_3D'
+        mode = 'max'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=True,
                                          save_weights_only=False, period=period, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
@@ -151,7 +177,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
             callbacks = [checkpoint] + callbacks
         loss = 'categorical_crossentropy'
         if weighted:
-            loss = weighted_categorical_crossentropy(np.asarray([1,200])) #categorical_crossentropy
+            loss = weighted_categorical_crossentropy(np.asarray([1,500])) #categorical_crossentropy
+            print('weighted loss')
         if mask_loss:
             loss = categorical_crossentropy_masked()
         model = my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
@@ -178,63 +205,66 @@ def train_model():
     batch_norm = False
     write_images = True
     save_a_model = False
-    weighted = True
     inverse_images = True
-    threshold_mask = 3.55
+    threshold_mask = -3.55
     if inverse_images:
-        threshold_mask = -3.55
+        threshold_mask = 3.55
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images)
-    pre_cycle = 0
-    gpu = 2
-    step_size_factor = 5
-    num_cycles = 5
-    step_size = len(train_generator)
-    base_things = {'num_conv_blocks': 2, 'conv_blocks': 1, 'num_convs': 2, 'num_atrous_blocks': 1,
-                   'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle':pre_cycle}
-    base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
-    model_name = '3D_Atrous_inversed'  # change this
-    if weighted:
-        model_name += '_weighted'
-    overall_dictionary = return_dictionary_all(base_dict)  # change this
-    epochs = step_size_factor * 2 * num_cycles
-    base_things['batch_norm'] = batch_norm
-    base_things['mask_image'] = mask_image
-    base_things['mask_pred'] = mask_pred
-    base_things['write_images'] = write_images
-    base_things['mask_loss'] = mask_loss
-    for iteration in range(3):
-        for layer in [3,4,5]:
-            data = overall_dictionary[layer]
-            for run_data in data:
-                run_data.update(base_things)  # Change this
-                run_data['Layers'] = str(layer)
-                run_data['Iteration'] = str(iteration)
-                layers_dict = get_layers_dict(layers=layer, **run_data)
-                # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                                                                liver_box=True, mask_image=mask_image,
-                                                                remove_liver_layer=True, threshold_value=threshold_mask)
-                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                     threshold_value=threshold_mask,
-                                                                     return_mask=mask_pred or mask_loss,liver_box=True,
-                                                                     mask_image=mask_image, remove_liver_layer=True)
-                x,y = train_generator_3D.__getitem__(0)
-                paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive)
-                things = return_things(run_data)
-                paths_class.define_model_things(model_name, things)
-                tensorboard_output = paths_class.tensorboard_path_out
-                if os.listdir(tensorboard_output):
-                    continue
-                print(tensorboard_output)
-                try:
-                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                              validation_generator=validation_generator_3D,save_a_model=save_a_model,
-                              paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
-                              epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
-                    K.clear_session()
-                except:
-                    print('failed here')
-                    K.clear_session()
+    for weighted in [False, True]:
+        pre_cycle = 0
+        gpu = 2
+        step_size_factor = 5
+        num_cycles = 5
+        step_size = len(train_generator)
+        base_things = {'num_conv_blocks': 2, 'conv_blocks': 1, 'num_convs': 2, 'num_atrous_blocks': 1,
+                       'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle':pre_cycle}
+        base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
+        model_name = '3D_Atrous_inversed'  # change this
+        if weighted:
+            model_name += '_weighted'
+        if weighted:
+            overall_dictionary = return_dictionary_all_weighted(base_dict)  # change this
+        else:
+            overall_dictionary = return_dictionary_all(base_dict)
+        epochs = step_size_factor * 2 * num_cycles
+        base_things['batch_norm'] = batch_norm
+        base_things['mask_image'] = mask_image
+        base_things['mask_pred'] = mask_pred
+        base_things['write_images'] = write_images
+        base_things['mask_loss'] = mask_loss
+        for iteration in range(3):
+            for layer in [3,4]:
+                data = overall_dictionary[layer]
+                for run_data in data:
+                    run_data.update(base_things)  # Change this
+                    run_data['Layers'] = str(layer)
+                    run_data['Iteration'] = str(iteration)
+                    layers_dict = get_layers_dict(layers=layer, **run_data)
+                    # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
+                    train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
+                                                                    liver_box=True, mask_image=mask_image,
+                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
+                    validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                                                                         threshold_value=threshold_mask,
+                                                                         return_mask=mask_pred or mask_loss,liver_box=True,
+                                                                         mask_image=mask_image, remove_liver_layer=True)
+                    x,y = train_generator_3D.__getitem__(0)
+                    paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive)
+                    things = return_things(run_data)
+                    paths_class.define_model_things(model_name, things)
+                    tensorboard_output = paths_class.tensorboard_path_out
+                    if os.listdir(tensorboard_output):
+                        continue
+                    print(tensorboard_output)
+                    try:
+                        run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
+                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,
+                                  paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
+                                  epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
+                        K.clear_session()
+                    except:
+                        print('failed here')
+                        K.clear_session()
 
 if __name__ == '__main__':
     train_model()

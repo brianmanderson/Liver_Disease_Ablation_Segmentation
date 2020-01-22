@@ -11,12 +11,12 @@ from Return_Train_Validation_Generators import return_generators
 
 
 def run_model(gpu=1,layers_dict=None, out_path='', train_generator=None, get_weights=False,
-              mask_pred=False,batch_norm=False, mask_image=False):
+              mask_pred=False,batch_norm=False, mask_image=False,threshold_mask=3.55, weighted=False):
     G = get_available_gpus()
     if len(G) == 1:
         gpu = 0
     train_generator = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred,
-                                                 liver_box=True, mask_image=mask_image, threshold_value=3.55,
+                                                 liver_box=True, mask_image=mask_image, threshold_value=threshold_mask,
                                                  remove_liver_layer=True)
     x,y = train_generator.__getitem__(0)
     if get_weights:
@@ -28,7 +28,9 @@ def run_model(gpu=1,layers_dict=None, out_path='', train_generator=None, get_wei
         gpu_options = tf.GPUOptions(allow_growth=True)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         K.set_session(sess)
-        loss = weighted_categorical_crossentropy(np.asarray([1,200])) #categorical_crossentropy
+        loss = 'categorical_crossentropy'
+        if weighted:
+            loss = weighted_categorical_crossentropy(np.asarray([1,500])) #categorical_crossentropy
         Model_class = my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
                                  activation='elu', pool_type='Max',out_classes=2, mask_loss=False,mask_output=mask_pred)
         Model_val = Model_class.created_model
@@ -104,16 +106,21 @@ def get_class_weights(train_generator, class_num=9, out_file_name=os.path.join('
 
 
 def main():
-    _, _, train_generator, validation_generator = return_generators()
+    threshold_mask = -3.55
+    inverse_images = True
+    weighted = False
+    if inverse_images:
+        threshold_mask = 3.55
+    _, _, train_generator, validation_generator = return_generators(inverse_images=inverse_images)
     x,y = train_generator.__getitem__(0)
     get_weights = False
-    gpu = 1
-    mask_image = True
-    mask_pred = False
+    gpu = 3
+    mask_image = False
+    mask_pred = True
     batch_norm = False
-    desc = 'Learning_Rates_Liver_Disease_GTV_weighted200'
+    desc = 'Learning_Rates_Liver_Disease_GTV'
     for max_blocks in [1,2]:
-        for layers in [3,4,5]:
+        for layers in [5]:
             for filters in [16,32]:
                 for max_filters in [32,64]:
                     conv_blocks = 1
@@ -123,7 +130,7 @@ def main():
                                                   num_conv_blocks=num_convs, num_atrous_blocks=num_atrous_blocks,
                                                   max_filters=max_filters, max_blocks=max_blocks)
                     for iteration in [1,2,3]:
-                        out_path = os.path.join('..','..', desc,
+                        out_path = os.path.join('..','..', 'Learning_Rates_Liver_Disease_GTV',desc,
                                                 'Atrous_{}_layers_{}_filters_{}_maxfilters_{}_convblocks_{}_num_convs_{}_'
                                                 'atrous_blocks_doubled_{}_max'.format(layers,filters,max_filters,conv_blocks,num_convs,num_atrous_blocks,max_blocks)
                                                 ,
@@ -133,8 +140,8 @@ def main():
                         print(out_path)
                         os.makedirs(out_path)
                         run_model(gpu=gpu, layers_dict=layers_dict, out_path=out_path, train_generator=train_generator,
-                                  get_weights=get_weights,batch_norm=batch_norm,
-                                  mask_image=mask_image, mask_pred=mask_pred)
+                                  get_weights=get_weights,batch_norm=batch_norm,weighted=weighted,
+                                  mask_image=mask_image, mask_pred=mask_pred, threshold_mask=threshold_mask)
                         if get_weights:
                             return None
 
