@@ -129,8 +129,8 @@ def return_dictionary_all_weighted(base_dict):
 
 def return_dictionary(base_dict):
     dictionary = {
-        3: [
-            base_dict(2.1e-7, 8e-4, 16, 32, 1)
+        4: [
+            base_dict(2e-7, 1e-4, 16, 32, 1)
         ]
     }
     return dictionary
@@ -171,7 +171,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=5,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=False)
-        early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode='min')
+        early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
         callbacks = [early_stopping, lrate, tensorboard]
         if save_a_model:
             callbacks = [checkpoint] + callbacks
@@ -205,35 +205,32 @@ def train_model():
     batch_norm = False
     write_images = True
     save_a_model = False
-    inverse_images = True
-    threshold_mask = -3.55
-    if inverse_images:
-        threshold_mask = 3.55
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images)
-    for weighted in [False, True]:
-        pre_cycle = 0
-        gpu = 2
-        step_size_factor = 5
-        num_cycles = 5
-        step_size = len(train_generator)
-        base_things = {'num_conv_blocks': 2, 'conv_blocks': 1, 'num_convs': 2, 'num_atrous_blocks': 1,
-                       'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle':pre_cycle}
-        base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
-        model_name = '3D_Atrous_inversed'  # change this
-        if weighted:
-            model_name += '_weighted'
-        if weighted:
-            overall_dictionary = return_dictionary_all_weighted(base_dict)  # change this
-        else:
-            overall_dictionary = return_dictionary_all(base_dict)
-        epochs = step_size_factor * 2 * num_cycles
-        base_things['batch_norm'] = batch_norm
-        base_things['mask_image'] = mask_image
-        base_things['mask_pred'] = mask_pred
-        base_things['write_images'] = write_images
-        base_things['mask_loss'] = mask_loss
-        for iteration in range(3):
-            for layer in [3,4]:
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators()
+    pre_cycle = 0
+    gpu = 2
+    step_size_factor = 10
+    num_cycles = 5
+    step_size = len(train_generator)
+    base_things = {'num_conv_blocks': 2, 'conv_blocks': 1, 'num_convs': 2, 'num_atrous_blocks': 1,
+                   'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle}
+    base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
+    epochs = step_size_factor * 2 * num_cycles
+    base_things['batch_norm'] = batch_norm
+    base_things['mask_image'] = mask_image
+    base_things['mask_pred'] = mask_pred
+    base_things['write_images'] = write_images
+    base_things['mask_loss'] = mask_loss
+    for iteration in range(2):
+        for weighted in [False]:
+            model_name = '3D_Atrous'  # change this
+            if weighted:
+                model_name += '_weighted'
+            if weighted:
+                overall_dictionary = return_dictionary_all_weighted(base_dict)  # change this
+            else:
+                overall_dictionary = return_dictionary_all(base_dict)
+            overall_dictionary = return_dictionary(base_dict)
+            for layer in [4]:
                 data = overall_dictionary[layer]
                 for run_data in data:
                     run_data.update(base_things)  # Change this
@@ -243,9 +240,9 @@ def train_model():
                     # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
                     train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
                                                                     liver_box=True, mask_image=mask_image,
-                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
+                                                                    remove_liver_layer=True, threshold_value=3.55)
                     validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                         threshold_value=threshold_mask,
+                                                                         threshold_value=3.55,
                                                                          return_mask=mask_pred or mask_loss,liver_box=True,
                                                                          mask_image=mask_image, remove_liver_layer=True)
                     x,y = train_generator_3D.__getitem__(0)

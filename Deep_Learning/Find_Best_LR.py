@@ -114,7 +114,7 @@ def main():
     _, _, train_generator, validation_generator = return_generators(inverse_images=inverse_images)
     x,y = train_generator.__getitem__(0)
     get_weights = False
-    gpu = 3
+    gpu = 2
     mask_image = False
     mask_pred = True
     batch_norm = False
