@@ -4,6 +4,7 @@ from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 from keras.models import *
 import tensorflow as tf
+from tensorflow.python.keras.losses import CategoricalCrossentropy
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D_np, ModelCheckpoint_new, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
 from keras.callbacks import EarlyStopping
@@ -130,7 +131,7 @@ def return_dictionary_all_weighted(base_dict):
 def return_dictionary(base_dict):
     dictionary = {
         4: [
-            base_dict(2e-7, 1e-4, 16, 32, 1)
+            base_dict(2e-7, 5e-4, 8, 16, 1),
         ]
     }
     return dictionary
@@ -138,7 +139,7 @@ def return_dictionary(base_dict):
 
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False, **kwargs):
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,smoothing=0.0, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -175,7 +176,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         callbacks = [early_stopping, lrate, tensorboard]
         if save_a_model:
             callbacks = [checkpoint] + callbacks
-        loss = 'categorical_crossentropy'
+        loss = CategoricalCrossentropy(label_smoothing=smoothing)
         if weighted:
             loss = weighted_categorical_crossentropy(np.asarray([1,500])) #categorical_crossentropy
             print('weighted loss')
@@ -204,27 +205,37 @@ def train_model():
     mask_pred = True
     batch_norm = False
     write_images = True
-    save_a_model = False
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators()
+    save_a_model = True
+    inverse_images = True
+    smoothing = 0.0
+    threshold_mask = -3.55
+    if inverse_images:
+        threshold_mask = 3.55
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images)
     pre_cycle = 0
-    gpu = 2
-    step_size_factor = 10
+    gpu = 1
+    step_size_factor = 5
     num_cycles = 5
     step_size = len(train_generator)
-    base_things = {'num_conv_blocks': 2, 'conv_blocks': 1, 'num_convs': 2, 'num_atrous_blocks': 1,
+    base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 1,
                    'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle}
     base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
     epochs = step_size_factor * 2 * num_cycles
     base_things['batch_norm'] = batch_norm
     base_things['mask_image'] = mask_image
+    base_things['smoothing'] = smoothing
     base_things['mask_pred'] = mask_pred
     base_things['write_images'] = write_images
     base_things['mask_loss'] = mask_loss
-    for iteration in range(2):
+    for iteration in [1]:
         for weighted in [False]:
             model_name = '3D_Atrous'  # change this
+            if inverse_images:
+                model_name += '_inversed'
             if weighted:
                 model_name += '_weighted'
+            if smoothing > 0:
+                model_name += '{}_smoothing'.format(smoothing)
             if weighted:
                 overall_dictionary = return_dictionary_all_weighted(base_dict)  # change this
             else:
@@ -240,9 +251,9 @@ def train_model():
                     # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
                     train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
                                                                     liver_box=True, mask_image=mask_image,
-                                                                    remove_liver_layer=True, threshold_value=3.55)
+                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
                     validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                         threshold_value=3.55,
+                                                                         threshold_value=threshold_mask,
                                                                          return_mask=mask_pred or mask_loss,liver_box=True,
                                                                          mask_image=mask_image, remove_liver_layer=True)
                     x,y = train_generator_3D.__getitem__(0)
