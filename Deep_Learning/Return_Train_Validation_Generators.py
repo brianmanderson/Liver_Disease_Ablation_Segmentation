@@ -6,7 +6,7 @@ from Base_Deeplearning_Code.Data_Generators.Generators import Train_Data_Generat
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 
 
-def return_generators(get_mean_std=False, get_size=False, inverse_images=False):
+def return_generators(get_mean_std=False, get_size=False, inverse_images=False, liver_norm=False):
     try:
         base = r'\\mymdafiles\di_data1'
         base_path = os.path.join(base,r'Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data')
@@ -20,24 +20,28 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False):
 
     num_classes = 3
     batch_size = 1
-    # mean_val = 67
-    # std_val = 36
+    mean_val = 67
+    std_val = 36
     image_num = 1
     expansion = 5
     lower_bound = -7
-    upper_bound = 3
-    # if get_mean_std:
-    #     mean_val = 0
-    #     std_val = 1
-    #     lower_bound = -np.inf
-    #     upper_bound = np.inf
-    image_processors_train = [Normalize_to_Liver(),Ensure_Image_Proportions(512, 512),
+    upper_bound = 7
+    if get_mean_std:
+        mean_val = 0
+        std_val = 1
+        lower_bound = -np.inf
+        upper_bound = np.inf
+    if liver_norm:
+        normalize = Normalize_to_Liver(0.5)
+    else:
+        normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
+    image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
                               Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.3, step=0.01)),
                               Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                                inverse_image=inverse_images),
                               Annotations_To_Categorical(num_of_classes=num_classes)
                               ]
-    image_processors_test = [Normalize_to_Liver(), Ensure_Image_Proportions(512, 512),
+    image_processors_test = [normalize, Ensure_Image_Proportions(512, 512),
                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                               inverse_image=inverse_images),
                              Annotations_To_Categorical(num_of_classes=num_classes)
