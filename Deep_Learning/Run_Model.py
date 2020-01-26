@@ -3,6 +3,8 @@ __author__ = 'Brian M Anderson'
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 from keras.models import *
+from keras.layers.advanced_activations import PReLU
+from keras.initializers import Constant
 import tensorflow as tf
 from tensorflow.python.keras.losses import CategoricalCrossentropy
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, ModelCheckpoint_new, get_available_gpus, save_obj,load_obj, \
@@ -18,30 +20,29 @@ from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
 from Return_Train_Validation_Generators import return_generators
 
 
-def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_conv_blocks=None, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,atrous_rate=1,max_atrous_rate=2, **kwargs):
+def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
+                    atrous_rate=1, max_atrous_rate=2, **kwargs):
+    activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
     layers_dict = {}
-    conv_block = {'Channels': [filters]}
-    strided_block = lambda x: {'channels': [x], 'kernels': [(3, 3, 3)], 'strides': [(2, 2, 2)]}
-    transpose_block = lambda x: {'channels': [x], 'kernels': [(3, 3, 3)], 'strides': [(2, 2, 2)], 'type':'Transpose'}
-    if num_conv_blocks is not None:
-        conv_blocks_total = [conv_block for _ in range(num_conv_blocks)]
-    else:
-        conv_blocks_total = [conv_block]
+    conv_block = lambda x: {'convolution': {'channels': x, 'kernels': (3, 3, 3), 'strides': (1, 1, 1)},'activation':activation}
+    strided_block = lambda x: {'convolution': {'channels': x, 'kernels': (3, 3, 3), 'strides': (2, 2, 2), 'activation':activation}}
+    transpose_block = lambda x: {'transpose': {'channels': x, 'kernels': (3, 3, 3), 'strides': (2, 2, 2), 'activation':activation}}
+    atrous_block = lambda x,y,z: {'atrous_block': {'channels': x, 'rate': y, 'activations': z}}
     for layer in range(conv_blocks,layers-1):
-        atrous_block_enc = {'channels': [filters], 'atrous_blocks': [atrous_rate], 'kernels': [(3, 3, 3)]}
-        atrous_block_dec = {'channels': [filters], 'atrous_blocks': [atrous_rate], 'kernels': [(3, 3, 3)]}
-        if atrous_rate < max_atrous_rate:
-            atrous_rate += 1
+        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
+        activations = [activation for i in range(atrous_rate-1)] + ['linear']
+        atrous_block_dec = [atrous_block(filters,atrous_rate,activations) for _ in range(num_atrous_blocks)]
+        if layer == 0:
+            encoding = [conv_block(filters)] + encoding
         dec_tranpose = transpose_block(filters)
         if filters < max_filters:
             filters = int(filters*2)
-        layers_dict['Layer_' + str(layer)] = {'Encoding': [atrous_block_enc for _ in range(num_atrous_blocks)],
+        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding,
                                               'Pooling':{'Encoding':[strided_block(filters)],'Decoding':[dec_tranpose]},
-                                              'Decoding': [atrous_block_dec for _ in range(num_atrous_blocks)]}
+                                              'Decoding': atrous_block_dec}
         num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
     num_atrous_blocks = min([(num_atrous_blocks) * 2, max_blocks])
-    atrous_block = {'channels': [filters], 'atrous_blocks': [atrous_rate],'kernels': [(3, 3, 3)]}
-    layers_dict['Base'] = {'Encoding':[atrous_block for _ in range(num_atrous_blocks)]}
+    layers_dict['Base'] = {'Encoding':[atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]}
     return layers_dict
 
 
@@ -155,7 +156,7 @@ def return_dictionary_new(base_dict):
 
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,smoothing=0.0,balance_beta=1.0, **kwargs):
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,smoothing=0.0,balance_beta=1.0, model_params=None,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -201,7 +202,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         if balance_beta != 1.0:
             loss = balanced_cross_entropy(balance_beta)
         model = my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
-                            activation='elu', pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred)
+                            pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
         # if return_mask:
         #     loss = weighted_categorical_crossentropy(np.load(os.path.join('.', 'new_class_weights.npy')))
         Model_val = model.created_model
@@ -233,16 +234,17 @@ def train_model():
         threshold_mask = 7
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     pre_cycle = 0
-    gpu = 3
+    gpu = 2
     step_size_factor = 5
-    num_cycles = 5
+    num_cycles = 8
     step_size = len(train_generator)
     base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 1,
                    'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle,
-                   'atrous_rate':1,'max_atrous_rate':3}
+                   'atrous_rate':2,'max_atrous_rate':2}
     base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
     epochs = step_size_factor * 2 * num_cycles
-    for iteration in [0,1]:
+    model_params = {'activation':{'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}}
+    for iteration in [0,1,2,3]:
         for balance_beta in [1.0]:
             model_name = '3D_Atrous_strideddown'  # change this
             if norm_to_liver:
@@ -272,6 +274,10 @@ def train_model():
                     run_data['Layers'] = str(layer)
                     run_data['Iteration'] = str(iteration)
                     layers_dict = get_layers_dict(layers=layer, **run_data)
+                    my_3D_UNet(filter_vals=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),
+                               batch_norm=batch_norm,
+                               pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
+                               **model_params)
                     # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
                     train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
                                                                     liver_box=True, mask_image=mask_image,
@@ -283,14 +289,20 @@ def train_model():
                     x,y = validation_generator_3D.__getitem__(0)
                     paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive)
                     things = return_things(run_data)
+                    things += ['prelu']
                     paths_class.define_model_things(model_name, things)
                     tensorboard_output = paths_class.tensorboard_path_out
+                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
+                              validation_generator=validation_generator_3D, save_a_model=save_a_model,
+                              model_params=model_params,
+                              paths_class=paths_class, morfeus_drive=morfeus_drive, base_path=base_path,
+                              epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
                     if os.listdir(tensorboard_output):
                         continue
                     print(tensorboard_output)
                     try:
                         run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,
+                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
                                   paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
                                   epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
                         K.clear_session()
