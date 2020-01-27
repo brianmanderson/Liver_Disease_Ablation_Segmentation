@@ -27,7 +27,6 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
     layers_dict = {}
     conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (1, 1, 1),'activation':activation}}
     strided_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (2, 2, 2), 'activation':activation}}
-    transpose_block = lambda x: {'transpose': {'channels': x, 'kernel': (3, 3, 3), 'strides': (2, 2, 2), 'activation':'linear'}}
     atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
     for layer in range(conv_blocks,layers-1):
         encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
@@ -37,7 +36,7 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
         if filters < max_filters:
             filters = int(filters*2)
         layers_dict['Layer_' + str(layer)] = {'Encoding': encoding,
-                                              'Pooling':{'Encoding':[strided_block(filters)]},
+                                              'Pooling':{'Encoding':[strided_block(filters)],'Pool_Size':(2,2,2)},
                                               'Decoding': atrous_block_dec}
         num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
     num_atrous_blocks = min([(num_atrous_blocks) * 2, max_blocks])
@@ -244,7 +243,7 @@ def train_model():
     epochs = step_size_factor * 2 * num_cycles
     model_params = {'activation':{'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}}
     model_params = {'activation':'relu'}
-    for iteration in [10]:
+    for iteration in [7]:
         for balance_beta in [1.0]:
             model_name = '3D_Atrous_strideddown'  # change this
             if norm_to_liver:
@@ -288,11 +287,10 @@ def train_model():
                     things += ['relu_reorganized']
                     paths_class.define_model_things(model_name, things)
                     tensorboard_output = paths_class.tensorboard_path_out
-                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                              validation_generator=validation_generator_3D, save_a_model=save_a_model,
-                              model_params=model_params,
-                              paths_class=paths_class, morfeus_drive=morfeus_drive, base_path=base_path,
-                              epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
+                    # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
+                    #            batch_norm=batch_norm,
+                    #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
+                    #            **model_params)
                     if os.listdir(tensorboard_output):
                         continue
                     print(tensorboard_output)
