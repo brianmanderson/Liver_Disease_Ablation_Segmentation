@@ -2,7 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 1/17/2020
 
 import os, sys
-from Base_Deeplearning_Code.Data_Generators.Generators import Train_Data_Generator3D
+from Base_Deeplearning_Code.Data_Generators.Generators import Data_Generator_Class
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 
 
@@ -32,7 +32,7 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
         lower_bound = -np.inf
         upper_bound = np.inf
     if liver_norm:
-        normalize = Normalize_to_Liver(0.5)
+        normalize = Normalize_to_Liver(0.2, upper=False)
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
@@ -46,14 +46,13 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
                                               inverse_image=inverse_images),
                              Annotations_To_Categorical(num_of_classes=num_classes)
                              ]
-    train_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
-                                             num_patients=batch_size, data_paths=paths, expansion=expansion,
-                                             is_test_set=True,
-                                             image_processors=image_processors_train)
-    validation_generator = Train_Data_Generator3D(batch_size=image_num,whole_patient=True, shuffle=False,
-                                                  num_patients=batch_size, data_paths=paths_validation_generator,
-                                                  expansion=expansion, is_test_set=True,
-                                                  image_processors=image_processors_test)
+    train_generator = Data_Generator_Class(by_patient=True,num_patients=image_num, whole_patient=True, shuffle=True,
+                                           data_paths=paths, expansion=expansion,
+                                           image_processors=image_processors_train)
+    validation_generator = Data_Generator_Class(by_patient=True,num_patients=image_num, whole_patient=True, shuffle=False,
+                                                data_paths=paths_validation_generator, expansion=expansion,
+                                                image_processors=image_processors_test)
+    # x,y = train_generator.__getitem__(0)
     if get_mean_std:
         livers = []
         diseases = []
@@ -96,5 +95,5 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
 
 
 if __name__ == '__main__':
-    # return_generators(True)
+    # return_generators(False, liver_norm=True)
     pass

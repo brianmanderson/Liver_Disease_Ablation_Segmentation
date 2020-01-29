@@ -44,6 +44,25 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
     return layers_dict
 
 
+def get_layers_dict_atrous(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
+                    atrous_rate=1, max_atrous_rate=2, **kwargs):
+    activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
+    activation = 'relu'
+    layers_dict = {}
+    conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (1, 1, 1),'activation':activation}}
+    atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
+    previous_filters = [1]
+    for layer in range(layers):
+        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
+        if previous_filters[layer] != filters:
+            encoding = [conv_block(filters)] + encoding
+        previous_filters.append(filters)
+        if filters < max_filters:
+            filters = int(filters*2)
+        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
+        num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
+    return layers_dict
+
 def return_things(run_data):
     middle_info = ''
     if run_data['batch_norm']:
@@ -239,11 +258,15 @@ def train_model():
     base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 1,
                    'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle,
                    'atrous_rate':2,'max_atrous_rate':2}
+    base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 4,
+                   'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle,
+                   'atrous_rate':2,'max_atrous_rate':2}
     base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
     epochs = step_size_factor * 2 * num_cycles
-    model_params = {'activation':{'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}}
-    model_params = {'activation':'relu'}
-    for iteration in [7]:
+    model_params = {'activation':{'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}},
+                    'concat_not_add':False}
+    model_params = {'activation':'relu', 'concat_not_add':False}
+    for iteration in [6]:
         for balance_beta in [1.0]:
             model_name = '3D_Atrous_strideddown'  # change this
             if norm_to_liver:
@@ -259,7 +282,7 @@ def train_model():
             else:
                 overall_dictionary = return_dictionary_all(base_dict)
             overall_dictionary = return_dictionary(base_dict)
-            for layer in [4]:
+            for layer in [5]:
                 data = overall_dictionary[layer]
                 for run_data in data:
                     base_things['batch_norm'] = batch_norm
@@ -273,6 +296,7 @@ def train_model():
                     run_data['Layers'] = str(layer)
                     run_data['Iteration'] = str(iteration)
                     layers_dict = get_layers_dict(layers=layer, **run_data)
+                    layers_dict = get_layers_dict_atrous(layers=layer,**run_data)
                     # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
                     train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
                                                                     liver_box=True, mask_image=mask_image,
@@ -284,7 +308,7 @@ def train_model():
                     x,y = validation_generator_3D.__getitem__(0)
                     paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
                     things = return_things(run_data)
-                    things += ['relu_reorganized']
+                    things += ['all_atrous']
                     paths_class.define_model_things(model_name, things)
                     tensorboard_output = paths_class.tensorboard_path_out
                     # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,

@@ -6,6 +6,7 @@ from Return_Train_Validation_Generators import return_generators
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding, np
 from keras.models import load_model
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
+import os
 
 
 def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
@@ -91,7 +92,7 @@ def return_val_generator():
 
 model_path = r'K:\Morfeus\BMAnderson\CNN\liver_disease_model\weights-improvement-best.hdf5'
 model = load_model(model_path, custom_objects={'dice_coef_3D':dice_coef_3D})
-Visualizing_Class = visualization_model_class(model=model, save_images=True)
+Visualizing_Class = visualization_model_class(model=model, save_images=True,out_path=os.path.join('.','Activations'))
 validation_generator = return_val_generator()
 x,y = validation_generator.__getitem__(0)
 Visualizing_Class.predict_on_tensor(x)
