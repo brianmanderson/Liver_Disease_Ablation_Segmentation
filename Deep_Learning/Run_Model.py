@@ -151,13 +151,20 @@ def return_dictionary_all_weighted(base_dict):
 
 def return_dictionary(base_dict):
     dictionary = {
+        3: [
+            base_dict(2e-7, 5e-4, 8, 16, 1),
+            base_dict(2e-7, 7e-4, 8, 32, 1),
+            base_dict(2e-7, 7e-4, 16, 32, 1)
+        ],
         4: [
-            base_dict(2e-7, 5e-4, 8, 16, 1)
-            # base_dict(2e-7, 7e-4, 8, 32, 1)
+            base_dict(2e-7, 5e-4, 8, 16, 1),
+            base_dict(2e-7, 7e-4, 8, 32, 1),
+            base_dict(2e-7, 7e-4, 16, 32, 1)
         ],
         5: [
             base_dict(2e-7, 5e-4, 8, 16, 1),
-            base_dict(2e-7, 7e-4, 8, 32, 1)
+            base_dict(2e-7, 7e-4, 8, 32, 1),
+            base_dict(2e-7, 7e-4, 16, 32, 1)
         ]
     }
     return dictionary
@@ -242,7 +249,7 @@ def train_model():
     batch_norm = False
     write_images = True
     save_a_model = True
-    inverse_images = True
+    inverse_images = False
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
@@ -251,7 +258,7 @@ def train_model():
         threshold_mask = 7
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     pre_cycle = 0
-    gpu = 2
+    gpu = 1
     step_size_factor = 5
     num_cycles = 8
     step_size = len(train_generator)
@@ -266,7 +273,7 @@ def train_model():
     model_params = {'activation':{'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}},
                     'concat_not_add':False}
     model_params = {'activation':'relu', 'concat_not_add':False}
-    for iteration in [6]:
+    for iteration in [0,1,2,3]:
         for balance_beta in [1.0]:
             model_name = '3D_Atrous_strideddown'  # change this
             if norm_to_liver:
@@ -282,7 +289,7 @@ def train_model():
             else:
                 overall_dictionary = return_dictionary_all(base_dict)
             overall_dictionary = return_dictionary(base_dict)
-            for layer in [5]:
+            for layer in [3]:
                 data = overall_dictionary[layer]
                 for run_data in data:
                     base_things['batch_norm'] = batch_norm
@@ -301,6 +308,7 @@ def train_model():
                     train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
                                                                     liver_box=True, mask_image=mask_image,
                                                                     remove_liver_layer=True, threshold_value=threshold_mask)
+                    x,y = train_generator_3D.__getitem__(0)
                     validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
                                                                          threshold_value=threshold_mask,
                                                                          return_mask=mask_pred or mask_loss,liver_box=True,
