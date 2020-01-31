@@ -142,29 +142,29 @@ def return_dictionary_all_weighted(base_dict):
 
 def return_dictionary(base_dict):
     dictionary = {
+        1: [
+            base_dict(2e-7, 7e-4, 8, 16),
+        ],
+        2: [
+            base_dict(2e-7, 7e-4, 8, 16),
+        ],
         3: [
             base_dict(2e-7, 7e-4, 8, 16),
-            base_dict(2e-7, 7e-4, 16, 32)
         ],
         4: [
-            base_dict(2e-7, 5e-4, 8, 16),
-            base_dict(2e-7, 7e-4, 16, 32)
+            base_dict(2e-7, 7e-4, 8, 16),
         ],
         5: [
-            base_dict(2e-7, 5e-4, 8, 16),
-            base_dict(2e-7, 7e-4, 16, 32)
+            base_dict(2e-7, 7e-4, 8, 16),
         ],
         6: [
-            base_dict(2e-7, 5e-4, 8, 16),
-            base_dict(2e-7, 7e-4, 16, 32)
+            base_dict(2e-7, 7e-4, 8, 16),
         ],
         7: [
-            base_dict(2e-7, 5e-4, 8, 16),
-            base_dict(2e-7, 7e-4, 16, 32)
+            base_dict(2e-7, 7e-4, 8, 16),
         ],
         8: [
-            base_dict(2e-7, 5e-4, 8, 16),
-            base_dict(2e-7, 7e-4, 16, 32)
+            base_dict(2e-7, 7e-4, 8, 16),
         ]
     }
     return dictionary
@@ -259,19 +259,20 @@ def train_model():
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     pre_cycle = 0
     gpu = 3
-    step_size_factor = 5
-    num_cycles = 8
+    step_size_factor = 8
+    num_cycles = 5
     step_size = len(train_generator)
 
     base_dict = lambda min_lr, max_lr, filters, max_filters: \
-        OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 2, 'filters':filters,
-                                     'max_filters':max_filters,'layers_conv_blocks': 0, 'conv_blocks': 0},
+        OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 1,'atrous_rate':1, 'max_atrous_blocks':1,
+                                     'filters':filters, 'max_filters':max_filters,'layers_conv_blocks': 0,
+                                     'conv_blocks': 0},
                      'Hyper_Parameters':{'min_lr':min_lr,'max_lr':max_lr,'step_size_factor': step_size_factor,
                                          'num_cycles': num_cycles, 'pre_cycle': pre_cycle}
                      })
     epochs = step_size_factor * 2 * num_cycles
     model_params = {'activation':'relu', 'concat_not_add':False}
-    model_name = '3D_Atrous_strideddown'  # change this
+    model_name = '3D_Atrous'  # change this
     if norm_to_liver:
         model_name += '_livernorm'
     if inverse_images:
@@ -281,48 +282,52 @@ def train_model():
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
     for iteration in [0,1,2]:
-        overall_dictionary = return_dictionary(base_dict)
-        for layer in overall_dictionary:
-            data = overall_dictionary[layer]
-            for run_data in data:
-                run_data['Architecture']['model_name'] = model_name
-                run_data['Architecture']['layers'] = layer
-                run_data['Architecture']['batch_norm'] = batch_norm
-                run_data['Architecture']['mask_image'] = mask_image
-                run_data['Architecture']['mask_pred'] = mask_pred
-                run_data['Architecture']['mask_loss'] = mask_loss
-                things = return_things(run_data)
-                things = things[1:] + ['Iteration_{}'.format(iteration)]
-                layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
-                # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                                                                liver_box=True, mask_image=mask_image,
-                                                                remove_liver_layer=True, threshold_value=threshold_mask)
-                # x,y = train_generator_3D.__getitem__(0)
-                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                     threshold_value=threshold_mask,
-                                                                     return_mask=mask_pred or mask_loss,liver_box=True,
-                                                                     mask_image=mask_image, remove_liver_layer=True)
-                # x,y = validation_generator_3D.__getitem__(0)
-                paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
-                paths_class.define_model_things(model_name, things)
-                tensorboard_output = paths_class.tensorboard_path_out
-                # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
-                #            batch_norm=batch_norm,
-                #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
-                #            **model_params)
-                if os.listdir(tensorboard_output):
-                    continue
-                print(tensorboard_output)
-                try:
-                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                              validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
-                              paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
-                              epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'])
-                    K.clear_session()
-                except:
-                    print('failed here')
-                    K.clear_session()
+        for atrous_rate in [1, 2, 3, 4, 5]:
+            overall_dictionary = return_dictionary(base_dict)
+            for layer in overall_dictionary:
+                data = overall_dictionary[layer]
+                for run_data in data:
+                    run_data['Architecture']['atrous_rate'] = atrous_rate
+                    run_data['Architecture']['model_name'] = model_name
+                    run_data['Architecture']['layers'] = layer
+                    run_data['Architecture']['batch_norm'] = batch_norm
+                    run_data['Architecture']['mask_image'] = mask_image
+                    run_data['Architecture']['mask_pred'] = mask_pred
+                    run_data['Architecture']['mask_loss'] = mask_loss
+                    things = return_things(run_data)
+                    things = things[1:] + ['{}_Iteration'.format(iteration)]
+                    layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
+                    # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
+                    train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
+                                                                    liver_box=True, mask_image=mask_image,
+                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
+                    # x,y = train_generator_3D.__getitem__(0)
+                    validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                                                                         threshold_value=threshold_mask,
+                                                                         return_mask=mask_pred or mask_loss,liver_box=True,
+                                                                         mask_image=mask_image, remove_liver_layer=True)
+                    # while True:
+                    #     for i in range(5):
+                    #         x,y = validation_generator_3D.__getitem__(i)
+                    paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
+                    paths_class.define_model_things(model_name, things)
+                    tensorboard_output = paths_class.tensorboard_path_out
+                    # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
+                    #            batch_norm=batch_norm,
+                    #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
+                    #            **model_params)
+                    if os.listdir(tensorboard_output):
+                        continue
+                    print(tensorboard_output)
+                    try:
+                        run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
+                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
+                                  paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
+                                  epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'])
+                        K.clear_session()
+                    except:
+                        print('failed here')
+                        K.clear_session()
 
 
 if __name__ == '__main__':

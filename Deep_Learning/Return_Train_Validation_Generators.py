@@ -32,7 +32,7 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
         lower_bound = -np.inf
         upper_bound = np.inf
     if liver_norm:
-        normalize = Normalize_to_Liver(0.2, upper=False)
+        normalize = Normalize_to_Liver(0.5, upper=True)
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
@@ -41,7 +41,8 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
                                                inverse_image=inverse_images),
                               Annotations_To_Categorical(num_of_classes=num_classes)
                               ]
-    image_processors_test = [normalize, Ensure_Image_Proportions(512, 512),
+    image_processors_test = [normalize,
+                             Ensure_Image_Proportions(512, 512),
                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                               inverse_image=inverse_images),
                              Annotations_To_Categorical(num_of_classes=num_classes)
