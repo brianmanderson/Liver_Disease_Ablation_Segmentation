@@ -36,7 +36,7 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
-                              Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.3, step=0.01)),
+                              Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.1, step=0.01)),
                               Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                                inverse_image=inverse_images),
                               Annotations_To_Categorical(num_of_classes=num_classes)

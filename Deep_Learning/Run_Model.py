@@ -18,6 +18,7 @@ from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
 from Return_Train_Validation_Generators import return_generators
+from _collections import OrderedDict
 
 
 def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
@@ -44,46 +45,36 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
     return layers_dict
 
 
-def get_layers_dict_atrous(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
-                    atrous_rate=1, max_atrous_rate=2, **kwargs):
+def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
+                           atrous_rate=2, **kwargs):
     activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
     activation = 'relu'
     layers_dict = {}
-    conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (1, 1, 1),'activation':activation}}
+    conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1),'activation':activation}}
     atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
     previous_filters = [1]
     for layer in range(layers):
-        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
+        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(atrous_blocks)]
         if previous_filters[layer] != filters:
             encoding = [conv_block(filters)] + encoding
         previous_filters.append(filters)
         if filters < max_filters:
             filters = int(filters*2)
         layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
-        num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
+        if atrous_blocks < max_atrous_blocks:
+            atrous_blocks = int(atrous_blocks*2)
     return layers_dict
 
 def return_things(run_data):
-    middle_info = ''
-    if run_data['batch_norm']:
-        middle_info += '_BatchNorm'
-    if run_data['mask_image']:
-        middle_info += '_MaskedImage'
-    if run_data['mask_pred']:
-        middle_info += '_MaskedPred'
-    things = ['{}_Layers'.format(run_data['Layers']),
-              '{}_Convblocks'.format(run_data['conv_blocks']),
-              '{}_atrous_rate'.format(run_data['atrous_rate']),
-              '{}_max_atrous_rate'.format(run_data['max_atrous_rate']),
-              '{}_Max_Atrous'.format(run_data['max_blocks']),
-              '{}_Filters_{}_Max_Filters'.format(run_data['filters'],run_data['max_filters']),
-              middle_info,
-              '{}_MinLR_{}_MaxLR'.format(run_data['min_lr'], run_data['max_lr']),
-              '{}_step_size_{}_precycles_{}_cycles'.format(run_data['step_size_factor'], run_data['pre_cycle'],
-                                                           run_data['num_cycles'])]
-    if run_data['balance_beta'] != 1.0:
-        things.append('beta_{}'.format(run_data['balance_beta']))
-    things.append('Iteration_{}'.format(run_data['Iteration']))
+    things = []
+    for top_key in ['Architecture','Hyper_Parameters']:
+        model_info = run_data[top_key]
+        for key in model_info:
+            if model_info[key] is not 0 and model_info[key] is not False:
+                if model_info[key] is True:
+                    things.append('{}'.format(key))
+                else:
+                    things.append('{}_{}'.format(model_info[key],key))
     return things
 
 
@@ -152,19 +143,28 @@ def return_dictionary_all_weighted(base_dict):
 def return_dictionary(base_dict):
     dictionary = {
         3: [
-            base_dict(2e-7, 5e-4, 8, 16, 1),
-            base_dict(2e-7, 7e-4, 8, 32, 1),
-            base_dict(2e-7, 7e-4, 16, 32, 1)
+            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 32)
         ],
         4: [
-            base_dict(2e-7, 5e-4, 8, 16, 1),
-            base_dict(2e-7, 7e-4, 8, 32, 1),
-            base_dict(2e-7, 7e-4, 16, 32, 1)
+            base_dict(2e-7, 5e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 32)
         ],
         5: [
-            base_dict(2e-7, 5e-4, 8, 16, 1),
-            base_dict(2e-7, 7e-4, 8, 32, 1),
-            base_dict(2e-7, 7e-4, 16, 32, 1)
+            base_dict(2e-7, 5e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 32)
+        ],
+        6: [
+            base_dict(2e-7, 5e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 32)
+        ],
+        7: [
+            base_dict(2e-7, 5e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 32)
+        ],
+        8: [
+            base_dict(2e-7, 5e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 32)
         ]
     }
     return dictionary
@@ -180,7 +180,7 @@ def return_dictionary_new(base_dict):
 
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,smoothing=0.0,balance_beta=1.0, model_params=None,**kwargs):
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, model_params=None,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -226,7 +226,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         if balance_beta != 1.0:
             loss = balanced_cross_entropy(balance_beta)
         model = my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
-                            pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
+                           pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
         # if return_mask:
         #     loss = weighted_categorical_crossentropy(np.load(os.path.join('.', 'new_class_weights.npy')))
         Model_val = model.created_model
@@ -258,83 +258,72 @@ def train_model():
         threshold_mask = 7
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     pre_cycle = 0
-    gpu = 1
+    gpu = 3
     step_size_factor = 5
     num_cycles = 8
     step_size = len(train_generator)
-    base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 1,
-                   'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle,
-                   'atrous_rate':2,'max_atrous_rate':2}
-    base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 4,
-                   'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': pre_cycle,
-                   'atrous_rate':2,'max_atrous_rate':2}
-    base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
+
+    base_dict = lambda min_lr, max_lr, filters, max_filters: \
+        OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 2, 'filters':filters,
+                                     'max_filters':max_filters,'layers_conv_blocks': 0, 'conv_blocks': 0},
+                     'Hyper_Parameters':{'min_lr':min_lr,'max_lr':max_lr,'step_size_factor': step_size_factor,
+                                         'num_cycles': num_cycles, 'pre_cycle': pre_cycle}
+                     })
     epochs = step_size_factor * 2 * num_cycles
-    model_params = {'activation':{'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}},
-                    'concat_not_add':False}
     model_params = {'activation':'relu', 'concat_not_add':False}
-    for iteration in [0,1,2,3]:
-        for balance_beta in [1.0]:
-            model_name = '3D_Atrous_strideddown'  # change this
-            if norm_to_liver:
-                model_name += '_livernorm'
-            if inverse_images:
-                model_name += '_inversed'
-            if weighted:
-                model_name += '_weighted'
-            if smoothing > 0:
-                model_name += '{}_smoothing'.format(smoothing)
-            if weighted:
-                overall_dictionary = return_dictionary_all_weighted(base_dict)  # change this
-            else:
-                overall_dictionary = return_dictionary_all(base_dict)
-            overall_dictionary = return_dictionary(base_dict)
-            for layer in [3]:
-                data = overall_dictionary[layer]
-                for run_data in data:
-                    base_things['batch_norm'] = batch_norm
-                    base_things['mask_image'] = mask_image
-                    base_things['smoothing'] = smoothing
-                    base_things['mask_pred'] = mask_pred
-                    base_things['write_images'] = write_images
-                    base_things['mask_loss'] = mask_loss
-                    base_things['balance_beta'] = balance_beta
-                    run_data.update(base_things)  # Change this
-                    run_data['Layers'] = str(layer)
-                    run_data['Iteration'] = str(iteration)
-                    layers_dict = get_layers_dict(layers=layer, **run_data)
-                    layers_dict = get_layers_dict_atrous(layers=layer,**run_data)
-                    # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                    train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                                                                    liver_box=True, mask_image=mask_image,
-                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
-                    x,y = train_generator_3D.__getitem__(0)
-                    validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                         threshold_value=threshold_mask,
-                                                                         return_mask=mask_pred or mask_loss,liver_box=True,
-                                                                         mask_image=mask_image, remove_liver_layer=True)
-                    x,y = validation_generator_3D.__getitem__(0)
-                    paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
-                    things = return_things(run_data)
-                    things += ['all_atrous']
-                    paths_class.define_model_things(model_name, things)
-                    tensorboard_output = paths_class.tensorboard_path_out
-                    # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
-                    #            batch_norm=batch_norm,
-                    #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
-                    #            **model_params)
-                    if os.listdir(tensorboard_output):
-                        continue
-                    print(tensorboard_output)
-                    try:
-                        run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
-                                  paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
-                                  epochs=epochs, model_name=model_name, weighted=weighted, **run_data)
-                        K.clear_session()
-                    except:
-                        print('failed here')
-                        K.clear_session()
+    model_name = '3D_Atrous_strideddown'  # change this
+    if norm_to_liver:
+        model_name += '_livernorm'
+    if inverse_images:
+        model_name += '_inversed'
+    if weighted:
+        model_name += '_weighted'
+    if smoothing > 0:
+        model_name += '{}_smoothing'.format(smoothing)
+    for iteration in [0,1,2]:
+        overall_dictionary = return_dictionary(base_dict)
+        for layer in overall_dictionary:
+            data = overall_dictionary[layer]
+            for run_data in data:
+                run_data['Architecture']['model_name'] = model_name
+                run_data['Architecture']['layers'] = layer
+                run_data['Architecture']['batch_norm'] = batch_norm
+                run_data['Architecture']['mask_image'] = mask_image
+                run_data['Architecture']['mask_pred'] = mask_pred
+                run_data['Architecture']['mask_loss'] = mask_loss
+                things = return_things(run_data)
+                things = things[1:] + ['Iteration_{}'.format(iteration)]
+                layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
+                # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
+                train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
+                                                                liver_box=True, mask_image=mask_image,
+                                                                remove_liver_layer=True, threshold_value=threshold_mask)
+                # x,y = train_generator_3D.__getitem__(0)
+                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                                                                     threshold_value=threshold_mask,
+                                                                     return_mask=mask_pred or mask_loss,liver_box=True,
+                                                                     mask_image=mask_image, remove_liver_layer=True)
+                # x,y = validation_generator_3D.__getitem__(0)
+                paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
+                paths_class.define_model_things(model_name, things)
+                tensorboard_output = paths_class.tensorboard_path_out
+                # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
+                #            batch_norm=batch_norm,
+                #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
+                #            **model_params)
+                if os.listdir(tensorboard_output):
+                    continue
+                print(tensorboard_output)
+                try:
+                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
+                              validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
+                              paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
+                              epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'])
+                    K.clear_session()
+                except:
+                    print('failed here')
+                    K.clear_session()
+
 
 if __name__ == '__main__':
     train_model()
