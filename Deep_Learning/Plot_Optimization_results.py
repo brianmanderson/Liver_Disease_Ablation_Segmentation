@@ -14,7 +14,7 @@ if make_excel:
 excel_out_path = os.path.join('.', 'Model_Optimization.xlsx')
 data = pd.read_excel(excel_out_path)
 data = data.dropna()
-(ggplot(data) + aes(x='layers',y='val_loss') + geom_point(mapping=aes(color='max_filters')) + facet_wrap('filters')
+(ggplot(data) + aes(x='layers',y='val_loss') + geom_point(mapping=aes(color='atrous_rate')) + facet_wrap('max_filters')
  + xlab('Layers') + ylab('Val_Loss') + ggtitle('Validation Loss vs parameters')+scale_color_gradient(low='blue',high='red'))
 xxx = 1
 # criteria_base = lambda x, variable_name, value: np.asarray(list(x[variable_name].values())) == value
