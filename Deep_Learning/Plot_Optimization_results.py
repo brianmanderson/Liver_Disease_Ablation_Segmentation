@@ -7,15 +7,18 @@ from plotnine import *
 
 
 make_excel = False
-input_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Keras\3D_Atrous_livernorm'
+input_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Keras\3D_Atrous_newlrs_livernorm'
 if make_excel:
     create_excel_from_event(input_path=input_path,names=['Layers','Filters','Max_Filters','Atrous_Blocks','atrous_rate','max_atrous_blocks','min_lr','max_lr','step_size_factor','num_cycles'])
 
 excel_out_path = os.path.join('.', 'Model_Optimization.xlsx')
 data = pd.read_excel(excel_out_path)
 data = data.dropna()
-(ggplot(data) + aes(x='layers',y='val_loss') + geom_point(mapping=aes(color='atrous_rate')) + facet_wrap('max_filters')
- + xlab('Layers') + ylab('Val_Loss') + ggtitle('Validation Loss vs parameters')+scale_color_gradient(low='blue',high='red'))
+xxx = 1
+(ggplot(data) + aes(x='layers',y='val_dice_coef_3D') + facet_wrap('atrous_rate',labeller='label_both') + geom_point(mapping=aes(color='max_filters')) + xlab('Layers') + ylab('Validation Dice') +
+ ggtitle('Validation Dice vs Number of Layers and Atrous Rate and Max Filters')+scale_colour_gradient(low='blue',high='red'))
+(ggplot(data) + aes(x='layers',y='val_loss') + facet_wrap('atrous_rate',labeller='label_both') + geom_point(mapping=aes(color='max_filters')) + xlab('Layers') + ylab('Validation Loss') +
+ ggtitle('Validation Loss vs Number of Layers and Atrous Rate and Max Filters')+scale_colour_gradient(low='blue',high='red'))
 xxx = 1
 # criteria_base = lambda x, variable_name, value: np.asarray(list(x[variable_name].values())) == value
 # criteria = partial(criteria_base, variable_name='max_filters', value=32)

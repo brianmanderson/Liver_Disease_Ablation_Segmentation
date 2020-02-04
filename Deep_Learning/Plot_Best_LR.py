@@ -18,8 +18,8 @@ def down_folder(input_path, base_input_path=''):
             print(input_path)
             desc = ''.join(input_path.split(base_input_path)[-1].split('\\'))
             save_path = os.path.join(base_input_path,'Outputs')
-            make_plot(paths, metric_list=['loss'], title=desc, save_path=save_path, plot=True,
-                      auto_rates=True, beta=0.98)
+            make_plot(paths, metric_list=['loss'], title=desc, save_path=save_path, plot=False,
+                      auto_rates=True, beta=0.96)
         except:
             xxx = 1
     return None

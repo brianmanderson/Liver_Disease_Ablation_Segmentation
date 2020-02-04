@@ -112,28 +112,28 @@ def get_class_weights(train_generator, class_num=9, out_file_name=os.path.join('
 def return_dictionary(base_dict):
     dictionary = {
         1: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         2: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         3: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         4: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         5: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         6: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         7: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ],
         8: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-7, 7e-4, 16, 16)
         ]
     }
     return dictionary
@@ -161,7 +161,7 @@ def main():
     _, _, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     x,y = train_generator.__getitem__(0)
     get_weights = False
-    gpu = 3
+    gpu = 2
     mask_image = False
     mask_pred = True
     batch_norm = False

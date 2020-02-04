@@ -143,28 +143,62 @@ def return_dictionary_all_weighted(base_dict):
 def return_dictionary(base_dict):
     dictionary = {
         1: [
-            base_dict(2e-7, 7e-4, 8, 16, 2),
+            base_dict(1e-5, 1e-2, 8, 16, 1),
+            base_dict(1e-5, 3e-3, 16, 16, 1),
+            base_dict(3e-6, 2e-3, 32, 32, 1),
+            base_dict(1e-5, 2e-3, 8, 16, 2),
+            base_dict(2e-6, 1e-3, 16, 16, 2),
+            base_dict(2e-6, 2e-4, 32, 32, 2),
+            base_dict(1e-5, 2e-4, 8, 16, 3),
+            base_dict(2e-6, 1.7e-4, 16, 16, 3),
+            base_dict(1e-6, 6e-5, 32, 32, 3)
         ],
         2: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(6e-6, 2e-4, 16, 16, 1),
+            base_dict(1e-6, 1e-3, 32, 32, 1),
+            base_dict(2e-6, 1e-4, 16, 16, 2),
+            base_dict(1e-6, 2.5e-4, 32, 32, 2),
+            base_dict(1.7e-6, 5e-5, 16, 16, 3),
+            base_dict(1e-6, 4e-5, 32, 32, 3)
         ],
         3: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-6, 1e-3, 16, 16, 1),
+            base_dict(1e-6, 1.5e-4, 32, 32, 1),
+            base_dict(1e-6, 1e-4, 16, 16, 2),
+            base_dict(5e-7, 7e-5, 32, 32, 2),
+            base_dict(1e-6, 8e-4, 16, 16, 3),
+            base_dict(1e-6, 2.5e-5, 32, 32, 3)
         ],
         4: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(5e-6, 2e-4, 16, 16, 1),
+            base_dict(1e-6, 1.5e-4, 32, 32, 1),
+            base_dict(1.8e-6, 4e-4, 16, 16, 2),
+            base_dict(1e-6, 2e-4, 32, 32, 2),
+            base_dict(1e-6, 5e-5, 16, 16, 3)
         ],
         5: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(1.5e-6, 2e-4, 16, 16, 1),
+            base_dict(2e-7, 2e-4, 32, 32, 1),
+            base_dict(2e-6, 1.5e-4, 16, 16, 2),
+            base_dict(2e-7, 5e-5, 32, 32, 2),
+            base_dict(1e-6, 1e-4, 16, 16, 3)
         ],
         6: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(2e-6, 6e-5, 16, 16, 1),
+            base_dict(2e-7, 3e-5, 32, 32, 1),
+            base_dict(1e-6, 8e-5, 16, 16, 2),
+            base_dict(2e-7, 1e-4, 32, 32, 2)
         ],
         7: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(8e-7, 1e-4, 16, 16, 1),
+            base_dict(2e-7, 7e-6, 32, 32, 1),
+            base_dict(1e-6, 1e-4, 16, 16, 2),
+            base_dict(2e-7, 2e-4, 32, 32, 2)
         ],
         8: [
-            base_dict(2e-7, 7e-4, 8, 16),
+            base_dict(1e-6, 1e-4, 16, 16, 1),
+            base_dict(6e-7, 2e-5, 32, 32, 1),
+            base_dict(6e-7, 4e-5, 16, 16, 2)
         ]
     }
     return dictionary
@@ -211,6 +245,12 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
                                        update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
+        # lr = []
+        # iteration = []
+        # for i in range(2000):
+        #     lr.append(lrate.clr())
+        #     lrate.on_batch_end(0)
+        #     iteration.append(i/step_size)
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=5,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=False)
         early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
@@ -248,7 +288,7 @@ def train_model():
     mask_pred = True
     batch_norm = False
     write_images = True
-    save_a_model = True
+    save_a_model = False
     inverse_images = False
     norm_to_liver = True
     smoothing = 0.0
@@ -258,7 +298,7 @@ def train_model():
         threshold_mask = 7
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     pre_cycle = 0
-    gpu = 3
+    gpu = 1
     step_size_factor = 8
     num_cycles = 5
     step_size = len(train_generator)
@@ -272,7 +312,7 @@ def train_model():
                      })
     epochs = step_size_factor * 2 * num_cycles
     model_params = {'activation':'relu', 'concat_not_add':False}
-    model_name = '3D_Atrous'  # change this
+    model_name = '3D_Atrous_newlrs'  # change this
     if norm_to_liver:
         model_name += '_livernorm'
     if inverse_images:
@@ -321,7 +361,7 @@ def train_model():
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
                               validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
                               paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
-                              epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'])
+                              epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
                     K.clear_session()
                 except:
                     print('failed here')
