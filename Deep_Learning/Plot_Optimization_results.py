@@ -6,12 +6,14 @@ import plotnine as p9
 from plotnine import *
 
 
-make_excel = False
-input_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Keras\3D_Atrous_newlrs_livernorm'
+make_excel = True
+out_path = r'\\mymdafiles\di_data1\Morfeus\bmanderson\Modular_Projects\Liver_Disease_Segmentation_Work'
+input_path = r'\\mymdafiles\di_data1\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Keras\3D_Atrous_newlrs_livernorm'
+excel_out_path = os.path.join(out_path, 'Model_Optimization.xlsx')
 if make_excel:
-    create_excel_from_event(input_path=input_path,names=['Layers','Filters','Max_Filters','Atrous_Blocks','atrous_rate','max_atrous_blocks','min_lr','max_lr','step_size_factor','num_cycles'])
+    create_excel_from_event(input_path=input_path,excel_out_path=excel_out_path,
+                            names=['Layers','Filters','Max_Filters','Atrous_Blocks','atrous_rate','max_atrous_blocks','min_lr','max_lr','step_size_factor','num_cycles'])
 
-excel_out_path = os.path.join('.', 'Model_Optimization.xlsx')
 data = pd.read_excel(excel_out_path)
 data = data.dropna()
 xxx = 1

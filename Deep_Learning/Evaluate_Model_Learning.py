@@ -90,9 +90,10 @@ def return_val_generator():
                                                              mask_image=mask_image, remove_liver_layer=True)
         return validation_generator_3D
 
-model_path = r'K:\Morfeus\BMAnderson\CNN\liver_disease_model\weights-improvement-best.hdf5'
+model_path = r'\\mymdafiles\di_data1\Morfeus\BMAnderson\CNN\liver_disease_model\weights-improvement-best.hdf5'
+out_path = r'\\mymdafiles\di_data1\Morfeus\bmanderson\Modular_Projects\Liver_Disease_Segmentation_Work'
 model = load_model(model_path, custom_objects={'dice_coef_3D':dice_coef_3D})
-Visualizing_Class = visualization_model_class(model=model, save_images=True,out_path=os.path.join('.','Activations'))
+Visualizing_Class = visualization_model_class(model=model, save_images=True,out_path=os.path.join(out_path,'Activations'))
 validation_generator = return_val_generator()
 x,y = validation_generator.__getitem__(0)
 Visualizing_Class.predict_on_tensor(x)

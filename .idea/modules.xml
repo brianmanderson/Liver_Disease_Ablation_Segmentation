@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Liver_Disease_Ablation_Segmentation.iml" filepath="$PROJECT_DIR$/.idea/Liver_Disease_Ablation_Segmentation.iml" />
+      <module fileurl="file://$USER_HOME$/PycharmProjects/Send_Email_To_Phone/.idea/Send_Email_To_Phone.iml" filepath="$USER_HOME$/PycharmProjects/Send_Email_To_Phone/.idea/Send_Email_To_Phone.iml" />
     </modules>
   </component>
 </project>
