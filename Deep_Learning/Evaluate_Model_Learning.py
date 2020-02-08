@@ -9,41 +9,37 @@ from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plo
 import os
 
 
-def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
-                    atrous_rate=1, max_atrous_rate=2, **kwargs):
+def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
+                           atrous_rate=2, **kwargs):
     activation = 'relu'
     layers_dict = {}
-    conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (1, 1, 1),'activation':activation}}
-    strided_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (2, 2, 2), 'activation':activation}}
-    transpose_block = lambda x: {'transpose': {'channels': x, 'kernel': (3, 3, 3), 'strides': (2, 2, 2), 'activation':'linear'}}
+    conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1),'activation':activation}}
     atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
-    for layer in range(conv_blocks,layers-1):
-        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
-        atrous_block_dec = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
-        if layer == 0:
+    previous_filters = [1]
+    for layer in range(layers):
+        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(atrous_blocks)]
+        if previous_filters[layer] != filters:
             encoding = [conv_block(filters)] + encoding
-        dec_tranpose = transpose_block(filters)
+        previous_filters.append(filters)
         if filters < max_filters:
             filters = int(filters*2)
-        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding,
-                                              'Pooling':{'Encoding':[strided_block(filters)],'Decoding':[dec_tranpose]},
-                                              'Decoding': atrous_block_dec}
-        num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
-    num_atrous_blocks = min([(num_atrous_blocks) * 2, max_blocks])
-    layers_dict['Base'] = {'Encoding':[atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]}
+        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
+        if atrous_blocks < max_atrous_blocks:
+            atrous_blocks = int(atrous_blocks*2)
     return layers_dict
 
 
-def return_dictionary(base_dict):
+def return_dictionary_best(base_dict):
     dictionary = {
         4: [
-            base_dict(2e-7, 5e-4, 8, 16, 1)
-            # base_dict(2e-7, 7e-4, 8, 32, 1)
+            base_dict(1e-6, 2e-4, 32, 32, 2),
         ],
-        5: [
-            base_dict(2e-7, 5e-4, 8, 16, 1),
-            base_dict(2e-7, 7e-4, 8, 32, 1)
-        ]
+        6: [
+            base_dict(2e-7, 1e-4, 32, 32, 2)
+        ],
+        7: [
+            base_dict(2e-7, 2e-4, 32, 32, 2)
+        ],
     }
     return dictionary
 
@@ -54,24 +50,21 @@ def return_val_generator():
     mask_pred = True
     batch_norm = False
     write_images = True
-    save_a_model = True
-    inverse_images = True
+    inverse_images = False
     norm_to_liver = True
     smoothing = 0.0
-    weighted = False
     threshold_mask = -7
     if inverse_images:
         threshold_mask = 7
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
-                                                                                        liver_norm=norm_to_liver)
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     step_size_factor = 5
     num_cycles = 8
     base_things = {'num_conv_blocks': 2, 'conv_blocks': 0, 'num_convs': 2, 'num_atrous_blocks': 1,
                    'step_size_factor': step_size_factor, 'num_cycles': num_cycles, 'pre_cycle': 0,
                    'atrous_rate': 2, 'max_atrous_rate': 2}
     base_dict = lambda a, b, c, d, e: {'min_lr': a, 'max_lr': b, 'filters': c, 'max_filters': d, 'max_blocks': e}
-    overall_dictionary = return_dictionary(base_dict)
-    layer = 4
+    overall_dictionary = return_dictionary_best(base_dict)
+    layer = 7
     data = overall_dictionary[layer]
     for run_data in data:
         base_things['batch_norm'] = batch_norm
@@ -82,7 +75,7 @@ def return_val_generator():
         base_things['mask_loss'] = mask_loss
         run_data.update(base_things)  # Change this
         run_data['Layers'] = str(layer)
-        layers_dict = get_layers_dict(layers=layer, **run_data)
+        layers_dict = get_layers_dict_atrous(layers=layer, **run_data)
         # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
         validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
                                                              threshold_value=threshold_mask,
@@ -92,9 +85,9 @@ def return_val_generator():
 
 model_path = r'\\mymdafiles\di_data1\Morfeus\BMAnderson\CNN\liver_disease_model\weights-improvement-best.hdf5'
 out_path = r'\\mymdafiles\di_data1\Morfeus\bmanderson\Modular_Projects\Liver_Disease_Segmentation_Work'
+validation_generator = return_val_generator()
+x,y = validation_generator.__getitem__(1)
 model = load_model(model_path, custom_objects={'dice_coef_3D':dice_coef_3D})
 Visualizing_Class = visualization_model_class(model=model, save_images=True,out_path=os.path.join(out_path,'Activations'))
-validation_generator = return_val_generator()
-x,y = validation_generator.__getitem__(0)
 Visualizing_Class.predict_on_tensor(x)
-Visualizing_Class.plot_activations()
+Visualizing_Class.plot_activations(y)

@@ -6,7 +6,7 @@ import plotnine as p9
 from plotnine import *
 
 
-make_excel = True
+make_excel = False
 out_path = r'\\mymdafiles\di_data1\Morfeus\bmanderson\Modular_Projects\Liver_Disease_Segmentation_Work'
 input_path = r'\\mymdafiles\di_data1\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Keras\3D_Atrous_newlrs_livernorm'
 excel_out_path = os.path.join(out_path, 'Model_Optimization.xlsx')

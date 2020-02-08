@@ -203,17 +203,52 @@ def return_dictionary(base_dict):
     }
     return dictionary
 
-def return_dictionary_new(base_dict):
+def return_dictionary_best(base_dict):
     dictionary = {
         4: [
-            base_dict(2e-7, 8e-4, 8, 16, 1),
+            base_dict(1e-6, 2e-4, 32, 32, 2),
+        ],
+        6: [
+            base_dict(2e-7, 1e-4, 32, 32, 2)
+        ],
+        7: [
+            base_dict(2e-7, 2e-4, 32, 32, 2)
+        ],
+    }
+    return dictionary
+
+
+def return_dictionary_best_4layer(base_dict):
+    dictionary = {
+        4: [
+            base_dict(1e-6, 2e-4, 32, 32, 2)
         ]
     }
     return dictionary
 
 
+def return_dictionary_best_7layer(base_dict):
+    dictionary = {
+        7: [
+            base_dict(2e-7, 2e-4, 32, 32, 2)
+        ],
+    }
+    return dictionary
+
+
+def return_dictionary_best_lr_ablate(base_dict):
+    dictionary = {
+        4: [
+            base_dict(1e-10, 1e-5, 32, 32, 2),
+            base_dict(1e-10, 6e-6, 32, 32, 2),
+            base_dict(1e-10, 1e-6, 32, 32, 2)
+        ],
+    }
+    return dictionary
+
+
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
-              step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,
+              step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
               morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, model_params=None,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
@@ -237,11 +272,11 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
 
         epoch_i = 0
         optimizer = Adam(lr=min_lr)
-        period = 5
+        wait = 5
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=True,
-                                         save_weights_only=False, period=period, mode=mode)
+                                         save_weights_only=False, period=wait, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
                                        update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
@@ -251,9 +286,9 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         #     lr.append(lrate.clr())
         #     lrate.on_batch_end(0)
         #     iteration.append(i/step_size)
-        early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=5,verbose=1,mode=mode,
-                                           max_delta=1.0,baseline=2.2,restore_best_weights=False)
-        early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
+        early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=15,verbose=1,mode=mode,
+                                           max_delta=1.0,baseline=2.2,restore_best_weights=True,wait=wait)
+        # early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
         callbacks = [early_stopping, lrate, tensorboard]
         if save_a_model:
             callbacks = [checkpoint] + callbacks
@@ -265,21 +300,23 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
             loss = categorical_crossentropy_masked()
         if balance_beta != 1.0:
             loss = balanced_cross_entropy(balance_beta)
-        model = my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
-                           pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
-        # if return_mask:
-        #     loss = weighted_categorical_crossentropy(np.load(os.path.join('.', 'new_class_weights.npy')))
-        Model_val = model.created_model
-        if mask_loss:
-            loss = model.custom_loss
-        train = True
-        if train:
+        if load_path is None:
+            model = my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
+                               pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
+            # if return_mask:
+            #     loss = weighted_categorical_crossentropy(np.load(os.path.join('.', 'new_class_weights.npy')))
+            Model_val = model.created_model
+            if mask_loss:
+                loss = model.custom_loss
             Model_val.compile(optimizer, loss=loss, metrics=['accuracy', dice_coef_3D])
-            x,y = train_generator.__getitem__(0)
-            # pred = Model_val.predict(x)
-            Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
-                                    shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
-                                    validation_data=validation_generator,steps_per_epoch=len(train_generator))
+        else:
+            print('\n\n\n\nLoading model at {}\n\n\n\n'.format(load_path))
+            Model_val = load_model(load_path, custom_objects={'dice_coef_3D': dice_coef_3D})
+        x,y = train_generator.__getitem__(0)
+        # pred = Model_val.predict(x)
+        Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
+                                shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
+                                validation_data=validation_generator,steps_per_epoch=len(train_generator))
 
 
 def train_model():
@@ -288,7 +325,7 @@ def train_model():
     mask_pred = True
     batch_norm = False
     write_images = True
-    save_a_model = False
+    save_a_model = True
     inverse_images = False
     norm_to_liver = True
     smoothing = 0.0
@@ -297,10 +334,26 @@ def train_model():
     if inverse_images:
         threshold_mask = 7
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
+    print(base_path)
+    x,y = validation_generator.__getitem__(1)
+    file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
+               r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
+               r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
+    file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/4_layers/1_atrous_blocks/2_atrous_rate/' \
+               r'1_max_atrous_blocks/32_filters/32_max_filters/mask_pred/1e-06_min_lr/0.0002_max_lr/' \
+               r'8_step_size_factor/11_num_cycles/1_Iteration/weights-improvement-best.hdf5'
+    # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
+    #            r'32_filters/32_max_filters/mask_pred/1e-10_min_lr/1e-07_max_lr/8_step_size_factor/' \
+    #            r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
+    # load_path = os.path.join(base_path,file_loc)
+    load_path = None
+    if load_path is None or not os.path.exists(load_path):
+        print('load path does not exist')
+        # return None
     pre_cycle = 0
-    gpu = 1
+    gpu = 2
     step_size_factor = 8
-    num_cycles = 5
+    num_cycles = 11
     step_size = len(train_generator)
 
     base_dict = lambda min_lr, max_lr, filters, max_filters, atrous_rate: \
@@ -321,8 +374,8 @@ def train_model():
         model_name += '_weighted'
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
-    for iteration in [0,1,2]:
-        overall_dictionary = return_dictionary(base_dict)
+    for iteration in [0, 1, 2]:
+        overall_dictionary = return_dictionary_best_4layer(base_dict)
         for layer in overall_dictionary:
             data = overall_dictionary[layer]
             for run_data in data:
@@ -333,7 +386,7 @@ def train_model():
                 run_data['Architecture']['mask_pred'] = mask_pred
                 run_data['Architecture']['mask_loss'] = mask_loss
                 things = return_things(run_data)
-                things = things[1:] + ['{}_Iteration'.format(iteration)]
+                things = things[1:] + ['mask_0.9','{}_Iteration'.format(iteration)]
                 layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
                 # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
                 train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
@@ -360,7 +413,7 @@ def train_model():
                 try:
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
                               validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
-                              paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,
+                              paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,load_path=load_path,
                               epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
                     K.clear_session()
                 except:

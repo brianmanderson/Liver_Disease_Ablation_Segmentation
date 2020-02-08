@@ -12,3 +12,5 @@ Clip and padding was adding 0's because it was multiple layers
 3D_Atrous_strided_livernorm was best, dice 0.35
 
 switched back to norming on above 50% liver
+
+Selected 4, 6, and 7 layers, atrous_rate:2, filters=32 as the best 3 for further consideration
