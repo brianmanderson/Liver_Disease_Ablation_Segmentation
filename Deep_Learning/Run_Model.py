@@ -48,7 +48,7 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
 def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
                            atrous_rate=2, **kwargs):
     activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
-    activation = 'relu'
+    # activation = 'relu'
     layers_dict = {}
     conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1),'activation':activation}}
     atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
@@ -239,9 +239,8 @@ def return_dictionary_best_7layer(base_dict):
 def return_dictionary_best_lr_ablate(base_dict):
     dictionary = {
         4: [
-            base_dict(1e-10, 1e-5, 32, 32, 2),
-            base_dict(1e-10, 6e-6, 32, 32, 2),
-            base_dict(1e-10, 1e-6, 32, 32, 2)
+            base_dict(1e-50, 1e-10, 32, 32, 2),
+            base_dict(1e-100, 1e-20, 32, 32, 2),
         ],
     }
     return dictionary
@@ -249,7 +248,8 @@ def return_dictionary_best_lr_ablate(base_dict):
 
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, model_params=None,**kwargs):
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, save_best_only=True,
+              model_params=None,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -275,7 +275,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         wait = 5
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
-        checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=True,
+        checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=save_best_only,
                                          save_weights_only=False, period=wait, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
                                        update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
@@ -289,7 +289,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=15,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=True,wait=wait)
         # early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
-        callbacks = [early_stopping, lrate, tensorboard]
+        callbacks = [lrate, tensorboard] #early_stopping, lrate,
         if save_a_model:
             callbacks = [checkpoint] + callbacks
         loss = 'categorical_crossentropy'
@@ -335,25 +335,23 @@ def train_model():
         threshold_mask = 7
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     print(base_path)
-    x,y = validation_generator.__getitem__(1)
-    file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
-               r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
-               r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
+    # x,y = validation_generator.__getitem__(1)
+    # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
+    #            r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
+    #            r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
     file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/4_layers/1_atrous_blocks/2_atrous_rate/' \
                r'1_max_atrous_blocks/32_filters/32_max_filters/mask_pred/1e-06_min_lr/0.0002_max_lr/' \
                r'8_step_size_factor/11_num_cycles/1_Iteration/weights-improvement-best.hdf5'
-    # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
-    #            r'32_filters/32_max_filters/mask_pred/1e-10_min_lr/1e-07_max_lr/8_step_size_factor/' \
-    #            r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
-    # load_path = os.path.join(base_path,file_loc)
-    load_path = None
-    if load_path is None or not os.path.exists(load_path):
-        print('load path does not exist')
-        # return None
+    load_path = os.path.join(base_path,file_loc)
+    # load_path = None
+    if load_path is not None:
+        if not os.path.exists(load_path):
+            print('load path does not exist')
+            return None
     pre_cycle = 0
     gpu = 2
     step_size_factor = 8
-    num_cycles = 11
+    num_cycles = 200
     step_size = len(train_generator)
 
     base_dict = lambda min_lr, max_lr, filters, max_filters, atrous_rate: \
@@ -374,51 +372,61 @@ def train_model():
         model_name += '_weighted'
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
-    for iteration in [0, 1, 2]:
-        overall_dictionary = return_dictionary_best_4layer(base_dict)
-        for layer in overall_dictionary:
-            data = overall_dictionary[layer]
-            for run_data in data:
-                run_data['Architecture']['model_name'] = model_name
-                run_data['Architecture']['layers'] = layer
-                run_data['Architecture']['batch_norm'] = batch_norm
-                run_data['Architecture']['mask_image'] = mask_image
-                run_data['Architecture']['mask_pred'] = mask_pred
-                run_data['Architecture']['mask_loss'] = mask_loss
-                things = return_things(run_data)
-                things = things[1:] + ['mask_0.9','{}_Iteration'.format(iteration)]
-                layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
-                # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                                                                liver_box=True, mask_image=mask_image,
-                                                                remove_liver_layer=True, threshold_value=threshold_mask)
-                # x,y = train_generator_3D.__getitem__(0)
-                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                     threshold_value=threshold_mask,
-                                                                     return_mask=mask_pred or mask_loss,liver_box=True,
-                                                                     mask_image=mask_image, remove_liver_layer=True)
-                # while True:
-                #     for i in range(5):
-                #         x,y = validation_generator_3D.__getitem__(i)
-                paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
-                paths_class.define_model_things(model_name, things)
-                tensorboard_output = paths_class.tensorboard_path_out
-                # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
-                #            batch_norm=batch_norm,
-                #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
-                #            **model_params)
-                if os.listdir(tensorboard_output):
-                    continue
-                print(tensorboard_output)
-                try:
-                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D, step_size=step_size,
-                              validation_generator=validation_generator_3D,save_a_model=save_a_model,model_params=model_params,
-                              paths_class=paths_class,morfeus_drive=morfeus_drive, base_path=base_path,load_path=load_path,
-                              epochs=epochs, weighted=weighted, write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
-                    K.clear_session()
-                except:
-                    print('failed here')
-                    K.clear_session()
+    for iteration in [0, 1]:
+        for save_best_only in [False,True]:
+            overall_dictionary = return_dictionary_best_4layer(base_dict)
+            if load_path is not None:
+                overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
+            for layer in overall_dictionary:
+                data = overall_dictionary[layer]
+                for run_data in data:
+                    run_data['Architecture']['model_name'] = model_name
+                    run_data['Architecture']['layers'] = layer
+                    run_data['Architecture']['batch_norm'] = batch_norm
+                    run_data['Architecture']['mask_image'] = mask_image
+                    run_data['Architecture']['mask_pred'] = mask_pred
+                    run_data['Architecture']['mask_loss'] = mask_loss
+                    things = return_things(run_data)
+                    things = things[1:]
+                    if save_best_only:
+                        things += ['Save_Best']
+                    else:
+                        things += ['Save_All']
+                    things += ['{}_Iteration'.format(iteration)]
+                    layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
+                    # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
+                    train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
+                                                                    liver_box=True, mask_image=mask_image,
+                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
+                    # x,y = train_generator_3D.__getitem__(0)
+                    validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                                                                         threshold_value=threshold_mask,
+                                                                         return_mask=mask_pred or mask_loss,liver_box=True,
+                                                                         mask_image=mask_image, remove_liver_layer=True)
+                    # while True:
+                    #     for i in range(5):
+                    #         x,y = validation_generator_3D.__getitem__(i)
+                    paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
+                    paths_class.define_model_things(model_name, things)
+                    tensorboard_output = paths_class.tensorboard_path_out
+                    # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
+                    #            batch_norm=batch_norm,
+                    #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
+                    #            **model_params)
+                    if os.listdir(tensorboard_output):
+                        continue
+                    print(tensorboard_output)
+                    try:
+                        run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
+                                  step_size=step_size,save_best_only=save_best_only,
+                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,
+                                  model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
+                                  base_path=base_path,load_path=load_path, epochs=epochs, weighted=weighted,
+                                  write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
+                        K.clear_session()
+                    except:
+                        print('failed here')
+                        K.clear_session()
 
 
 if __name__ == '__main__':
