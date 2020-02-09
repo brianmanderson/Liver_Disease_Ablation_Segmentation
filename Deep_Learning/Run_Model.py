@@ -239,7 +239,8 @@ def return_dictionary_best_7layer(base_dict):
 def return_dictionary_best_lr_ablate(base_dict):
     dictionary = {
         4: [
-            base_dict(1e-100, 1e-10, 32, 32, 2),
+            base_dict(1e-100, 1e-8, 32, 32, 2),
+            base_dict(1e-100, 1e-10, 32, 32, 2)
         ],
     }
     return dictionary
@@ -270,14 +271,16 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         tensorboard_output = paths_class.tensorboard_path_out
 
         epoch_i = 0
-        optimizer = Adam(lr=min_lr)
-        wait = 5
+        optimizer = Adam(learning_rate=min_lr)
+        print('Learning rate is {}'.format(min_lr))
+        wait = 1
+        period = 30
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
-                                         save_weights_only=False, period=wait, mode=mode)
+                                         save_weights_only=False, period=period, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
-                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
+                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=30, write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
         lrate = Half_Drop(base_lr=max_lr, step_size=step_size*step_size_factor//2)
         # lr = []
@@ -289,7 +292,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=15,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=True,wait=wait)
         # early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
-        callbacks = [lrate, tensorboard] #early_stopping, lrate,
+        callbacks = [tensorboard] #early_stopping, lrate,
         if save_a_model:
             callbacks = [checkpoint] + callbacks
         loss = 'categorical_crossentropy'
@@ -343,13 +346,13 @@ def train_model():
                r'1_max_atrous_blocks/32_filters/32_max_filters/mask_pred/1e-06_min_lr/0.0002_max_lr/' \
                r'8_step_size_factor/11_num_cycles/1_Iteration/weights-improvement-best.hdf5'
     load_path = os.path.join(base_path,file_loc)
-    # load_path = None
+    load_path = None
     if load_path is not None:
         if not os.path.exists(load_path):
             print('load path does not exist')
             return None
     pre_cycle = 0
-    gpu = 1
+    gpu = 3
     step_size_factor = 300
     num_cycles = 100
     step_size = len(train_generator)
