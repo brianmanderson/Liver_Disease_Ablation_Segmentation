@@ -7,7 +7,7 @@ from keras.layers.advanced_activations import PReLU
 from keras.initializers import Constant
 import tensorflow as tf
 # from tensorflow.python.keras.losses import CategoricalCrossentropy
-from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, ModelCheckpoint_new, get_available_gpus, save_obj,load_obj, \
+from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
 from keras.callbacks import EarlyStopping
 from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage
@@ -16,7 +16,7 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Clas
 from keras.optimizers import Adam
 from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new
-from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
+from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR, Half_Drop
 from Return_Train_Validation_Generators import return_generators
 from _collections import OrderedDict
 
@@ -239,8 +239,7 @@ def return_dictionary_best_7layer(base_dict):
 def return_dictionary_best_lr_ablate(base_dict):
     dictionary = {
         4: [
-            base_dict(1e-50, 1e-10, 32, 32, 2),
-            base_dict(1e-100, 1e-20, 32, 32, 2),
+            base_dict(1e-100, 1e-10, 32, 32, 2),
         ],
     }
     return dictionary
@@ -248,7 +247,7 @@ def return_dictionary_best_lr_ablate(base_dict):
 
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, save_best_only=True,
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0,
               model_params=None,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
@@ -275,11 +274,12 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         wait = 5
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
-        checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=save_best_only,
+        checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
                                          save_weights_only=False, period=wait, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
                                        update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
+        lrate = Half_Drop(base_lr=max_lr, step_size=step_size*step_size_factor//2)
         # lr = []
         # iteration = []
         # for i in range(2000):
@@ -349,9 +349,9 @@ def train_model():
             print('load path does not exist')
             return None
     pre_cycle = 0
-    gpu = 2
-    step_size_factor = 8
-    num_cycles = 200
+    gpu = 1
+    step_size_factor = 300
+    num_cycles = 100
     step_size = len(train_generator)
 
     base_dict = lambda min_lr, max_lr, filters, max_filters, atrous_rate: \
@@ -373,60 +373,61 @@ def train_model():
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
     for iteration in [0, 1]:
-        for save_best_only in [False,True]:
-            overall_dictionary = return_dictionary_best_4layer(base_dict)
-            if load_path is not None:
-                overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
-            for layer in overall_dictionary:
-                data = overall_dictionary[layer]
-                for run_data in data:
-                    run_data['Architecture']['model_name'] = model_name
-                    run_data['Architecture']['layers'] = layer
-                    run_data['Architecture']['batch_norm'] = batch_norm
-                    run_data['Architecture']['mask_image'] = mask_image
-                    run_data['Architecture']['mask_pred'] = mask_pred
-                    run_data['Architecture']['mask_loss'] = mask_loss
-                    things = return_things(run_data)
-                    things = things[1:]
-                    if save_best_only:
-                        things += ['Save_Best']
-                    else:
-                        things += ['Save_All']
-                    things += ['{}_Iteration'.format(iteration)]
-                    layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
-                    # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                    train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                                                                    liver_box=True, mask_image=mask_image,
-                                                                    remove_liver_layer=True, threshold_value=threshold_mask)
-                    # x,y = train_generator_3D.__getitem__(0)
-                    validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                         threshold_value=threshold_mask,
-                                                                         return_mask=mask_pred or mask_loss,liver_box=True,
-                                                                         mask_image=mask_image, remove_liver_layer=True)
-                    # while True:
-                    #     for i in range(5):
-                    #         x,y = validation_generator_3D.__getitem__(i)
-                    paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
-                    paths_class.define_model_things(model_name, things)
-                    tensorboard_output = paths_class.tensorboard_path_out
-                    # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
-                    #            batch_norm=batch_norm,
-                    #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
-                    #            **model_params)
-                    if os.listdir(tensorboard_output):
-                        continue
-                    print(tensorboard_output)
-                    try:
-                        run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
-                                  step_size=step_size,save_best_only=save_best_only,
-                                  validation_generator=validation_generator_3D,save_a_model=save_a_model,
-                                  model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
-                                  base_path=base_path,load_path=load_path, epochs=epochs, weighted=weighted,
-                                  write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
-                        K.clear_session()
-                    except:
-                        print('failed here')
-                        K.clear_session()
+        overall_dictionary = return_dictionary_best_4layer(base_dict)
+        if load_path is not None:
+            overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
+        for layer in overall_dictionary:
+            data = overall_dictionary[layer]
+            for run_data in data:
+                run_data['Architecture']['model_name'] = model_name
+                run_data['Architecture']['layers'] = layer
+                run_data['Architecture']['batch_norm'] = batch_norm
+                run_data['Architecture']['mask_image'] = mask_image
+                run_data['Architecture']['mask_pred'] = mask_pred
+                run_data['Architecture']['mask_loss'] = mask_loss
+                things = return_things(run_data)
+                things = things[1:]
+                things += ['{}_Iteration'.format(iteration)]
+                layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
+                # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
+                train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
+                                                                liver_box=True, mask_image=mask_image,
+                                                                remove_liver_layer=True, threshold_value=threshold_mask)
+                # x,y = train_generator_3D.__getitem__(0)
+                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                                                                     threshold_value=threshold_mask,
+                                                                     return_mask=mask_pred or mask_loss,liver_box=True,
+                                                                     mask_image=mask_image, remove_liver_layer=True)
+                # while True:
+                #     for i in range(5):
+                #         x,y = validation_generator_3D.__getitem__(i)
+                paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
+                paths_class.define_model_things(model_name, things)
+                tensorboard_output = paths_class.tensorboard_path_out
+                # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
+                #            batch_norm=batch_norm,
+                #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
+                #            **model_params)
+                if os.listdir(tensorboard_output):
+                    continue
+                print(tensorboard_output)
+                # run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
+                #           step_size=step_size,
+                #           validation_generator=validation_generator_3D, save_a_model=save_a_model,
+                #           model_params=model_params, paths_class=paths_class, morfeus_drive=morfeus_drive,
+                #           base_path=base_path, load_path=load_path, epochs=epochs, weighted=weighted,
+                #           write_images=write_images, **run_data['Architecture'], **run_data['Hyper_Parameters'])
+                try:
+                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
+                              step_size=step_size,
+                              validation_generator=validation_generator_3D,save_a_model=save_a_model,
+                              model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
+                              base_path=base_path,load_path=load_path, epochs=epochs, weighted=weighted,
+                              write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
+                    K.clear_session()
+                except:
+                    print('failed here')
+                    K.clear_session()
 
 
 if __name__ == '__main__':
