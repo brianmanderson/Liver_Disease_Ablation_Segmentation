@@ -2,18 +2,18 @@ __author__ = 'Brian M Anderson'
 # Created on 1/18/2020
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
-from keras.models import *
-from keras.layers.advanced_activations import PReLU
-from keras.initializers import Constant
+from tensorflow.keras.models import *
+from tensorflow.keras.initializers import Constant
 import tensorflow as tf
 # from tensorflow.python.keras.losses import CategoricalCrossentropy
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
-from keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping
+import tensorflow.keras.backend as K
 from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, SGD
 from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR, Half_Drop
@@ -23,7 +23,7 @@ from _collections import OrderedDict
 
 def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
                     atrous_rate=1, max_atrous_rate=2, **kwargs):
-    activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
+    # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
     activation = 'relu'
     layers_dict = {}
     conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (1, 1, 1),'activation':activation}}
@@ -47,8 +47,8 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
 
 def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
                            atrous_rate=2, **kwargs):
-    activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
-    # activation = 'relu'
+    # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
+    activation = 'relu'
     layers_dict = {}
     conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1),'activation':activation}}
     atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
@@ -221,8 +221,8 @@ def return_dictionary_best(base_dict):
 def return_dictionary_best_4layer(base_dict):
     dictionary = {
         4: [
-            # base_dict(1e-6, 2e-4, 32, 32, 2)
-            base_dict(1e-3, 0, 32, 32, 2)
+            base_dict(1.01e-6, 2e-4, 32, 32, 2)
+            # base_dict(1e-3, 0, 32, 32, 2)
         ]
     }
     return dictionary
@@ -240,7 +240,7 @@ def return_dictionary_best_7layer(base_dict):
 def return_dictionary_best_lr_ablate(base_dict):
     dictionary = {
         4: [
-            base_dict(7e-6, 7e-6, 32, 32, 2)
+            base_dict(7e-6, 0, 32, 32, 2)
         ],
     }
     return dictionary
@@ -249,7 +249,7 @@ def return_dictionary_best_lr_ablate(base_dict):
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
               morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0,
-              model_params=None,skip_cyclic_lr=False, **kwargs):
+              model_params=None,skip_cyclic_lr=False, opt_name='Adam',**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -271,7 +271,10 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         tensorboard_output = paths_class.tensorboard_path_out
 
         epoch_i = 0
-        optimizer = Adam(lr=min_lr)
+        if opt_name == 'Adam':
+            optimizer = Adam(lr=min_lr)
+        else:
+            optimizer = SGD(lr=min_lr, momentum=0.9)
         print('Learning rate is {}'.format(min_lr))
         wait = 1
         period = 5
@@ -282,8 +285,10 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
                                        update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
         if not skip_cyclic_lr:
-            lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2', pre_cycle=pre_cycle)
-            # lrate = Half_Drop(base_lr=min_lr, step_size=step_size*step_size_factor//2)
+            lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size * step_size_factor, mode='triangular2',
+                             pre_cycle=pre_cycle, base_reduce_factor=2)
+        else:
+            lrate = Half_Drop(base_lr=min_lr, step_epoch=step_size_factor)
         # lr = []
         # iteration = []
         # for i in range(2000):
@@ -318,8 +323,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
             print('\n\n\n\nLoading model at {}\n\n\n\n'.format(load_path))
             Model_val = load_model(load_path, custom_objects={'dice_coef_3D': dice_coef_3D})
         Model_val.compile(optimizer, loss=loss, metrics=['accuracy', dice_coef_3D])
-        K.set_value(Model_val.optimizer.lr, min_lr)
-        x,y = train_generator.__getitem__(0)
+        # K.set_value(Model_val.optimizer.lr, min_lr)
+        # x,y = train_generator.__getitem__(0)
         # pred = Model_val.predict(x)
         Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
                                 shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
@@ -328,6 +333,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
 
 def train_model():
     mask_image = False
+    half_lr = False
     mask_loss = False
     mask_pred = True
     batch_norm = False
@@ -343,23 +349,28 @@ def train_model():
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     print(base_path)
     skip_cyclic_lr = True
+    if skip_cyclic_lr:
+        half_lr = True
     # x,y = validation_generator.__getitem__(1)
     # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
     #            r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
     #            r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
-    file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/4_layers/1_atrous_blocks/2_atrous_rate/' \
-               r'1_max_atrous_blocks/32_filters/32_max_filters/mask_pred/1e-06_min_lr/0.0002_max_lr/' \
-               r'8_step_size_factor/11_num_cycles/1_Iteration/weights-improvement-best.hdf5'
+    file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/4_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
+               r'32_filters/32_max_filters/mask_pred/Adam_opt_name/1.01e-06_min_lr/0.0002_max_lr/8_step_size_factor/' \
+               r'100_num_cycles/0_Iteration/weights-improvement-best.hdf5'
     load_path = os.path.join(base_path,file_loc)
-    load_previous_iteration = False
+    # load_path = None
     if load_path is not None:
         load_previous_iteration = True
         if not os.path.exists(load_path):
             print('load path does not exist')
             return None
+    else:
+        load_previous_iteration = False
     pre_cycle = 0
+    opt_name = 'Adam'
     gpu = 1
-    step_size_factor = 300
+    step_size_factor = 50
     num_cycles = 100
     step_size = len(train_generator)
 
@@ -367,7 +378,7 @@ def train_model():
         OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 1,'atrous_rate':atrous_rate, 'max_atrous_blocks':1,
                                      'filters':filters, 'max_filters':max_filters,'layers_conv_blocks': 0,
                                      'conv_blocks': 0},
-                     'Hyper_Parameters':{'restart_training':load_previous_iteration,'skip_cyclic_lr':skip_cyclic_lr,'min_lr':min_lr,'max_lr':max_lr,'step_size_factor': step_size_factor,
+                     'Hyper_Parameters':{'opt_name':opt_name,'restart_training':load_previous_iteration,'skip_cyclic_lr':skip_cyclic_lr,'Half_LR':half_lr,'min_lr':min_lr,'max_lr':max_lr,'step_size_factor': step_size_factor,
                                          'num_cycles': num_cycles, 'pre_cycle': pre_cycle}
                      })
     epochs = step_size_factor * 2 * num_cycles
@@ -381,7 +392,7 @@ def train_model():
         model_name += '_weighted'
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
-    for iteration in [0, 1]:
+    for iteration in [0]:
         overall_dictionary = return_dictionary_best_4layer(base_dict)
         if load_path is not None:
             overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
@@ -407,6 +418,16 @@ def train_model():
                                                                      threshold_value=threshold_mask,
                                                                      return_mask=mask_pred or mask_loss,liver_box=True,
                                                                      mask_image=mask_image, remove_liver_layer=True)
+                # size_vals = 0
+                # for i in range(len(train_generator_3D)):
+                #     print(i)
+                #     x,y = train_generator_3D.__getitem__(i)
+                #     print(x[0].shape)
+                #     size_ = np.prod(x[0].shape)
+                #     if size_ > size_vals:
+                #         size_vals = size_
+                #         print(size_)
+                # return None
                 # while True:
                 #     for i in range(5):
                 #         x,y = validation_generator_3D.__getitem__(i)
