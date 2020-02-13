@@ -2,17 +2,17 @@ __author__ = 'Brian M Anderson'
 # Created on 1/18/2020
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
-from tensorflow.keras.models import *
-from tensorflow.keras.initializers import Constant
+from tensorflow.python.keras.models import *
+from tensorflow.python.keras.initializers import Constant
 import tensorflow as tf
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
-from tensorflow.keras.callbacks import EarlyStopping
-import tensorflow.keras.backend as K
+from tensorflow.python.keras.callbacks import EarlyStopping
+import tensorflow.python.keras.backend as K
 from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.python.keras.optimizers import Adam, SGD
 from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR, Half_Drop
@@ -248,7 +248,7 @@ def return_dictionary_best_lr_ablate(base_dict):
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
               morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0,
-              model_params=None,skip_cyclic_lr=False, opt_name='Adam',**kwargs):
+              model_params=None,skip_cyclic_lr=False, opt_name='Adam',scale_mode='linear_cycle',step_size_add=0,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     G = get_available_gpus()
@@ -281,13 +281,12 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
                                          save_weights_only=False, period=period, mode=mode)
-        tensorboard = TensorBoardImage(log_dir=tensorboard_output, batch_size=1, write_graph=True, write_grads=False,num_images=3,
-                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=3, write_images=write_images)
-        if not skip_cyclic_lr:
-            lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor, mode='triangular2',
-                             pre_cycle=pre_cycle, base_reduce_factor=2)
-        else:
-            lrate = Half_Drop(base_lr=min_lr, step_epoch=step_size_factor)
+        tensorboard = TensorBoardImage(log_dir=tensorboard_output, write_graph=True, write_grads=False,num_images=3,
+                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=3,
+                                       write_images=write_images)
+        lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor, mode='triangular2',
+                         pre_cycle=pre_cycle, base_reduce_factor=2, scale_mode=scale_mode,
+                         step_size_factor_scale=lambda x: x + step_size_add)
         # lr = []
         # iteration = []
         # for i in range(2000):
@@ -297,7 +296,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=15,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=True,wait=wait)
         # early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
-        callbacks = [tensorboard, Add_LR_To_Tensorboard()] #early_stopping, lrate,
+        callbacks = [tensorboard] #early_stopping, lrate,
         if not skip_cyclic_lr:
             callbacks += [lrate]
         if save_a_model:
@@ -332,7 +331,6 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
 
 def train_model():
     mask_image = False
-    half_lr = False
     mask_loss = False
     mask_pred = True
     batch_norm = False
@@ -345,9 +343,6 @@ def train_model():
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
     print(base_path)
     x,y = train_generator.__getitem__(0)
-    skip_cyclic_lr = False
-    if skip_cyclic_lr:
-        half_lr = True
     # x,y = validation_generator.__getitem__(1)
     # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
     #            r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
@@ -364,22 +359,20 @@ def train_model():
             return None
     else:
         load_previous_iteration = False
-    pre_cycle = 0
     opt_name = 'Adam'
-    gpu = 2
+    gpu = 3
     step_size_factor = 8
-    num_cycles = 100
+    num_cycles = 14
     step_size = len(train_generator)
-
+    scale_mode = 'linear_cycle'
+    step_size_add = 2
     base_dict = lambda min_lr, max_lr, filters, max_filters, atrous_rate: \
         OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 1,'atrous_rate':atrous_rate, 'max_atrous_blocks':1,
                                      'filters':filters, 'max_filters':max_filters,'layers_conv_blocks': 0,
                                      'conv_blocks': 0},
                      'Hyper_Parameters':{'opt_name':opt_name,'restart_training':load_previous_iteration,
-                                         'threshold_to_0':True,
-                                         'skip_cyclic_lr':skip_cyclic_lr,'Half_LR':half_lr,'min_lr':min_lr,
-                                         'max_lr':max_lr,'step_size_factor': step_size_factor,
-                                         'num_cycles': num_cycles, 'pre_cycle': pre_cycle}
+                                         'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
+                                         'max_lr':max_lr,'step_size_factor': step_size_factor, 'step_size_add':step_size_add}
                      })
     epochs = step_size_factor * 2 * num_cycles
     model_params = {'activation':'relu', 'concat_not_add':False}
@@ -392,7 +385,7 @@ def train_model():
         model_name += '_weighted'
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
-    for iteration in [0,1,2]:
+    for iteration in [0, 1, 2]:
         overall_dictionary = return_dictionary_best_4layer(base_dict)
         if load_path is not None:
             overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
@@ -406,7 +399,6 @@ def train_model():
                 run_data['Architecture']['mask_pred'] = mask_pred
                 run_data['Architecture']['mask_loss'] = mask_loss
                 things = return_things(run_data)
-                things = things[1:]
                 things += ['{}_Iteration'.format(iteration)]
                 layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
                 # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
@@ -441,12 +433,6 @@ def train_model():
                 if os.listdir(tensorboard_output):
                     continue
                 print(tensorboard_output)
-                # run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
-                #           step_size=step_size,
-                #           validation_generator=validation_generator_3D, save_a_model=save_a_model,
-                #           model_params=model_params, paths_class=paths_class, morfeus_drive=morfeus_drive,
-                #           base_path=base_path, load_path=load_path, epochs=epochs, weighted=weighted,
-                #           write_images=write_images, **run_data['Architecture'], **run_data['Hyper_Parameters'])
                 try:
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
                               step_size=step_size,

@@ -3,6 +3,7 @@ __author__ = 'Brian M Anderson'
 
 from Base_Deeplearning_Code.Data_Generators.Generators import Data_Generator_Class
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
+from Base_Deeplearning_Code.Data_Generators.Return_Paths import find_base_dir
 
 
 def return_generators(get_mean_std=False, get_size=False, inverse_images=False, liver_norm=False):
@@ -11,7 +12,7 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
         base_path = os.path.join(base,r'Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data')
         os.listdir(base_path)
     except:
-        base = os.path.join('..', '..', '..', '..', '..', '..', '..')
+        base = find_base_dir()
         base_path = os.path.join(base, 'Liver_GTV_Ablation')
     morfeus_drive = os.path.abspath(os.path.join(base,'Morfeus','BMAnderson','Modular_Projects','Liver_Disease_Ablation_Segmentation_Work'))
     paths = [os.path.join(base_path, 'Train', 'Single_Images3D')]

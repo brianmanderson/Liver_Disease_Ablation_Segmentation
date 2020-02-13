@@ -1,9 +1,8 @@
-import os, sys
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
-from keras.models import *
+import tensorflow.python.keras.backend as K
 import tensorflow as tf
-from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D_np, ModelCheckpoint_new, get_available_gpus, save_obj,load_obj, \
+from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D_np, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, weighted_categorical_crossentropy_masked, dice_coef_3D, np
 from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
@@ -28,7 +27,7 @@ def run_model(gpu=1,layers_dict=None, out_path='', train_generator=None, get_wei
     with tf.device('/gpu:' + str(gpu)):
         gpu_options = tf.GPUOptions(allow_growth=True)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-        K.set_session(sess)
+        tf.compat.v1.keras.backend.set_session(sess)
         loss = 'categorical_crossentropy'
         if weighted:
             loss = weighted_categorical_crossentropy(np.asarray([1,500])) #categorical_crossentropy
