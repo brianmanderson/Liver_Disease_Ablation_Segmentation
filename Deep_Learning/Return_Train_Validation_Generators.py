@@ -4,22 +4,16 @@ __author__ = 'Brian M Anderson'
 from Base_Deeplearning_Code.Data_Generators.Generators import Data_Generator_Class
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import find_base_dir
+from Return_Morfeus_Base_Paths import return_paths
 
 
 def return_generators(get_mean_std=False, get_size=False, inverse_images=False, liver_norm=False, patches=False,
-                      batch_size=None):
-    try:
-        base = r'\\mymdafiles\di_data1'
-        base_path = os.path.join(base,r'Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data')
-        os.listdir(base_path)
-    except:
-        base = find_base_dir()
-        base_path = os.path.join(base, 'Liver_GTV_Ablation')
-    morfeus_drive = os.path.abspath(os.path.join(base,'Morfeus','BMAnderson','Modular_Projects','Liver_Disease_Ablation_Segmentation_Work'))
-    paths = [os.path.join(base_path, 'Train', 'Single_Images3D')]
-    paths_validation_generator = [os.path.join(base_path, 'Validation', 'Single_Images3D')]
-    paths = [os.path.join(base_path, 'Train', 'Single_Images3D_new')]
-    paths_validation_generator = [os.path.join(base_path, 'Validation', 'Single_Images3D_new')]
+                      batch_size=None, path_extension='Single_Images3D', max_batch_size=np.inf):
+    base_path, morfeus_drive = return_paths()
+    if not os.path.exists(base_path):
+        print('{} does not exist'.format(base_path))
+    paths = [os.path.join(base_path, 'Train', path_extension)]
+    paths_validation_generator = [os.path.join(base_path, 'Validation', path_extension)]
     num_classes = 3
     mean_val = 67
     std_val = 36
@@ -32,7 +26,7 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
         std_val = 1
         lower_bound = -np.inf
         upper_bound = np.inf
-    if liver_norm and batch_size is None:
+    if liver_norm:
         normalize = Normalize_to_Liver(0.5, upper=True)
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
@@ -52,9 +46,9 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
     if batch_size is None:
         whole_patient = True
     train_generator = Data_Generator_Class(by_patient=True,num_patients=image_num, whole_patient=whole_patient, shuffle=True,
-                                           data_paths=paths, expansion=expansion,batch_size=batch_size,
+                                           data_paths=paths, expansion=expansion,batch_size=batch_size,max_batch_size=max_batch_size,
                                            image_processors=image_processors_train)
-    train_generator.wanted_indexes=[2]
+    train_generator.wanted_indexes = [2]
     if patches:
         image_processors_train = [Normalize_Images(mean_val=mean_val, std_val=std_val),
                                   Ensure_Image_Proportions(512, 512),
@@ -67,7 +61,6 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
         train_generator = Data_Generator_Class(by_patient=True,num_patients=10, whole_patient=False, shuffle=True,
                                                data_paths=paths, expansion=expansion,batch_size=15,
                                                image_processors=image_processors_train)
-    # x,y = train_generator.__getitem__(0)
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=image_num, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, expansion=expansion,
                                                 image_processors=image_processors_test)
@@ -114,5 +107,5 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
 
 
 if __name__ == '__main__':
-    # return_generators(False, liver_norm=True)
+    return_generators(False, liver_norm=True, path_extension='Single_Images3D_1mm')
     pass

@@ -69,7 +69,7 @@ def return_things(run_data):
     for top_key in ['Hyper_Parameters']:
         model_info = run_data[top_key]
         for key in model_info:
-            if model_info[key] is not 0 and model_info[key] is not False:
+            if model_info[key] is not 0 and model_info[key] is not False and model_info[key] is not None:
                 if model_info[key] is True:
                     things.append('{}'.format(key))
                 else:
@@ -341,10 +341,14 @@ def train_model():
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
-    batch_size = 30
+    batch_size = None
+    path_extension = 'Single_Images3D_1mm'
+    max_batch_size = 100
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
                                                                                         liver_norm=norm_to_liver,
-                                                                                        batch_size=batch_size)
+                                                                                        batch_size=batch_size,
+                                                                                        max_batch_size=max_batch_size,
+                                                                                        path_extension=path_extension)
     print(base_path)
     x,y = train_generator.__getitem__(0)
     # x,y = validation_generator.__getitem__(1)
@@ -366,7 +370,7 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 3
+    gpu = 5
     step_size_factor = 15
     num_cycles = 50
     step_size = len(train_generator)
@@ -378,7 +382,7 @@ def train_model():
                                      'conv_blocks': 0},
                      'Hyper_Parameters':{'opt_name':opt_name,
                                          'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
-                                         'max_lr':max_lr,'Random_Box':batch_size,'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
+                                         'max_lr':max_lr,'Path_Ext':path_extension,'Max_Batch':max_batch_size,'Random_Box':batch_size,'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
                                          'restart_training':load_previous_iteration}
                      })
     epochs = step_size_factor

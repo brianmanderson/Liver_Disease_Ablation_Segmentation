@@ -1,7 +1,9 @@
+import tensorflow as tf
+# tf.compat.v1.enable_eager_execution()
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
+from tensorflow.python.keras.callbacks import TensorBoard
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 import tensorflow.python.keras.backend as K
-import tensorflow as tf
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D_np, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, weighted_categorical_crossentropy_masked, dice_coef_3D, np
 from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
@@ -34,37 +36,50 @@ def run_model(gpu=1,layers_dict=None, out_path='', train_generator=None, get_wei
         Model_class = my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
                                  activation='elu', pool_type='Max',out_classes=2, mask_loss=False,mask_output=mask_pred)
         Model_val = Model_class.created_model
-
+        # k = TensorBoard(out_path)
+        # k.set_model(Model_val)
         LearningRateFinder(epochs=10, model=Model_val, metrics=['accuracy'],out_path=out_path,loss=loss,
                            train_generator=train_generator, lower_lr=1e-7, high_lr=1e-2)
         K.clear_session()
 
 
-def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_conv_blocks=None, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf, **kwargs):
-    atrous_rate = 2
+def get_layers_dict(layers=1, filters=16, conv_layers = 1, num_conv_blocks=1, num_atrous_blocks=4, max_conv_blocks=3,
+                    max_atrous_blocks=None, max_filters=np.inf,
+                    atrous_rate=2, max_atrous_rate=None, **kwargs):
+    # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
+    if max_atrous_blocks is None:
+        max_atrous_blocks = num_atrous_blocks
+    if max_atrous_rate is None:
+        max_atrous_rate = atrous_rate
+    activation = 'elu'
     layers_dict = {}
-    pool = (4, 4, 4)
-    for layer in range(conv_blocks):
-        conv_block = {'Channels': [filters]}
-        if num_conv_blocks is not None:
-            conv_blocks_total = [conv_block for _ in range(num_conv_blocks)]
-        else:
-            conv_blocks_total = [conv_block]
-        layers_dict['Layer_' + str(layer)] = {'Encoding':conv_blocks_total,'Pooling':pool,'Decoding':conv_blocks_total}
-        pool = (2, 2, 2)
+    conv_block = lambda x, y: {'convolution': {'channels': x, 'kernel': y, 'strides': (1, 1, 1),'activation':activation}}
+    strided_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (2, 2, 2), 'activation':activation}}
+    atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
+    previous_filters = [1]
+    for layer in range(conv_layers):
+        encoding = decoding = [conv_block(filters, (3, 3, 3)) for _ in range(num_conv_blocks)]
+        num_conv_blocks = min([num_conv_blocks + 1, max_conv_blocks])
         if filters < max_filters:
             filters = int(filters*2)
-    pool = (2, 2, 2)
-    for layer in range(conv_blocks,layers-1):
-        atrous_block = {'Channels': [filters], 'Atrous_block': [atrous_rate], 'Kernel': [(3, 3, 3)]}
-        layers_dict['Layer_' + str(layer)] = {'Encoding': [atrous_block for _ in range(num_atrous_blocks)], 'Pooling': pool,
-                                              'Decoding': [atrous_block for _ in range(num_atrous_blocks)]}
+        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding,
+                                              'Pooling':{'Encoding':[strided_block(filters)],'Pool_Size':(2,2,2)},
+                                              'Decoding': decoding}
+        previous_filters.append(filters)
+    for layer in range(conv_layers,layers-1):
+        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
+        if previous_filters[layer] != filters:
+            encoding = [conv_block(filters, (1, 1, 1))] + encoding
+        previous_filters.append(filters)
+        atrous_block_dec = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]
+        atrous_rate = min([atrous_rate + 1, max_atrous_rate])
         if filters < max_filters:
             filters = int(filters*2)
-        num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
-    num_atrous_blocks = min([(num_atrous_blocks) * 2, max_blocks])
-    atrous_block = {'Channels': [filters], 'Atrous_block': [atrous_rate],'Kernel': [(3, 3, 3)]}
-    layers_dict['Base'] = {'Encoding':[atrous_block for _ in range(num_atrous_blocks)]}
+        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding,
+                                              'Pooling':{'Encoding':[strided_block(filters)],'Pool_Size':(2,2,2)},
+                                              'Decoding': atrous_block_dec}
+        num_atrous_blocks = min([num_atrous_blocks + 1,max_atrous_blocks])
+    layers_dict['Base'] = {'Encoding':[atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]}
     return layers_dict
 
 
@@ -140,7 +155,7 @@ def return_dictionary(base_dict):
 
 def return_things(run_data):
     things = []
-    for top_key in ['Architecture']:
+    for top_key in ['Architecture','Hyper_Parameters']:
         model_info = run_data[top_key]
         for key in model_info:
             if model_info[key] is not 0 and model_info[key] is not False:
@@ -154,45 +169,55 @@ def return_things(run_data):
 def main():
     threshold_mask = -7
     inverse_images = False
-    norm_to_liver = True
+    norm_to_liver = False
     if inverse_images:
         threshold_mask = 7
-    _, _, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
+    path_extension = 'Single_Images3D_1mm'
+    max_batch_size = 80
+    _, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,max_batch_size=max_batch_size,
+                                                                                liver_norm=norm_to_liver, path_extension=path_extension)
     x,y = train_generator.__getitem__(0)
     get_weights = False
-    gpu = 2
+    gpu = 6
     mask_image = False
     mask_pred = True
     batch_norm = False
-    mask_loss = False
-    base_dict = lambda min_lr, max_lr, filters, max_filters: \
-        OrderedDict({'Architecture':{'layers': 0,'atrous_blocks': 1,'atrous_rate':1, 'max_atrous_blocks':1,
-                                     'filters':filters, 'max_filters':max_filters,'layers_conv_blocks': 0,
-                                     'conv_blocks': 0}
+    base_dict = lambda layers, conv_layers, num_atrous_blocks, atrous_rate, filters, max_filters: \
+        OrderedDict({
+            'Architecture':{'layers': layers,'conv_layers':conv_layers,'num_conv_blocks':0,
+                                     'num_atrous_blocks': num_atrous_blocks,'atrous_rate':atrous_rate,
+                                     'filters':filters, 'max_filters':max_filters},
+            'Hyper_Parameters':{'Path_Ext':path_extension}
                      })
-    for atrous_rate in [1, 2, 3, 4, 5]:
-        overall_dictionary = return_dictionary(base_dict)
-        for layer in overall_dictionary:
-            data = overall_dictionary[layer]
-            for run_data in data:
-                run_data['Architecture']['atrous_rate'] = atrous_rate
-                run_data['Architecture']['layers'] = layer
-                layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
-                for iteration in [1,2,3]:
-                    things = return_things(run_data)
-                    out_path = os.path.join('..','..','Learning_Rates_Liver_Disease','All_Atrous')
-                    for thing in things:
-                        out_path = os.path.join(out_path,thing)
-                    out_path = os.path.join(out_path,'{}_Iteration'.format(iteration))
-                    if os.path.exists(out_path):
-                        continue
-                    print(out_path)
-                    os.makedirs(out_path)
-                    run_model(gpu=gpu, layers_dict=layers_dict, out_path=out_path, train_generator=train_generator,
-                              get_weights=get_weights,batch_norm=batch_norm,
-                              mask_image=mask_image, mask_pred=mask_pred, threshold_mask=threshold_mask)
-                    if get_weights:
-                        return None
+
+    for layer in [3, 4, 5]:
+        for conv_layers in [0]:
+            for num_atrous_blocks in [1, 2, 3]:
+                for atrous_rate in [1, 2, 3]:
+                    for filters in [16, 32]:
+                        for max_filters in [32, 64, 128]:
+                            for iteration in [0, 1, 2]:
+                                run_data = base_dict(layer, conv_layers, num_atrous_blocks, atrous_rate, filters,
+                                                     max_filters)
+                                layers_dict = get_layers_dict(max_atrous_blocks=2,max_atrous_rate=2,**run_data['Architecture'])
+                                things = return_things(run_data)
+                                things.append('{}_Iteration'.format(iteration))
+                                out_path = os.path.join(morfeus_drive, 'Learning_Rates_Disease')
+                                for thing in things:
+                                    out_path = os.path.join(out_path, thing)
+                                print(out_path)
+                                if os.path.exists(out_path):
+                                    continue
+                                os.makedirs(out_path)
+                                try:
+                                    run_model(gpu=gpu, layers_dict=layers_dict, out_path=out_path,
+                                              train_generator=train_generator,
+                                              get_weights=get_weights, batch_norm=batch_norm, mask_image=mask_image,
+                                              mask_pred=mask_pred)
+                                except:
+                                    print('failed here')
+                                    K.clear_session()
+
 
 
 if __name__ == '__main__':
