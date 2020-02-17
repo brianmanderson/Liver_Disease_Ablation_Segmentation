@@ -21,9 +21,9 @@ from _collections import OrderedDict
 
 
 def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
-                    atrous_rate=1, max_atrous_rate=2, **kwargs):
+                    atrous_rate=2, max_atrous_rate=2, **kwargs):
     # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
-    activation = 'relu'
+    activation = 'elu'
     layers_dict = {}
     conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (1, 1, 1),'activation':activation}}
     strided_block = lambda x: {'convolution': {'channels': x, 'kernel': (3, 3, 3), 'strides': (2, 2, 2), 'activation':activation}}
@@ -239,23 +239,25 @@ def return_dictionary_best_7layer(base_dict):
 def return_dictionary_best_lr_ablate(base_dict):
     dictionary = {
         4: [
-            base_dict(7e-6, 0, 32, 32, 2)
-        ],
+            base_dict(1e-12, 2e-7, 32, 32, 2),
+            base_dict(1e-12, 1e-7, 32, 32, 2),
+            base_dict(1e-12, 2e-8, 32, 32, 2)
+        ]
     }
     return dictionary
 
 
 def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0,
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, epoch_i = 0,
               model_params=None,skip_cyclic_lr=False, opt_name='Adam',scale_mode='linear_cycle',step_size_add=0,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
-    G = get_available_gpus()
-    if len(G) == 1:
-        gpu = 0
+    # G = get_available_gpus()
+    # if len(G) == 1:
+    #     gpu = 0
     with tf.device('/gpu:' + str(gpu)):
-        gpu_options = tf.GPUOptions(allow_growth=True)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=.9, allow_growth=True) # maybe should just allocate whole gpu..
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         tf.compat.v1.keras.backend.set_session(sess)
         if not os.path.exists(morfeus_drive):
@@ -269,7 +271,6 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         model_path_out = paths_class.model_path_out
         tensorboard_output = paths_class.tensorboard_path_out
 
-        epoch_i = 0
         if opt_name == 'Adam':
             optimizer = Adam(lr=min_lr)
         else:
@@ -340,17 +341,21 @@ def train_model():
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images, liver_norm=norm_to_liver)
+    batch_size = 30
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
+                                                                                        liver_norm=norm_to_liver,
+                                                                                        batch_size=batch_size)
     print(base_path)
     x,y = train_generator.__getitem__(0)
     # x,y = validation_generator.__getitem__(1)
     # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
     #            r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
     #            r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
-    file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/4_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
-               r'32_filters/32_max_filters/mask_pred/Adam_opt_name/1.01e-06_min_lr/0.0002_max_lr/8_step_size_factor/' \
-               r'100_num_cycles/0_Iteration/weights-improvement-best.hdf5'
-    load_path = os.path.join(base_path,file_loc)
+    file_loc = r'Keras/3D_Atrous_new_livernorm/Models/Default_Architecture/Adam_opt_name/threshold_to_0/' \
+               r'linear_cycle_scale_mode/1e-06_min_lr/0.0002_max_lr/15_step_size_factor/3_step_size_add/1_Iteration/' \
+               r'weights-improvement-best.hdf5'
+    # load_path = os.path.join(base_path,file_loc)
+    epoch_i = 0
     load_path = None
     if load_path is not None:
         load_previous_iteration = True
@@ -358,23 +363,28 @@ def train_model():
             print('load path does not exist')
             return None
     else:
+        epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
     gpu = 3
-    step_size_factor = 8
-    num_cycles = 14
+    step_size_factor = 15
+    num_cycles = 50
     step_size = len(train_generator)
     scale_mode = 'linear_cycle'
-    step_size_add = 2
+    step_size_add = 3
     base_dict = lambda min_lr, max_lr, filters, max_filters, atrous_rate: \
         OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 1,'atrous_rate':atrous_rate, 'max_atrous_blocks':1,
                                      'filters':filters, 'max_filters':max_filters,'layers_conv_blocks': 0,
                                      'conv_blocks': 0},
-                     'Hyper_Parameters':{'opt_name':opt_name,'restart_training':load_previous_iteration,
+                     'Hyper_Parameters':{'opt_name':opt_name,
                                          'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
-                                         'max_lr':max_lr,'step_size_factor': step_size_factor, 'step_size_add':step_size_add}
+                                         'max_lr':max_lr,'Random_Box':batch_size,'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
+                                         'restart_training':load_previous_iteration}
                      })
-    epochs = step_size_factor * 2 * num_cycles
+    epochs = step_size_factor
+    for _ in range(1,num_cycles):
+        epochs += step_size_add + (step_size_factor * 2)
+    epochs = epochs + epoch_i
     model_params = {'activation':'relu', 'concat_not_add':False}
     model_name = '3D_Atrous_new'  # change this
     if norm_to_liver:
@@ -405,7 +415,8 @@ def train_model():
                 train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
                                                                 liver_box=True, mask_image=mask_image,
                                                                 remove_liver_layer=True, threshold_value=0)
-                # x,y = train_generator_3D.__getitem__(0)
+                xx, yy = train_generator.__getitem__(0)
+                x,y = train_generator_3D.__getitem__(0)
                 validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
                                                                      threshold_value=0,
                                                                      return_mask=mask_pred or mask_loss,liver_box=True,
@@ -430,12 +441,13 @@ def train_model():
                 #            batch_norm=batch_norm,
                 #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
                 #            **model_params)
-                if os.listdir(tensorboard_output):
-                    continue
                 print(tensorboard_output)
+                if os.listdir(tensorboard_output):
+                    print('already done')
+                    continue
                 try:
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
-                              step_size=step_size,
+                              step_size=step_size,epoch_i=epoch_i,
                               validation_generator=validation_generator_3D,save_a_model=save_a_model,
                               model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
                               base_path=base_path,load_path=load_path, epochs=epochs, weighted=weighted,

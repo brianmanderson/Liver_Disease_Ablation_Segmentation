@@ -10,3 +10,6 @@
 [submodule "Pre_Processing/Dicom_RT_and_Images_to_Mask"]
 	path = Pre_Processing/Dicom_RT_and_Images_to_Mask
 	url = https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask.git
+[submodule "Pre_Processing/Nifti_To_Dicom"]
+	path = Pre_Processing/Nifti_To_Dicom
+	url = https://github.com/brianmanderson/Nifti_To_Dicom.git
