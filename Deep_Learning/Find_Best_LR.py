@@ -1,7 +1,5 @@
 import tensorflow as tf
-# tf.compat.v1.enable_eager_execution()
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
-from tensorflow.python.keras.callbacks import TensorBoard
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 import tensorflow.python.keras.backend as K
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D_np, get_available_gpus, save_obj,load_obj, \
@@ -173,12 +171,12 @@ def main():
     if inverse_images:
         threshold_mask = 7
     path_extension = 'Single_Images3D_1mm'
-    max_batch_size = 80
+    max_batch_size = 40
     _, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,max_batch_size=max_batch_size,
                                                                                 liver_norm=norm_to_liver, path_extension=path_extension)
     x,y = train_generator.__getitem__(0)
     get_weights = False
-    gpu = 6
+    gpu = 1
     mask_image = False
     mask_pred = True
     batch_norm = False
@@ -192,10 +190,10 @@ def main():
 
     for layer in [3, 4, 5]:
         for conv_layers in [0]:
-            for num_atrous_blocks in [1, 2, 3]:
-                for atrous_rate in [1, 2, 3]:
+            for num_atrous_blocks in [1, 2]:
+                for atrous_rate in [1, 2]:
                     for filters in [16, 32]:
-                        for max_filters in [32, 64, 128]:
+                        for max_filters in [32, 64]:
                             for iteration in [0, 1, 2]:
                                 run_data = base_dict(layer, conv_layers, num_atrous_blocks, atrous_rate, filters,
                                                      max_filters)

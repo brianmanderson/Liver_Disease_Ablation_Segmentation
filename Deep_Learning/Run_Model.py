@@ -270,7 +270,6 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
 
         model_path_out = paths_class.model_path_out
         tensorboard_output = paths_class.tensorboard_path_out
-
         if opt_name == 'Adam':
             optimizer = Adam(lr=min_lr)
         else:
@@ -297,7 +296,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=15,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=True,wait=wait)
         # early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
-        callbacks = [tensorboard] #early_stopping, lrate,
+        callbacks = [Add_LR_To_Tensorboard(), tensorboard] #early_stopping, lrate,
         if not skip_cyclic_lr:
             callbacks += [lrate]
         if save_a_model:
@@ -342,8 +341,8 @@ def train_model():
     smoothing = 0.0
     weighted = False
     batch_size = None
-    path_extension = 'Single_Images3D_1mm'
-    max_batch_size = 100
+    path_extension = 'Single_Images3D_3mm'
+    max_batch_size = 40
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
                                                                                         liver_norm=norm_to_liver,
                                                                                         batch_size=batch_size,
@@ -370,8 +369,8 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 5
-    step_size_factor = 15
+    gpu = 4
+    step_size_factor = 20
     num_cycles = 50
     step_size = len(train_generator)
     scale_mode = 'linear_cycle'

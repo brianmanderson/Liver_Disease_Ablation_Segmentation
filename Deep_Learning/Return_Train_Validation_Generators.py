@@ -31,10 +31,11 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
+                              Annotations_To_Categorical(num_of_classes=num_classes),
+                              Pull_Cube_From_Image(desired_size=(40, 100, 100), samples=2),
                               Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.1, step=0.01)),
                               Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
-                                               inverse_image=inverse_images, floor=0),
-                              Annotations_To_Categorical(num_of_classes=num_classes)
+                                               inverse_image=inverse_images, floor=0)
                               ]
     image_processors_test = [normalize,
                              Ensure_Image_Proportions(512, 512),
@@ -64,7 +65,8 @@ def return_generators(get_mean_std=False, get_size=False, inverse_images=False, 
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=image_num, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, expansion=expansion,
                                                 image_processors=image_processors_test)
-    # x,y = train_generator.__getitem__(0)
+    while True:
+        x,y = train_generator.__getitem__(0)
     if get_mean_std:
         livers = []
         diseases = []
