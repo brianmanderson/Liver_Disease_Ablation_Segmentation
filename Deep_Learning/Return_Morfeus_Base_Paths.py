@@ -9,6 +9,9 @@ def return_paths():
     try:
         base = r'\\mymdafiles\di_data1'
         base_path = r'D:\Liver_Disease_Ablation'
+        if not os.path.exists(base_path):
+            base_path = os.path.join(base,
+                                     r'Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data')
         os.listdir(base_path)
     except:
         base = find_base_dir()
