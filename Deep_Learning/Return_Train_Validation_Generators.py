@@ -7,8 +7,8 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import find_base_dir
 from Return_Morfeus_Base_Paths import return_paths
 
 
-def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False,
-                      batch_size=None, path_extension='Single_Images3D', max_batch_size=np.inf):
+def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False,num_patients=1,
+                      cube_size=None, path_extension='Single_Images3D', max_batch_size=np.inf):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
@@ -17,7 +17,6 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
     num_classes = 3
     mean_val = 67
     std_val = 36
-    num_patients = 5
     expansion = 10
     lower_bound = -7
     upper_bound = 7
@@ -31,8 +30,10 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
-                              Annotations_To_Categorical(num_of_classes=num_classes),
-                              Pull_Cube_From_Image(desired_size=(40, 100, 100), samples=1),
+                              Annotations_To_Categorical(num_of_classes=num_classes)]
+    if cube_size is not None:
+        image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
+    image_processors_train += [
                               # Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.05, step=0.01)),
                               Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                                inverse_image=inverse_images, floor=0),
@@ -43,15 +44,19 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
                              Ensure_Image_Proportions(512, 512),
                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                                               inverse_image=inverse_images, floor=0),
-                             Annotations_To_Categorical(num_of_classes=num_classes)
+                             Annotations_To_Categorical(num_of_classes=num_classes),
+                             Clip_Images(annotations_index=(1,2)),
+                             Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
+                                                         remove_liver_layer_indexes=(0, 2), threshold_value=0)
                              ]
     train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, shuffle=True,
-                                           data_paths=paths, expansion=expansion,batch_size=batch_size,max_batch_size=max_batch_size,
+                                           data_paths=paths, expansion=expansion,
                                            image_processors=image_processors_train)
     train_generator.wanted_indexes = [2]
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, expansion=expansion,
                                                 image_processors=image_processors_test)
+    x,y = validation_generator.__getitem__(0)
     # while True:
     #     x,y = train_generator.__getitem__(0)
     #     xxx = 1

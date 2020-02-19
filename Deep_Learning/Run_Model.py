@@ -47,7 +47,7 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
 def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
                            atrous_rate=2, **kwargs):
     # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
-    activation = 'relu'
+    activation = 'elu'
     layers_dict = {}
     conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1),'activation':activation}}
     atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
@@ -340,14 +340,14 @@ def train_model():
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
-    batch_size = None
-    path_extension = 'Single_Images3D_3mm'
-    max_batch_size = 40
+    path_extension = 'Single_Images3D_1mm'
+    cube_size = (40,120,120)
+    num_patients = 5
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
                                                                                         liver_norm=norm_to_liver,
-                                                                                        batch_size=batch_size,
-                                                                                        max_batch_size=max_batch_size,
-                                                                                        path_extension=path_extension)
+                                                                                        cube_size=cube_size,
+                                                                                        path_extension=path_extension,
+                                                                                        num_patients=num_patients)
     print(base_path)
     x,y = train_generator.__getitem__(0)
     # x,y = validation_generator.__getitem__(1)
@@ -370,8 +370,8 @@ def train_model():
         load_previous_iteration = False
     opt_name = 'Adam'
     gpu = 4
-    step_size_factor = 20
-    num_cycles = 50
+    step_size_factor = 30
+    num_cycles = 25
     step_size = len(train_generator)
     scale_mode = 'linear_cycle'
     step_size_add = 3
@@ -381,14 +381,16 @@ def train_model():
                                      'conv_blocks': 0},
                      'Hyper_Parameters':{'opt_name':opt_name,
                                          'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
-                                         'max_lr':max_lr,'Path_Ext':path_extension,'Max_Batch':max_batch_size,'Random_Box':batch_size,'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
+                                         'max_lr':max_lr,'Path_Ext':path_extension,'Cube_size':cube_size,'Num_Pats':num_patients,
+                                         'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
                                          'restart_training':load_previous_iteration}
                      })
     epochs = step_size_factor
     for _ in range(1,num_cycles):
         epochs += step_size_add + (step_size_factor * 2)
     epochs = epochs + epoch_i
-    model_params = {'activation':'relu', 'concat_not_add':False}
+    epochs = max([epochs,500])
+    model_params = {'activation':'elu', 'concat_not_add':False}
     model_name = '3D_Atrous_new'  # change this
     if norm_to_liver:
         model_name += '_livernorm'
@@ -415,15 +417,15 @@ def train_model():
                 things += ['{}_Iteration'.format(iteration)]
                 layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
                 # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                                                                liver_box=True, mask_image=mask_image,
-                                                                remove_liver_layer=True, threshold_value=0)
+                # train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
+                #                                                 liver_box=True, mask_image=mask_image,
+                #                                                 remove_liver_layer=True, threshold_value=0)
                 xx, yy = train_generator.__getitem__(0)
-                x,y = train_generator_3D.__getitem__(0)
-                validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                                                                     threshold_value=0,
-                                                                     return_mask=mask_pred or mask_loss,liver_box=True,
-                                                                     mask_image=mask_image, remove_liver_layer=True)
+                # x,y = train_generator_3D.__getitem__(0)
+                # validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
+                #                                                      threshold_value=0,
+                #                                                      return_mask=mask_pred or mask_loss,liver_box=True,
+                #                                                      mask_image=mask_image, remove_liver_layer=True)
                 # size_vals = 0
                 # for i in range(len(train_generator_3D)):
                 #     print(i)
@@ -449,9 +451,9 @@ def train_model():
                     print('already done')
                     continue
                 try:
-                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator_3D,
+                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator,
                               step_size=step_size,epoch_i=epoch_i,
-                              validation_generator=validation_generator_3D,save_a_model=save_a_model,
+                              validation_generator=validation_generator,save_a_model=save_a_model,
                               model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
                               base_path=base_path,load_path=load_path, epochs=epochs, weighted=weighted,
                               write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
