@@ -25,6 +25,5 @@
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images/Resample_Class" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Nifti_To_Dicom" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Plot_And_Scroll_Images" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../../Prediction_Model_Class" vcs="Git" />
   </component>
 </project>
