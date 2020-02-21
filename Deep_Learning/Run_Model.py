@@ -13,7 +13,7 @@ from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoard
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from tensorflow.python.keras.optimizers import Adam, SGD
-from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
+from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR, Half_Drop
 from Return_Train_Validation_Generators import return_generators
@@ -47,22 +47,27 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
 def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
                            atrous_rate=2, **kwargs):
     # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
-    activation = 'elu'
+    activation = {'activation':'elu'}
     layers_dict = {}
-    conv_block = lambda x: {'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1),'activation':activation}}
-    atrous_block = lambda x,y,z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
-    previous_filters = [1]
+    conv_block = lambda x: {
+        'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': activation}}
+    atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
+    residual_block = lambda x: {'residual':x}
     for layer in range(layers):
-        encoding = [atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(atrous_blocks)]
-        if previous_filters[layer] != filters:
-            encoding = [conv_block(filters)] + encoding
-        previous_filters.append(filters)
+        encoding = [residual_block([activation,atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
+                    range(atrous_blocks)]
         if filters < max_filters:
-            filters = int(filters*2)
+            filters = int(filters * 2)
         layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
         if atrous_blocks < max_atrous_blocks:
-            atrous_blocks = int(atrous_blocks*2)
+            atrous_blocks = int(atrous_blocks * 2)
+    encoding = [residual_block([activation, atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
+                for _ in
+                range(atrous_blocks)]
+    layers_dict['Base'] = encoding
+    layers_dict['Final_Steps'] = [activation, {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
     return layers_dict
+
 
 def return_things(run_data):
     things = ['Default_Architecture']
@@ -257,8 +262,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
     # if len(G) == 1:
     #     gpu = 0
     with tf.device('/gpu:' + str(gpu)):
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=.9, allow_growth=True) # maybe should just allocate whole gpu..
-        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+        gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=.9, allow_growth=True) # maybe should just allocate whole gpu..
+        sess = tf.compat.v1.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         tf.compat.v1.keras.backend.set_session(sess)
         if not os.path.exists(morfeus_drive):
             print('Morf wrong')
@@ -282,7 +287,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
                                          save_weights_only=False, period=period, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, write_graph=True, write_grads=False,num_images=3,
-                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=3,
+                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=10,
                                        write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor, mode='triangular2',
                          pre_cycle=pre_cycle, base_reduce_factor=2, scale_mode=scale_mode,
@@ -310,8 +315,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         if balance_beta != 1.0:
             loss = balanced_cross_entropy(balance_beta)
         if load_path is None:
-            model = my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
-                               pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
+            model = my_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2),custom_loss=loss,batch_norm=batch_norm,
+                            pool_type='Max',out_classes=2,mask_loss=mask_loss, mask_output=mask_pred,**model_params)
             # if return_mask:
             #     loss = weighted_categorical_crossentropy(np.load(os.path.join('.', 'new_class_weights.npy')))
             Model_val = model.created_model
@@ -324,7 +329,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
         # K.set_value(Model_val.optimizer.lr, min_lr)
         # x,y = train_generator.__getitem__(0)
         # pred = Model_val.predict(x)
-        Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
+        Model_val.fit_generator(generator=train_generator, workers=30, use_multiprocessing=False, max_queue_size=50,
                                 shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
                                 validation_data=validation_generator,steps_per_epoch=step_size)
 
@@ -341,8 +346,9 @@ def train_model():
     smoothing = 0.0
     weighted = False
     path_extension = 'Single_Images3D_1mm'
-    cube_size = (40,120,120)
-    num_patients = 5
+    cube_size = (30,300,300)
+    # cube_size = None
+    num_patients = 1
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
                                                                                         liver_norm=norm_to_liver,
                                                                                         cube_size=cube_size,
@@ -369,8 +375,8 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 4
-    step_size_factor = 30
+    gpu = 3
+    step_size_factor = 40
     num_cycles = 25
     step_size = len(train_generator)
     scale_mode = 'linear_cycle'
@@ -383,13 +389,13 @@ def train_model():
                                          'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
                                          'max_lr':max_lr,'Path_Ext':path_extension,'Cube_size':cube_size,'Num_Pats':num_patients,
                                          'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
-                                         'restart_training':load_previous_iteration}
+                                         'restart_training':load_previous_iteration,'New_Style_Arch':True}
                      })
     epochs = step_size_factor
     for _ in range(1,num_cycles):
         epochs += step_size_add + (step_size_factor * 2)
     epochs = epochs + epoch_i
-    epochs = max([epochs,500])
+    epochs = min([epochs,1000])
     model_params = {'activation':'elu', 'concat_not_add':False}
     model_name = '3D_Atrous_new'  # change this
     if norm_to_liver:

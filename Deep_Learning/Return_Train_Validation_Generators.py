@@ -30,33 +30,33 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
-                              Annotations_To_Categorical(num_of_classes=num_classes)]
+                              Annotations_To_Categorical(num_of_classes=num_classes),
+                              Clip_Images(annotations_index=(1,2), bounding_box_expansion=(10, 20, 20))]
     if cube_size is not None:
         image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
     image_processors_train += [
-                              # Add_Noise_To_Images(by_patient=True, variation=np.arange(start=0, stop=0.05, step=0.01)),
                               Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
-                                               inverse_image=inverse_images, floor=0),
+                                               inverse_image=inverse_images, final_scale_value=1),
                               Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
                                                           remove_liver_layer_indexes=(0,2), threshold_value=0)
                               ]
     image_processors_test = [normalize,
                              Ensure_Image_Proportions(512, 512),
                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
-                                              inverse_image=inverse_images, floor=0),
+                                              inverse_image=inverse_images, final_scale_value=1),
                              Annotations_To_Categorical(num_of_classes=num_classes),
                              Clip_Images(annotations_index=(1,2)),
                              Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
                                                          remove_liver_layer_indexes=(0, 2), threshold_value=0)
                              ]
     train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, shuffle=True,
-                                           data_paths=paths, expansion=expansion,
+                                           data_paths=paths, expansion=30,
                                            image_processors=image_processors_train)
     train_generator.wanted_indexes = [2]
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, expansion=expansion,
                                                 image_processors=image_processors_test)
-    x,y = validation_generator.__getitem__(0)
+    # x,y = validation_generator.__getitem__(0)
     # while True:
     #     x,y = train_generator.__getitem__(0)
     #     xxx = 1
@@ -87,5 +87,5 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
 
 
 if __name__ == '__main__':
-    # return_generators(False, liver_norm=True, path_extension='Single_Images3D_1mm')
+    # return_generators(False, liver_norm=True, path_extension='Single_Images3D_1mm', cube_size = (30,300,300))
     pass
