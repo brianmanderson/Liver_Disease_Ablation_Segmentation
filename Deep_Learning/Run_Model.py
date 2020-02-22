@@ -4,7 +4,7 @@ from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 from tensorflow.python.keras.models import *
 from tensorflow.python.keras.initializers import Constant
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
 from tensorflow.python.keras.callbacks import EarlyStopping
@@ -46,7 +46,6 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
 
 def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
                            atrous_rate=2, **kwargs):
-    # activation = {'activation':PReLU,'kwargs':{'alpha_initializer':Constant(0.25),'shared_axes':[1,2,3]}}
     activation = {'activation':'elu'}
     layers_dict = {}
     conv_block = lambda x: {
@@ -66,6 +65,30 @@ def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blo
                 range(atrous_blocks)]
     layers_dict['Base'] = encoding
     layers_dict['Final_Steps'] = [activation, {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
+    return layers_dict
+
+
+def get_layers_dict_atrous_new(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
+                           atrous_rate=2, **kwargs):
+    activation = {'activation':'elu'}
+    layers_dict = {}
+    conv_block = lambda x: {
+        'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': activation}}
+    atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
+    residual_block = lambda x: {'residual':x}
+    for layer in range(layers):
+        encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
+                    range(atrous_blocks)]
+        if filters < max_filters:
+            filters = int(filters * 2)
+        layers_dict['Layer_' + str(layer)] = {'Encoding': [encoding, activation]}
+        if atrous_blocks < max_atrous_blocks:
+            atrous_blocks = int(atrous_blocks * 2)
+    encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
+                for _ in
+                range(atrous_blocks)]
+    layers_dict['Base'] = [encoding,activation]
+    layers_dict['Final_Steps'] = {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}
     return layers_dict
 
 
@@ -262,9 +285,9 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
     # if len(G) == 1:
     #     gpu = 0
     with tf.device('/gpu:' + str(gpu)):
-        gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=.9, allow_growth=True) # maybe should just allocate whole gpu..
-        sess = tf.compat.v1.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-        tf.compat.v1.keras.backend.set_session(sess)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=.9, allow_growth=True) # maybe should just allocate whole gpu..
+        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+        tf.keras.backend.set_session(sess)
         if not os.path.exists(morfeus_drive):
             print('Morf wrong')
             return None
@@ -375,7 +398,7 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 3
+    gpu = 0
     step_size_factor = 40
     num_cycles = 25
     step_size = len(train_generator)
@@ -395,7 +418,7 @@ def train_model():
     for _ in range(1,num_cycles):
         epochs += step_size_add + (step_size_factor * 2)
     epochs = epochs + epoch_i
-    epochs = min([epochs,1000])
+    epochs = min([epochs,2000])
     model_params = {'activation':'elu', 'concat_not_add':False}
     model_name = '3D_Atrous_new'  # change this
     if norm_to_liver:
@@ -422,36 +445,13 @@ def train_model():
                 things = return_things(run_data)
                 things += ['{}_Iteration'.format(iteration)]
                 layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
-                # layers_dict = get_layers_dict_conv(layers=layer, **run_data) # change this
-                # train_generator_3D = Image_Clipping_and_Padding(layers_dict, train_generator, return_mask=mask_pred or mask_loss,
-                #                                                 liver_box=True, mask_image=mask_image,
-                #                                                 remove_liver_layer=True, threshold_value=0)
                 xx, yy = train_generator.__getitem__(0)
-                # x,y = train_generator_3D.__getitem__(0)
-                # validation_generator_3D = Image_Clipping_and_Padding(layers_dict, validation_generator,
-                #                                                      threshold_value=0,
-                #                                                      return_mask=mask_pred or mask_loss,liver_box=True,
-                #                                                      mask_image=mask_image, remove_liver_layer=True)
-                # size_vals = 0
-                # for i in range(len(train_generator_3D)):
-                #     print(i)
-                #     x,y = train_generator_3D.__getitem__(i)
-                #     print(x[0].shape)
-                #     size_ = np.prod(x[0].shape)
-                #     if size_ > size_vals:
-                #         size_vals = size_
-                #         print(size_)
-                # return None
                 # while True:
                 #     for i in range(5):
                 #         x,y = validation_generator_3D.__getitem__(i)
                 paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_model)
                 paths_class.define_model_things(model_name, things)
                 tensorboard_output = paths_class.tensorboard_path_out
-                # my_3D_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_size=(2, 2, 2), custom_loss=None,
-                #            batch_norm=batch_norm,
-                #            pool_type='Max', out_classes=2, mask_loss=mask_loss, mask_output=mask_pred,
-                #            **model_params)
                 print(tensorboard_output)
                 if os.listdir(tensorboard_output):
                     print('already done')

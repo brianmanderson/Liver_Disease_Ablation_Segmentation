@@ -1,10 +1,10 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
 import tensorflow.python.keras.backend as K
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D_np, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, weighted_categorical_crossentropy_masked, dice_coef_3D, np
-from Base_Deeplearning_Code.Models.Keras_3D_Models import my_3D_UNet
+from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from Return_Train_Validation_Generators import return_generators
 from _collections import OrderedDict
