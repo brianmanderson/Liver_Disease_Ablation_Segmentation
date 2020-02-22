@@ -285,7 +285,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
     # if len(G) == 1:
     #     gpu = 0
     with tf.device('/gpu:' + str(gpu)):
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=.9, allow_growth=True) # maybe should just allocate whole gpu..
+        gpu_options = tf.GPUOptions(allow_growth=True) # maybe should just allocate whole gpu..
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         tf.keras.backend.set_session(sess)
         if not os.path.exists(morfeus_drive):
@@ -398,8 +398,8 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 0
-    step_size_factor = 40
+    gpu = 1
+    step_size_factor = 60
     num_cycles = 25
     step_size = len(train_generator)
     scale_mode = 'linear_cycle'

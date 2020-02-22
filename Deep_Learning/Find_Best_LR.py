@@ -27,7 +27,7 @@ def run_model(gpu=1,layers_dict=None, out_path='', train_generator=None, get_wei
     with tf.device('/gpu:' + str(gpu)):
         gpu_options = tf.GPUOptions(allow_growth=True)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-        tf.compat.v1.keras.backend.set_session(sess)
+        tf.keras.backend.set_session(sess)
         loss = 'categorical_crossentropy'
         if weighted:
             loss = weighted_categorical_crossentropy(np.asarray([1,500])) #categorical_crossentropy
