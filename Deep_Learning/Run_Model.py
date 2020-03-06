@@ -396,7 +396,7 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 0
+    gpu = 1
     step_size_factor = 60
     num_cycles = 25
     step_size = len(train_generator)

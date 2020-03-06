@@ -1,3 +1,8 @@
 ./Activations/
 ./__pycache__/
 /Figures/Thumbs.db
+/Evaluate_Model/Area/
+/Evaluate_Model/Output/
+/Evaluate_Model/Test_Output/
+/Evaluate_Model/Threshold/
+/Evaluate_Model/Volume/
