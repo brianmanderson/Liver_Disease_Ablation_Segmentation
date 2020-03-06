@@ -9,7 +9,7 @@ from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_en
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
 from tensorflow.python.keras.callbacks import EarlyStopping
 import tensorflow.python.keras.backend as K
-from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage
+from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage, TensorBoard
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from tensorflow.python.keras.optimizers import Adam, SGD
@@ -48,23 +48,21 @@ def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blo
                            atrous_rate=2, **kwargs):
     activation = {'activation':'elu'}
     layers_dict = {}
-    conv_block = lambda x: {
-        'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': activation}}
     atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
     residual_block = lambda x: {'residual':x}
     for layer in range(layers):
-        encoding = [residual_block([activation,atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
-                    range(atrous_blocks)]
+        encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
+                    range(atrous_blocks)] + [activation]
         if filters < max_filters:
             filters = int(filters * 2)
         layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
         if atrous_blocks < max_atrous_blocks:
             atrous_blocks = int(atrous_blocks * 2)
-    encoding = [residual_block([activation, atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
+    encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
                 for _ in
-                range(atrous_blocks)]
+                range(atrous_blocks)] + [activation]
     layers_dict['Base'] = encoding
-    layers_dict['Final_Steps'] = [activation, {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
+    layers_dict['Final_Steps'] = [{'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
     return layers_dict
 
 
@@ -398,7 +396,7 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 1
+    gpu = 0
     step_size_factor = 60
     num_cycles = 25
     step_size = len(train_generator)
@@ -412,7 +410,7 @@ def train_model():
                                          'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
                                          'max_lr':max_lr,'Path_Ext':path_extension,'Cube_size':cube_size,'Num_Pats':num_patients,
                                          'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
-                                         'restart_training':load_previous_iteration,'New_Style_Arch':True}
+                                         'restart_training':load_previous_iteration,'New_Style_Arch':True,'FWHM':True}
                      })
     epochs = step_size_factor
     for _ in range(1,num_cycles):

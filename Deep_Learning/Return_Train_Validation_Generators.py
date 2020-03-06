@@ -8,25 +8,26 @@ from Return_Morfeus_Base_Paths import return_paths
 
 
 def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False,num_patients=1,
-                      cube_size=None, path_extension='Single_Images3D', max_batch_size=np.inf):
+                      cube_size=None, path_extension='Single_Images3D', return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
     paths = [os.path.join(base_path, 'Train', path_extension)]
     paths_validation_generator = [os.path.join(base_path, 'Validation', path_extension)]
+    paths_test_generator = [os.path.join(base_path, 'Test', path_extension)]
     num_classes = 3
     mean_val = 67
     std_val = 36
     expansion = 10
-    lower_bound = -7
-    upper_bound = 7
+    lower_bound = -np.inf
+    upper_bound = np.inf
     if get_mean_std:
         mean_val = 0
         std_val = 1
         lower_bound = -np.inf
         upper_bound = np.inf
     if liver_norm:
-        normalize = Normalize_to_Liver(0.5, upper=True)
+        normalize = Normalize_to_Liver() # was (0.1 to 0.75)
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
@@ -35,15 +36,15 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
     if cube_size is not None:
         image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
     image_processors_train += [
-                              Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
-                                               inverse_image=inverse_images, final_scale_value=1),
+                              # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
+                              #                  inverse_image=inverse_images),
                               Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
                                                           remove_liver_layer_indexes=(0,2), threshold_value=0)
                               ]
     image_processors_test = [normalize,
                              Ensure_Image_Proportions(512, 512),
-                             Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
-                                              inverse_image=inverse_images, final_scale_value=1),
+                             # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
+                             #                  inverse_image=inverse_images),
                              Annotations_To_Categorical(num_of_classes=num_classes),
                              Clip_Images(annotations_index=(1,2)),
                              Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
@@ -56,6 +57,13 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, expansion=expansion,
                                                 image_processors=image_processors_test)
+    # x, y = train_generator.__getitem__(0)
+    if return_test:
+        test_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
+                                              data_paths=paths_test_generator, expansion=expansion,
+                                              image_processors=image_processors_test)
+        x,y = test_generator.__getitem__(16)
+        return base_path, morfeus_drive, 0, test_generator
     # x,y = validation_generator.__getitem__(0)
     # while True:
     #     x,y = train_generator.__getitem__(0)
@@ -87,5 +95,5 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
 
 
 if __name__ == '__main__':
-    # return_generators(False, liver_norm=True, path_extension='Single_Images3D_1mm', cube_size = (30,300,300))
+    # return_generators(False, liver_norm=True, path_extension='Single_Images3D_1mm', cube_size = (30,300,300), return_test=True)
     pass
