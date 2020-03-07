@@ -3,3 +3,9 @@
 ./.idea/
 /Deep_Learning/Activations/
 /Deep_Learning/__pycache__/
+/Deep_Learning/Evaluate_Model/Area/
+/Deep_Learning/Evaluate_Model/Output/
+/Deep_Learning/Evaluate_Model/Test_Output/
+/Deep_Learning/Evaluate_Model/Threshold/
+/Deep_Learning/Evaluate_Model/Volume/
+/Deep_Learning/Evaluate_Model/__pycache__/

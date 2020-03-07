@@ -26,11 +26,11 @@ def main():
         path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
         path = r'D:\Liver_Disease_Ablation'
         desired_output_spacing = (0.89648, 0.89648, 3)
-        desired_output_spacing = (None, None, 1)
+        desired_output_spacing = (None, None, None)
         extension = 32
         write_images = True
         re_write_pickle = False
-        run_main(path,desired_output_spacing,extension, write_images, re_write_pickle)
+        run_main(path,desired_output_spacing,extension, write_images, re_write_pickle, file_ext='_None')
 
 
 if __name__ == '__main__':
