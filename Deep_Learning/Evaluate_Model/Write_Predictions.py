@@ -7,7 +7,7 @@ import os, time
 from Return_Train_Validation_Generators import return_generators, sitk, plot_scroll_Image
 
 
-def create_prediction_files(is_test=False, path_ext = ''):
+def create_prediction_files(is_test=False, path_ext = '', desc=''):
     path_extension = 'Single_Images3D' + path_ext
     cube_size = (30,300,300)
     # cube_size = None
@@ -26,6 +26,7 @@ def create_prediction_files(is_test=False, path_ext = ''):
         ext = 'Validation'
         if is_test:
             ext = 'Test'
+        ext += desc
         pred_output_path = os.path.join('D:\Liver_Disease_Ablation\Predictions{}'.format(path_ext),ext)
         if not os.path.exists(pred_output_path):
             os.makedirs(pred_output_path)
@@ -36,7 +37,7 @@ def create_prediction_files(is_test=False, path_ext = ''):
             if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
                 continue
             elif model_val is None:
-                model_val = load_model(r'D:\Liver_Disease_Ablation\weights-improvement-best_10_90.hdf5',
+                model_val = load_model(r'D:\Liver_Disease_Ablation\weights-improvement-best_FWHM.hdf5',
                                        custom_objects={'dice_coef_3D': dice_coef_3D})
             x,y = eval_generator.__getitem__(i)
             sitk_image = sitk.ReadImage(image_path)

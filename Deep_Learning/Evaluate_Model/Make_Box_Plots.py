@@ -18,10 +18,8 @@ def load_obj(path):
         out = {}
         return out
 
-k = load_obj(r'D:\Liver_Disease_Ablation\Train\Single_Images3D_1mm\descriptions_start_and_stop.pkl')
-# 'Abdomen_1k_batch_5_2classes_Liver_3_Layer_256_limited_batch'
-path = r'Y:\CNN\For_DGX_Station\Projects\Segmentation\Liver_Disease_Ablation_Segmentation\Deep_Learning' \
-       r'\Evaluate_Model\Test_Output\Out_Data_diceog.xlsx'
+path = r'C:\Users\bmanderson\Desktop\Modular_Projects\Liver_Disease_Ablation_Segmentation\Deep_Learning' \
+       r'\Evaluate_Model\Outputs\Test_Output_FWHM\Out_Data_FWHM_dice.xlsx'
 
 
 data = pd.read_excel(path)

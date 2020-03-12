@@ -3,7 +3,7 @@ __author__ = 'Brian M Anderson'
 from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 from tensorflow.python.keras.models import *
-from tensorflow.python.keras.initializers import Constant
+import sys
 import tensorflow.compat.v1 as tf
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, get_available_gpus, save_obj,load_obj, \
     remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
@@ -62,7 +62,8 @@ def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blo
                 for _ in
                 range(atrous_blocks)] + [activation]
     layers_dict['Base'] = encoding
-    layers_dict['Final_Steps'] = [{'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
+    layers_dict['Final_Steps'] = [{'convolution':{'channels': 16, 'kernel': (3, 3, 3), 'strides': (1, 1, 1), 'activation': 'elu'}},
+                                  {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
     return layers_dict
 
 
@@ -355,7 +356,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
                                 validation_data=validation_generator,steps_per_epoch=step_size)
 
 
-def train_model():
+def train_model(gpu=0):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -396,7 +397,6 @@ def train_model():
         epoch_i = 0
         load_previous_iteration = False
     opt_name = 'Adam'
-    gpu = 1
     step_size_factor = 60
     num_cycles = 25
     step_size = len(train_generator)
@@ -410,7 +410,8 @@ def train_model():
                                          'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
                                          'max_lr':max_lr,'Path_Ext':path_extension,'Cube_size':cube_size,'Num_Pats':num_patients,
                                          'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
-                                         'restart_training':load_previous_iteration,'New_Style_Arch':True,'FWHM':True}
+                                         'restart_training':load_previous_iteration,'New_Style_Arch':True,'FWHM':True,
+                                         'Added_Conv':True}
                      })
     epochs = step_size_factor
     for _ in range(1,num_cycles):
@@ -427,7 +428,7 @@ def train_model():
         model_name += '_weighted'
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
-    for iteration in [0, 1, 2]:
+    for iteration in [0]:
         overall_dictionary = return_dictionary_best_4layer(base_dict)
         if load_path is not None:
             overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
@@ -454,6 +455,13 @@ def train_model():
                 if os.listdir(tensorboard_output):
                     print('already done')
                     continue
+                run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator,
+                          step_size=step_size, epoch_i=epoch_i,
+                          validation_generator=validation_generator, save_a_model=save_a_model,
+                          model_params=model_params, paths_class=paths_class, morfeus_drive=morfeus_drive,
+                          base_path=base_path, load_path=load_path, epochs=epochs, weighted=weighted,
+                          write_images=write_images, **run_data['Architecture'], **run_data['Hyper_Parameters'])
+                K.clear_session()
                 try:
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator,
                               step_size=step_size,epoch_i=epoch_i,
@@ -468,4 +476,4 @@ def train_model():
 
 
 if __name__ == '__main__':
-    train_model()
+    train_model(gpu=int(sys.argv[1]))

@@ -71,15 +71,16 @@ class SurfaceDistanceMeasures(Enum):
     hausdorff_distance, mean_surface_distance, median_surface_distance, std_surface_distance, max_surface_distance = range(5)
 
 
-def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_None\Test', threshold=0.55):
+def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_None\TestFWHM', threshold=0.55, out_path='.',
+                        metric='Test_Output',desc=''):
+    metric += desc
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     out_dict = {}
     for name, _ in OverlapMeasures.__members__.items():
         out_dict[name] = {'Patient_ID':['']}
     for name, _ in SurfaceDistanceMeasures.__members__.items():
         out_dict[name] = {'Patient_ID':['']}
-    metric = 'Test_Output'
-    out_path = os.path.join('.',metric)
+    out_path = os.path.join(out_path,metric)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     for name in out_dict.keys():
@@ -190,9 +191,10 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_None\Test
                 surface_distance_results[i, measured_name.value])
         for measured_name in out_dict.keys():
             df = pd.DataFrame(out_dict[measured_name])
-            df.to_excel(os.path.join(out_path,'Out_Data_{}.xlsx'.format(measured_name)),index=0)
+            df.to_excel(os.path.join(out_path,'Out_Data{}_{}.xlsx'.format(desc,measured_name)),index=0)
     return None
 
 
 if __name__ == '__main__':
-    create_metric_chart()
+    create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_1mm\TestFWHM', threshold=0.55, out_path=os.path.join('.','Outputs'),
+                        metric='Test_Output',desc='_FWHM')
