@@ -455,13 +455,6 @@ def train_model(gpu=0):
                 if os.listdir(tensorboard_output):
                     print('already done')
                     continue
-                run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator,
-                          step_size=step_size, epoch_i=epoch_i,
-                          validation_generator=validation_generator, save_a_model=save_a_model,
-                          model_params=model_params, paths_class=paths_class, morfeus_drive=morfeus_drive,
-                          base_path=base_path, load_path=load_path, epochs=epochs, weighted=weighted,
-                          write_images=write_images, **run_data['Architecture'], **run_data['Hyper_Parameters'])
-                K.clear_session()
                 try:
                     run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator,
                               step_size=step_size,epoch_i=epoch_i,
