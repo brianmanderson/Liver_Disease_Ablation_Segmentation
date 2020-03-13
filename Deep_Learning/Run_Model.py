@@ -283,7 +283,7 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
     # G = get_available_gpus()
     # if len(G) == 1:
     #     gpu = 0
-    with tf.device('/gpu:' + str(gpu)):
+    with tf.device('/gpu:0'):
         gpu_options = tf.GPUOptions(allow_growth=True) # maybe should just allocate whole gpu..
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         tf.keras.backend.set_session(sess)
@@ -357,6 +357,8 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
 
 
 def train_model(gpu=0):
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
     mask_image = False
     mask_loss = False
     mask_pred = True
