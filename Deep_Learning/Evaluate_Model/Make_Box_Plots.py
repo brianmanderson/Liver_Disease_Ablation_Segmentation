@@ -19,7 +19,7 @@ def load_obj(path):
         return out
 
 path = r'C:\Users\bmanderson\Desktop\Modular_Projects\Liver_Disease_Ablation_Segmentation\Deep_Learning' \
-       r'\Evaluate_Model\Outputs\Test_Output_FWHM\Out_Data_FWHM_dice.xlsx'
+       r'\Evaluate_Model\Test_Output\Out_Data_FWHM_dice.xlsx'
 
 
 data = pd.read_excel(path)
