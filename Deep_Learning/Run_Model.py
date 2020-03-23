@@ -274,7 +274,7 @@ def return_dictionary_best_lr_ablate(base_dict):
     return dictionary
 
 
-def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
+def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
               morfeus_drive='',base_path='', save_a_model=True,weighted=False, mask_loss=False,balance_beta=1.0, epoch_i = 0,
               model_params=None,skip_cyclic_lr=False, opt_name='Adam',scale_mode='linear_cycle',step_size_add=0,**kwargs):
@@ -356,15 +356,12 @@ def run_model(gpu=1,min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,vali
                                 validation_data=validation_generator,steps_per_epoch=step_size)
 
 
-def train_model(gpu=0):
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+def train_model(run_best=False, save_a_model=False):
     mask_image = False
     mask_loss = False
     mask_pred = True
     batch_norm = False
     write_images = True
-    save_a_model = True
     inverse_images = False
     norm_to_liver = True
     smoothing = 0.0
@@ -430,8 +427,11 @@ def train_model(gpu=0):
         model_name += '_weighted'
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
-    for iteration in [0]:
-        overall_dictionary = return_dictionary_best_4layer(base_dict)
+    for iteration in range(3):
+        if run_best:
+            overall_dictionary = return_dictionary_best_4layer(base_dict)
+        else:
+            overall_dictionary = return_dictionary(base_dict)
         if load_path is not None:
             overall_dictionary = return_dictionary_best_lr_ablate(base_dict)
         for layer in overall_dictionary:
@@ -443,6 +443,8 @@ def train_model(gpu=0):
                 run_data['Architecture']['mask_image'] = mask_image
                 run_data['Architecture']['mask_pred'] = mask_pred
                 run_data['Architecture']['mask_loss'] = mask_loss
+                if save_a_model:
+                    run_data['Hyper_Parameters']['Save_Model'] = True
                 things = return_things(run_data)
                 things += ['{}_Iteration'.format(iteration)]
                 layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
@@ -458,7 +460,7 @@ def train_model(gpu=0):
                     print('already done')
                     continue
                 try:
-                    run_model(gpu=gpu, layers_dict=layers_dict, train_generator=train_generator,
+                    run_model(layers_dict=layers_dict, train_generator=train_generator,
                               step_size=step_size,epoch_i=epoch_i,
                               validation_generator=validation_generator,save_a_model=save_a_model,
                               model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
@@ -471,4 +473,4 @@ def train_model(gpu=0):
 
 
 if __name__ == '__main__':
-    train_model(gpu=int(sys.argv[1]))
+    pass

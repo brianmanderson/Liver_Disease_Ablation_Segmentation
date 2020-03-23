@@ -101,6 +101,7 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_1mm\Valid
     statistics_image_filter = sitk.StatisticsImageFilter()
 
     fill_binary = Fill_Binary_Holes()
+    min_volume = Minimum_Volume_and_Area_Prediction(5)
     for file in image_list:
         pat_name = file.split('\\')[-1].split('_')[0]
         print(pat_name)
@@ -110,7 +111,6 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_1mm\Valid
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
         truth_array = sitk.GetArrayFromImage(truth)
         volume = truth_array[truth_array == 1].shape[0] * np.prod(truth.GetSpacing()) / 1000
-        min_volume = Minimum_Volume_and_Area_Prediction(5)
         print(volume)
         for name in out_dict.keys():
             out_dict[name]['Volume'].append(volume)
@@ -127,10 +127,9 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions_1mm\Valid
         # for i, threshold in enumerate(threshold_range):
         print(metric)
         for i, metric_value in enumerate(metric_range):
-            threshold_and_expand = Threshold_and_Expand(seed_threshold_value=0.8, lower_threshold_value=metric_value)
+            threshold_and_expand = Threshold_and_Expand(seed_threshold_value=0.95, lower_threshold_value=.2)
             print(metric_value)
             threshold_pred = threshold_and_expand.process(prediction)
-            threshold_pred = fill_binary.process(threshold_pred)
             # threshold_pred = fill_binary.process(threshold_pred)
             threshold_pred = min_volume.process(threshold_pred)
             overlap_measures_filter.Execute(truth, threshold_pred)

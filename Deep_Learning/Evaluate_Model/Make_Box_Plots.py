@@ -19,17 +19,18 @@ def load_obj(path):
         return out
 
 path = r'C:\Users\bmanderson\Desktop\Modular_Projects\Liver_Disease_Ablation_Segmentation\Deep_Learning' \
-       r'\Evaluate_Model\Test_Output\Out_Data_FWHM_dice.xlsx'
+       r'\Evaluate_Model\Test_Output\Out_Data_FWHM_mean_surface_distance.xlsx'
 
-
+metric = 'Mean Surface Distance'
 data = pd.read_excel(path)
 data = data.to_dict()
-dice_values = np.asarray(list(data['Dice'].values()))
+dice_values = np.asarray(list(data['MSD'].values()))
 volume_values = np.asarray(list(data['Volume'].values()))
 less_than_ten_cc_line = volume_values <= 10
 greater_than_ten_cc_line = volume_values > 10
 
-for title, values in zip(['Disease Dice > 10 cc','Disease Dice <= 10 cc'],[greater_than_ten_cc_line,less_than_ten_cc_line]):
+for title, values in zip(['Disease {} > 10 cc'.format(metric),'Disease {} <= 10 cc'.format(metric)],
+                         [greater_than_ten_cc_line,less_than_ten_cc_line]):
        values = [dice_values[values]]
        x_ticks = ['']
        num_labels = [i for i in range(len(x_ticks))]
@@ -41,7 +42,7 @@ for title, values in zip(['Disease Dice > 10 cc','Disease Dice <= 10 cc'],[great
        metric = 'Overlap_Results'
        plt.boxplot(values)
        plt.xlabel('LiTs Test Set')
-       plt.ylabel('Dice Simiarlity Coefficient')
+       plt.ylabel(metric)
        plt.xticks(num_labels,x_ticks)
-       plt.yticks(y_ticks)
+       # plt.yticks(y_ticks)
        plt.show()
