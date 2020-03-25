@@ -11,6 +11,45 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
+find_lr = False
+if find_lr:
+    from Deep_Learning.Optimization.Find_Best_LR import find_best_lr, find_best_lr_2D
+    find_best_lr()
+    find_best_lr_2D(is_deeplab=True)
+    find_best_lr_2D(is_deeplab=False)
+'''
+Plot the LR, get the min and max from the images
+'''
+plot_lr = False
+if plot_lr:
+    from Optimization.Plot_Best_LR import make_plots
+    # path = r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Segmentation_Work\Learning_Rates_v3_plus'
+    # path = r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Segmentation_Work\Learning_Rates_vgg_16'
+    path = r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Segmentation_Work\Learning_Rates_Liver_3D'
+    make_plots(path)
+
+'''
+Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
+decision based on
+'''
+run_200 = True
+if run_200:
+    from Run_Model import train_model
+    # iterate_model(epochs=100, save_a_model=True, runv3_plus=False, run_vgg=False)
+    train_model(epochs=100, save_a_model=True, run_best=False, ext='_1mm')
+    # iterate_model(epochs=100, save_a_model=True, runv3_plus=False, run_vgg=True, retrain=True)
+
+make_opt_excel = False
+if make_opt_excel:
+    '''
+    Need to run the model for ~ 200 epochs, then run Plot_Optimization_results
+    '''
+    from Optimization.Plot_Optimization_results import main
+    main()
+
+'''
+Now go to Evaluate_Model folder
+'''
 
 '''
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model

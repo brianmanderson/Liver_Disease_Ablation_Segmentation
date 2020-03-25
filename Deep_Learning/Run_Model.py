@@ -1,22 +1,20 @@
 __author__ = 'Brian M Anderson'
 # Created on 1/18/2020
-from Base_Deeplearning_Code.Data_Generators.Generators import Image_Clipping_and_Padding
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 from tensorflow.python.keras.models import *
-import sys
 import tensorflow.compat.v1 as tf
-from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, get_available_gpus, save_obj,load_obj, \
-    remove_non_liver, weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
+from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import balanced_cross_entropy, \
+    weighted_categorical_crossentropy, categorical_crossentropy_masked, dice_coef_3D, np, EarlyStopping_BMA
 from tensorflow.python.keras.callbacks import EarlyStopping
 import tensorflow.python.keras.backend as K
-from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage, TensorBoard
+from Base_Deeplearning_Code.Callbacks.Visualizing_Model_Utils import TensorBoardImage
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from tensorflow.python.keras.optimizers import Adam, SGD
 from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
-from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR, Half_Drop
-from Return_Train_Validation_Generators import return_generators
+from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
+from Return_Train_Validation_Generators import return_generators, get_layers_dict_atrous
 from _collections import OrderedDict
 
 
@@ -41,53 +39,6 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
         num_atrous_blocks = min([(num_atrous_blocks) * 2,max_blocks])
     num_atrous_blocks = min([(num_atrous_blocks) * 2, max_blocks])
     layers_dict['Base'] = {'Encoding':[atrous_block(filters,atrous_rate,[activation for _ in range(atrous_rate)]) for _ in range(num_atrous_blocks)]}
-    return layers_dict
-
-
-def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
-                           atrous_rate=2, **kwargs):
-    activation = {'activation':'elu'}
-    layers_dict = {}
-    atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
-    residual_block = lambda x: {'residual':x}
-    for layer in range(layers):
-        encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
-                    range(atrous_blocks)] + [activation]
-        if filters < max_filters:
-            filters = int(filters * 2)
-        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
-        if atrous_blocks < max_atrous_blocks:
-            atrous_blocks = int(atrous_blocks * 2)
-    encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
-                for _ in
-                range(atrous_blocks)] + [activation]
-    layers_dict['Base'] = encoding
-    layers_dict['Final_Steps'] = [{'convolution':{'channels': 16, 'kernel': (3, 3, 3), 'strides': (1, 1, 1), 'activation': 'elu'}},
-                                  {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
-    return layers_dict
-
-
-def get_layers_dict_atrous_new(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
-                           atrous_rate=2, **kwargs):
-    activation = {'activation':'elu'}
-    layers_dict = {}
-    conv_block = lambda x: {
-        'convolution': {'channels': x, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': activation}}
-    atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
-    residual_block = lambda x: {'residual':x}
-    for layer in range(layers):
-        encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
-                    range(atrous_blocks)]
-        if filters < max_filters:
-            filters = int(filters * 2)
-        layers_dict['Layer_' + str(layer)] = {'Encoding': [encoding, activation]}
-        if atrous_blocks < max_atrous_blocks:
-            atrous_blocks = int(atrous_blocks * 2)
-    encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
-                for _ in
-                range(atrous_blocks)]
-    layers_dict['Base'] = [encoding,activation]
-    layers_dict['Final_Steps'] = {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}
     return layers_dict
 
 
@@ -166,92 +117,7 @@ def return_dictionary_all_weighted(base_dict):
     return dictionary
 
 
-def return_dictionary(base_dict):
-    dictionary = {
-        1: [
-            base_dict(1e-5, 1e-2, 8, 16, 1),
-            base_dict(1e-5, 3e-3, 16, 16, 1),
-            base_dict(3e-6, 2e-3, 32, 32, 1),
-            base_dict(1e-5, 2e-3, 8, 16, 2),
-            base_dict(2e-6, 1e-3, 16, 16, 2),
-            base_dict(2e-6, 2e-4, 32, 32, 2),
-            base_dict(1e-5, 2e-4, 8, 16, 3),
-            base_dict(2e-6, 1.7e-4, 16, 16, 3),
-            base_dict(1e-6, 6e-5, 32, 32, 3)
-        ],
-        2: [
-            base_dict(6e-6, 2e-4, 16, 16, 1),
-            base_dict(1e-6, 1e-3, 32, 32, 1),
-            base_dict(2e-6, 1e-4, 16, 16, 2),
-            base_dict(1e-6, 2.5e-4, 32, 32, 2),
-            base_dict(1.7e-6, 5e-5, 16, 16, 3),
-            base_dict(1e-6, 4e-5, 32, 32, 3)
-        ],
-        3: [
-            base_dict(2e-6, 1e-3, 16, 16, 1),
-            base_dict(1e-6, 1.5e-4, 32, 32, 1),
-            base_dict(1e-6, 1e-4, 16, 16, 2),
-            base_dict(5e-7, 7e-5, 32, 32, 2),
-            base_dict(1e-6, 8e-4, 16, 16, 3),
-            base_dict(1e-6, 2.5e-5, 32, 32, 3)
-        ],
-        4: [
-            base_dict(5e-6, 2e-4, 16, 16, 1),
-            base_dict(1e-6, 1.5e-4, 32, 32, 1),
-            base_dict(1.8e-6, 4e-4, 16, 16, 2),
-            base_dict(1e-6, 2e-4, 32, 32, 2),
-            base_dict(1e-6, 5e-5, 16, 16, 3)
-        ],
-        5: [
-            base_dict(1.5e-6, 2e-4, 16, 16, 1),
-            base_dict(2e-7, 2e-4, 32, 32, 1),
-            base_dict(2e-6, 1.5e-4, 16, 16, 2),
-            base_dict(2e-7, 5e-5, 32, 32, 2),
-            base_dict(1e-6, 1e-4, 16, 16, 3)
-        ],
-        6: [
-            base_dict(2e-6, 6e-5, 16, 16, 1),
-            base_dict(2e-7, 3e-5, 32, 32, 1),
-            base_dict(1e-6, 8e-5, 16, 16, 2),
-            base_dict(2e-7, 1e-4, 32, 32, 2)
-        ],
-        7: [
-            base_dict(8e-7, 1e-4, 16, 16, 1),
-            base_dict(2e-7, 7e-6, 32, 32, 1),
-            base_dict(1e-6, 1e-4, 16, 16, 2),
-            base_dict(2e-7, 2e-4, 32, 32, 2)
-        ],
-        8: [
-            base_dict(1e-6, 1e-4, 16, 16, 1),
-            base_dict(6e-7, 2e-5, 32, 32, 1),
-            base_dict(6e-7, 4e-5, 16, 16, 2)
-        ]
-    }
-    return dictionary
 
-def return_dictionary_best(base_dict):
-    dictionary = {
-        4: [
-            base_dict(1e-6, 2e-4, 32, 32, 2),
-        ],
-        6: [
-            base_dict(2e-7, 1e-4, 32, 32, 2)
-        ],
-        7: [
-            base_dict(2e-7, 2e-4, 32, 32, 2)
-        ],
-    }
-    return dictionary
-
-
-def return_dictionary_best_4layer(base_dict):
-    dictionary = {
-        4: [
-            base_dict(1e-6, 2e-4, 32, 32, 2)
-            # base_dict(1e-3, 0, 32, 32, 2)
-        ]
-    }
-    return dictionary
 
 
 def return_dictionary_best_7layer(base_dict):
@@ -280,13 +146,10 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
               model_params=None,skip_cyclic_lr=False, opt_name='Adam',scale_mode='linear_cycle',step_size_add=0,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
-    # G = get_available_gpus()
-    # if len(G) == 1:
-    #     gpu = 0
     with tf.device('/gpu:0'):
         gpu_options = tf.GPUOptions(allow_growth=True) # maybe should just allocate whole gpu..
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-        tf.keras.backend.set_session(sess)
+        K.set_session(sess)
         if not os.path.exists(morfeus_drive):
             print('Morf wrong')
             return None
@@ -356,7 +219,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
                                 validation_data=validation_generator,steps_per_epoch=step_size)
 
 
-def train_model(run_best=False, save_a_model=False):
+def train_model(epochs=50,run_best=False, save_a_model=False, ext=''):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -366,9 +229,8 @@ def train_model(run_best=False, save_a_model=False):
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
-    path_extension = 'Single_Images3D_1mm'
+    path_extension = 'Single_Images3D' + ext
     cube_size = (30,300,300)
-    # cube_size = None
     num_patients = 1
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
                                                                                         liver_norm=norm_to_liver,
@@ -377,10 +239,6 @@ def train_model(run_best=False, save_a_model=False):
                                                                                         num_patients=num_patients)
     print(base_path)
     x,y = train_generator.__getitem__(0)
-    # x,y = validation_generator.__getitem__(1)
-    # file_loc = r'Keras/3D_Atrous_newlrs_livernorm/Models/7_layers/1_atrous_blocks/2_atrous_rate/1_max_atrous_blocks/' \
-    #            r'32_filters/32_max_filters/mask_pred/2e-07_min_lr/0.0002_max_lr/8_step_size_factor/' \
-    #            r'11_num_cycles/0_Iteration/weights-improvement-best.hdf5'
     file_loc = r'Keras/3D_Atrous_new_livernorm/Models/Default_Architecture/Adam_opt_name/threshold_to_0/' \
                r'linear_cycle_scale_mode/1e-06_min_lr/0.0002_max_lr/15_step_size_factor/3_step_size_add/1_Iteration/' \
                r'weights-improvement-best.hdf5'
@@ -412,11 +270,11 @@ def train_model(run_best=False, save_a_model=False):
                                          'restart_training':load_previous_iteration,'New_Style_Arch':True,'FWHM':True,
                                          'Added_Conv':True}
                      })
-    epochs = step_size_factor
-    for _ in range(1,num_cycles):
-        epochs += step_size_add + (step_size_factor * 2)
-    epochs = epochs + epoch_i
-    epochs = min([epochs,2000])
+    # epochs = step_size_factor
+    # for _ in range(1,num_cycles):
+    #     epochs += step_size_add + (step_size_factor * 2)
+    # epochs = epochs + epoch_i
+    epochs = min([2000,epochs])
     model_params = {'activation':'elu', 'concat_not_add':False}
     model_name = '3D_Atrous_new'  # change this
     if norm_to_liver:

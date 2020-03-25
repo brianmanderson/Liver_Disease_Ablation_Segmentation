@@ -7,7 +7,118 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import find_base_dir
 from Return_Morfeus_Base_Paths import return_paths
 
 
-def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False,num_patients=1,
+def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
+                           atrous_rate=2, **kwargs):
+    activation = {'activation':'elu'}
+    layers_dict = {}
+    atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
+    residual_block = lambda x: {'residual':x}
+    for layer in range(layers):
+        encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
+                    range(atrous_blocks)] + [activation]
+        if filters < max_filters:
+            filters = int(filters * 2)
+        layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
+        if atrous_blocks < max_atrous_blocks:
+            atrous_blocks = int(atrous_blocks * 2)
+    encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
+                for _ in
+                range(atrous_blocks)] + [activation]
+    layers_dict['Base'] = encoding
+    layers_dict['Final_Steps'] = [{'convolution':{'channels': 16, 'kernel': (3, 3, 3), 'strides': (1, 1, 1), 'activation': 'elu'}},
+                                  {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
+    return layers_dict
+
+def return_dictionary(base_dict):
+    dictionary = {
+        1: [
+            base_dict(1e-5, 1e-2, 8, 16, 1),
+            base_dict(1e-5, 3e-3, 16, 16, 1),
+            base_dict(3e-6, 2e-3, 32, 32, 1),
+            base_dict(1e-5, 2e-3, 8, 16, 2),
+            base_dict(2e-6, 1e-3, 16, 16, 2),
+            base_dict(2e-6, 2e-4, 32, 32, 2),
+            base_dict(1e-5, 2e-4, 8, 16, 3),
+            base_dict(2e-6, 1.7e-4, 16, 16, 3),
+            base_dict(1e-6, 6e-5, 32, 32, 3)
+        ],
+        2: [
+            base_dict(6e-6, 2e-4, 16, 16, 1),
+            base_dict(1e-6, 1e-3, 32, 32, 1),
+            base_dict(2e-6, 1e-4, 16, 16, 2),
+            base_dict(1e-6, 2.5e-4, 32, 32, 2),
+            base_dict(1.7e-6, 5e-5, 16, 16, 3),
+            base_dict(1e-6, 4e-5, 32, 32, 3)
+        ],
+        3: [
+            base_dict(2e-6, 1e-3, 16, 16, 1),
+            base_dict(1e-6, 1.5e-4, 32, 32, 1),
+            base_dict(1e-6, 1e-4, 16, 16, 2),
+            base_dict(5e-7, 7e-5, 32, 32, 2),
+            base_dict(1e-6, 8e-4, 16, 16, 3),
+            base_dict(1e-6, 2.5e-5, 32, 32, 3)
+        ],
+        4: [
+            base_dict(5e-6, 2e-4, 16, 16, 1),
+            base_dict(1e-6, 1.5e-4, 32, 32, 1),
+            base_dict(1.8e-6, 4e-4, 16, 16, 2),
+            base_dict(1e-6, 2e-4, 32, 32, 2),
+            base_dict(1e-6, 5e-5, 16, 16, 3)
+        ],
+        5: [
+            base_dict(1.5e-6, 2e-4, 16, 16, 1),
+            base_dict(2e-7, 2e-4, 32, 32, 1),
+            base_dict(2e-6, 1.5e-4, 16, 16, 2),
+            base_dict(2e-7, 5e-5, 32, 32, 2),
+            base_dict(1e-6, 1e-4, 16, 16, 3)
+        ],
+        6: [
+            base_dict(2e-6, 6e-5, 16, 16, 1),
+            base_dict(2e-7, 3e-5, 32, 32, 1),
+            base_dict(1e-6, 8e-5, 16, 16, 2),
+            base_dict(2e-7, 1e-4, 32, 32, 2)
+        ],
+        7: [
+            base_dict(8e-7, 1e-4, 16, 16, 1),
+            base_dict(2e-7, 7e-6, 32, 32, 1),
+            base_dict(1e-6, 1e-4, 16, 16, 2),
+            base_dict(2e-7, 2e-4, 32, 32, 2)
+        ],
+        8: [
+            base_dict(1e-6, 1e-4, 16, 16, 1),
+            base_dict(6e-7, 2e-5, 32, 32, 1),
+            base_dict(6e-7, 4e-5, 16, 16, 2)
+        ]
+    }
+    return dictionary
+
+
+def return_dictionary_best(base_dict):
+    dictionary = {
+        4: [
+            base_dict(1e-6, 2e-4, 32, 32, 2),
+        ],
+        6: [
+            base_dict(2e-7, 1e-4, 32, 32, 2)
+        ],
+        7: [
+            base_dict(2e-7, 2e-4, 32, 32, 2)
+        ],
+    }
+    return dictionary
+
+
+def return_dictionary_best_4layer(base_dict):
+    dictionary = {
+        4: [
+            base_dict(1e-6, 2e-4, 32, 32, 2)
+            # base_dict(1e-3, 0, 32, 32, 2)
+        ]
+    }
+    return dictionary
+
+
+def return_generators(get_mean_std=False, liver_norm=False,num_patients=1,
                       cube_size=None, path_extension='Single_Images3D', return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
@@ -19,13 +130,9 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
     mean_val = 67
     std_val = 36
     expansion = 10
-    lower_bound = -np.inf
-    upper_bound = np.inf
     if get_mean_std:
         mean_val = 0
         std_val = 1
-        lower_bound = -np.inf
-        upper_bound = np.inf
     if liver_norm:
         normalize = Normalize_to_Liver() # was (0.1 to 0.75)
     else:
@@ -39,7 +146,7 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
                               # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                               #                  inverse_image=inverse_images),
                               Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
-                                                          remove_liver_layer_indexes=(0,2), threshold_value=0)
+                                                          remove_liver_layer_indexes=(0,2))
                               ]
     image_processors_test = [normalize,
                              Ensure_Image_Proportions(512, 512),
@@ -48,7 +155,7 @@ def return_generators(get_mean_std=False, inverse_images=False, liver_norm=False
                              Annotations_To_Categorical(num_of_classes=num_classes),
                              Clip_Images(annotations_index=(1,2)),
                              Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
-                                                         remove_liver_layer_indexes=(0, 2), threshold_value=0)
+                                                         remove_liver_layer_indexes=(0, 2))
                              ]
     train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, shuffle=True,
                                            data_paths=paths, expansion=30,
