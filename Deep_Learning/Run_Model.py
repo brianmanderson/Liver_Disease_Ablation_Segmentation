@@ -166,7 +166,6 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
             things = return_things(run_data)
             things += ['{}_Iteration'.format(iteration)]
             layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
-            xx, yy = train_generator.__getitem__(0)
             # while True:
             #     for i in range(5):
             #         x,y = validation_generator_3D.__getitem__(i)
