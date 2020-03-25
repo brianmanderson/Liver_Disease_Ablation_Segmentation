@@ -49,7 +49,7 @@ def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300))
     min_lr = 1e-7
     max_lr = 1e-2
     for iteration in [0, 1, 2]:
-        for layer in [1,2,3]:
+        for layer in [1,2,3,4,5]:
             for filters in [8, 16]:
                 for max_filters in [16, 32]:
                     run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,

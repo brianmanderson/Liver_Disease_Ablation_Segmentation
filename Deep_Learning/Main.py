@@ -33,7 +33,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model import train_model
-    train_model(epochs=100, save_a_model=False, run_best=False, path_extension='Single_Images3D_1mm')
+    train_model(epochs=360, save_a_model=False, run_best=False, path_extension='Single_Images3D_1mm')
 
 make_opt_excel = False
 if make_opt_excel:
