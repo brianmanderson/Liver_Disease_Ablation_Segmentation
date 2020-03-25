@@ -13,7 +13,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 find_lr = True
 if find_lr:
-    from Deep_Learning.Optimization.Find_Best_LR import find_best_lr
+    from Optimization.Find_Best_LR import find_best_lr
     find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300))
 '''
 Plot the LR, get the min and max from the images
