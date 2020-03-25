@@ -113,6 +113,9 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         else:
             print('\n\n\n\nLoading model at {}\n\n\n\n'.format(load_path))
             Model_val = load_model(load_path, custom_objects={'dice_coef_3D': dice_coef_3D})
+        if os.listdir(tensorboard_output):
+            print('already done')
+            return None
         Model_val.compile(optimizer, loss=loss, metrics=['accuracy', dice_coef_3D])
         Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
                                 shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
