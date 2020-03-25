@@ -9,3 +9,5 @@
 /Deep_Learning/Evaluate_Model/Threshold/
 /Deep_Learning/Evaluate_Model/Volume/
 /Deep_Learning/Evaluate_Model/__pycache__/
+__pycache__/
+*.py[cod]
