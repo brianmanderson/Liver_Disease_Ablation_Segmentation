@@ -43,8 +43,8 @@ def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, ma
 
 
 def return_things(run_data):
-    things = ['Default_Architecture']
-    for top_key in ['Hyper_Parameters']:
+    things = []
+    for top_key in ['Architecture','Hyper_Parameters']:
         model_info = run_data[top_key]
         for key in model_info:
             if model_info[key] is not 0 and model_info[key] is not False and model_info[key] is not None:
