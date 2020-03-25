@@ -14,7 +14,8 @@ from tensorflow.python.keras.optimizers import Adam, SGD
 from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
-from Return_Train_Validation_Generators import return_generators, get_layers_dict_atrous
+from Return_Train_Validation_Generators import return_generators, get_layers_dict_atrous, return_dictionary,\
+    return_dictionary_best_4layer
 from _collections import OrderedDict
 
 
@@ -115,9 +116,6 @@ def return_dictionary_all_weighted(base_dict):
         5: [base_dict(1.5e-7, 4e-5, 32, 64, 1)]
     }
     return dictionary
-
-
-
 
 
 def return_dictionary_best_7layer(base_dict):
@@ -232,8 +230,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, ext=''):
     path_extension = 'Single_Images3D' + ext
     cube_size = (30,300,300)
     num_patients = 1
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators(inverse_images=inverse_images,
-                                                                                        liver_norm=norm_to_liver,
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators(liver_norm=norm_to_liver,
                                                                                         cube_size=cube_size,
                                                                                         path_extension=path_extension,
                                                                                         num_patients=num_patients)
@@ -259,17 +256,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, ext=''):
     step_size = len(train_generator)
     scale_mode = 'linear_cycle'
     step_size_add = 3
-    base_dict = lambda min_lr, max_lr, filters, max_filters, atrous_rate: \
-        OrderedDict({'Architecture':{'model_name':'','layers': 0,'atrous_blocks': 1,'atrous_rate':atrous_rate, 'max_atrous_blocks':1,
-                                     'filters':filters, 'max_filters':max_filters,'layers_conv_blocks': 0,
-                                     'conv_blocks': 0},
-                     'Hyper_Parameters':{'opt_name':opt_name,
-                                         'threshold_to_0':True,'scale_mode':scale_mode,'min_lr':min_lr,
-                                         'max_lr':max_lr,'Path_Ext':path_extension,'Cube_size':cube_size,'Num_Pats':num_patients,
-                                         'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
-                                         'restart_training':load_previous_iteration,'New_Style_Arch':True,'FWHM':True,
-                                         'Added_Conv':True}
-                     })
+
     # epochs = step_size_factor
     # for _ in range(1,num_cycles):
     #     epochs += step_size_add + (step_size_factor * 2)

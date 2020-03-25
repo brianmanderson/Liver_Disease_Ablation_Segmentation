@@ -3,8 +3,19 @@ __author__ = 'Brian M Anderson'
 
 from Base_Deeplearning_Code.Data_Generators.Generators import Data_Generator_Class
 from Base_Deeplearning_Code.Data_Generators.Image_Processors import *
-from Base_Deeplearning_Code.Data_Generators.Return_Paths import find_base_dir
 from Return_Morfeus_Base_Paths import return_paths
+from _collections import OrderedDict
+
+
+def return_base_dict(step_size_factor=10, step_size_add=3, cube_size=(30,300,300)):
+    base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
+        OrderedDict({'Architecture':{'model_name':'','layers': layers,'atrous_blocks': 2,
+                                     'filters':filters, 'max_filters':max_filters},
+                     'Hyper_Parameters':{'min_lr':min_lr, 'max_lr':max_lr,'Cube_size':cube_size,
+                                         'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
+                                         'FWHM':True,}
+                     })
+    return base_dict
 
 
 def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blocks=2, max_filters=np.inf,
@@ -13,7 +24,7 @@ def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blo
     layers_dict = {}
     atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
     residual_block = lambda x: {'residual':x}
-    for layer in range(layers):
+    for layer in range(layers-1):
         encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
                     range(atrous_blocks)] + [activation]
         if filters < max_filters:
@@ -118,7 +129,7 @@ def return_dictionary_best_4layer(base_dict):
     return dictionary
 
 
-def return_generators(get_mean_std=False, liver_norm=False,num_patients=1,
+def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                       cube_size=None, path_extension='Single_Images3D', return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
