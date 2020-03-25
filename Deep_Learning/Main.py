@@ -11,7 +11,7 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
-find_lr = True
+find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR import find_best_lr
     find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300))
@@ -22,7 +22,7 @@ plot_lr = False
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators import return_generators
-    _, morfeus_drive, _, _ = return_generators()
+    _, morfeus_drive, _, _ = return_generators(path_extension='Single_Images3D_1mm')
     path = os.path.join(morfeus_drive,'3.25_Learning_Rates','Fully_Atrous')
     make_plots(path)
 
@@ -30,12 +30,10 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model import train_model
-    # iterate_model(epochs=100, save_a_model=True, runv3_plus=False, run_vgg=False)
-    train_model(epochs=100, save_a_model=True, run_best=False, ext='_1mm')
-    # iterate_model(epochs=100, save_a_model=True, runv3_plus=False, run_vgg=True, retrain=True)
+    train_model(epochs=100, save_a_model=False, run_best=False, path_extension='Single_Images3D_1mm')
 
 make_opt_excel = False
 if make_opt_excel:
