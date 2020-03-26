@@ -7,13 +7,13 @@ from Return_Morfeus_Base_Paths import return_paths
 from _collections import OrderedDict
 
 
-def return_base_dict(step_size_factor=10, step_size_add=3, cube_size=(30,300,300)):
+def return_base_dict(step_size_factor=10, step_size_add=3):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
         OrderedDict({'Architecture':{'model_name':'','new_training':True,'layers': layers,'atrous_blocks': 2,
                                      'filters':filters, 'max_filters':max_filters},
-                     'Hyper_Parameters':{'min_lr':min_lr, 'max_lr':max_lr,'Cube_size':cube_size,
+                     'Hyper_Parameters':{'min_lr':min_lr, 'max_lr':max_lr,
                                          'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
-                                         'FWHM':True,}
+                                         }
                      })
     return base_dict
 
@@ -123,7 +123,7 @@ def return_dictionary_new(base_dict):
         base_dict(3e-6, 1e-4, 3, 16, 32),
 
         base_dict(3e-6, 2e-4, 4, 8, 16),
-        base_dict(1e-6, 8e-4, 4, 8, 32),
+        base_dict(1e-6, 2e-4, 4, 8, 32),
         base_dict(2e-6, 1e-4, 4, 16, 16),
         base_dict(4e-6, 1e-4, 4, 16, 32),
 
