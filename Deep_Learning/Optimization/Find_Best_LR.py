@@ -23,6 +23,7 @@ def run_model(layers_dict=None, out_path='',train_generator=None):
         # k = TensorBoard(log_dir=out_path)
         # k.set_model(model)
         epochs = 10
+        print('\n\n{}\n\n'.format(out_path))
         LearningRateFinder(epochs=epochs, model=model, metrics=['accuracy', dice_coef_3D],out_path=out_path,loss=loss,
                            train_generator=train_generator, lower_lr=1e-7, high_lr=1e-2)
         K.clear_session()
