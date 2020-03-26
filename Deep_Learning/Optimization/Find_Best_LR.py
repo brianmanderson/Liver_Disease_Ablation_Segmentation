@@ -41,7 +41,7 @@ def return_things(run_data):
     return things
 
 
-def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300)):
+def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300), path_desc='3.25_Learning_Rates_New_Training'):
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(path_extension=path_extension,
                                                                                         cube_size=cube_size)
     x,y = train_generator.__getitem__(0)
@@ -57,7 +57,7 @@ def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300))
                     layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
                     things = return_things(run_data)
                     things.append('{}_Iteration'.format(iteration))
-                    out_path = os.path.join(morfeus_drive,'3.25_Learning_Rates','Fully_Atrous')
+                    out_path = os.path.join(morfeus_drive,path_desc,'Fully_Atrous')
                     for thing in things:
                         out_path = os.path.join(out_path,thing)
                     if os.path.exists(out_path):

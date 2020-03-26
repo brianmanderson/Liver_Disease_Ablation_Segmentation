@@ -9,7 +9,7 @@ from _collections import OrderedDict
 
 def return_base_dict(step_size_factor=10, step_size_add=3, cube_size=(30,300,300)):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
-        OrderedDict({'Architecture':{'model_name':'','layers': layers,'atrous_blocks': 2,
+        OrderedDict({'Architecture':{'model_name':'','new_training':True,'layers': layers,'atrous_blocks': 2,
                                      'filters':filters, 'max_filters':max_filters},
                      'Hyper_Parameters':{'min_lr':min_lr, 'max_lr':max_lr,'Cube_size':cube_size,
                                          'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
@@ -120,7 +120,17 @@ def return_dictionary_new(base_dict):
         base_dict(4e-6, 5e-4, 3, 8, 16),
         base_dict(4e-6, 5e-4, 3, 8, 32),
         base_dict(4e-6, 3e-4, 3, 16, 16),
-        base_dict(3e-6, 1e-4, 3, 16, 32)
+        base_dict(3e-6, 1e-4, 3, 16, 32),
+
+        base_dict(3e-6, 2e-4, 4, 8, 16),
+        base_dict(1e-6, 8e-4, 4, 8, 32),
+        base_dict(2e-6, 1e-4, 4, 16, 16),
+        base_dict(4e-6, 1e-4, 4, 16, 32),
+
+        base_dict(2e-6, 1e-4, 5, 8, 16),
+        base_dict(1e-6, 5e-4, 5, 8, 32),
+        base_dict(1e-6, 1e-4, 5, 16, 16),
+        base_dict(1e-6, 1e-4, 5, 16, 32)
     ]
     return dictionary
 
@@ -161,7 +171,8 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     num_classes = 3
     mean_val = 67
     std_val = 36
-    expansion = 10
+    batch_size = 32
+    expansion = batch_size // 2
     if get_mean_std:
         mean_val = 0
         std_val = 1
@@ -171,9 +182,10 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
                               Annotations_To_Categorical(num_of_classes=num_classes),
-                              Clip_Images(annotations_index=(1,2), bounding_box_expansion=(10, 20, 20))]
-    if cube_size is not None:
-        image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
+                              Clip_Images(annotations_index=(1,2), bounding_box_expansion=(10, 20, 20),
+                                          min_images=batch_size,min_rows=300, min_cols=300)]
+    # if cube_size is not None:
+    #     image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
     image_processors_train += [
                               # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                               #                  inverse_image=inverse_images),
@@ -189,14 +201,17 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                              Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
                                                          remove_liver_layer_indexes=(0, 2))
                              ]
-    train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, shuffle=True,
-                                           data_paths=paths, expansion=30,
+    train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=False, batch_size=batch_size, shuffle=True,
+                                           data_paths=paths, expansion=expansion, wanted_indexes=[2],
                                            image_processors=image_processors_train)
     train_generator.wanted_indexes = [2]
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, expansion=expansion,
                                                 image_processors=image_processors_test)
-    # x, y = train_generator.__getitem__(0)
+    while False:
+        for i in range(len(train_generator)):
+            x, y = train_generator.__getitem__(i)
+            xxx = 1
     if return_test:
         test_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                               data_paths=paths_test_generator, expansion=expansion,
@@ -234,5 +249,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    # return_generators(False, liver_norm=True, path_extension='Single_Images3D_1mm', cube_size = (30,300,300), return_test=True)
+    # return_generators(False, path_extension='Single_Images3D_1mm', cube_size = (32,300,300), return_test=False)
     pass
