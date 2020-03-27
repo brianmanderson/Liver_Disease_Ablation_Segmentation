@@ -135,6 +135,37 @@ def return_dictionary_new(base_dict):
     return dictionary
 
 
+def return_dictionary_new_training(base_dict):
+    # base_dict = lambda min_lr, max_lr, layers, filters, max_filters
+    dictionary = [
+        base_dict(2e-6, 3e-4, 1, 8, 16),
+        base_dict(2e-6, 2e-4, 1, 8, 32),
+        base_dict(2e-6, 2e-4, 1, 16, 16),
+        base_dict(2e-6, 2e-4, 1, 16, 32),
+
+        base_dict(2e-6, 1e-4, 2, 8, 16),
+        base_dict(1e-6, 1e-4, 2, 8, 32),
+        base_dict(1e-6, 1.5e-4, 2, 16, 16),
+        base_dict(5e-7, 1e-4, 2, 16, 32),
+
+        base_dict(8e-7, 1.5e-4, 3, 8, 16),
+        base_dict(8e-7, 8e-5, 3, 8, 32),
+        base_dict(5e-7, 1e-4, 3, 16, 16),
+        base_dict(5e-7, 8e-5, 3, 16, 32),
+
+        base_dict(4e-7, 1e-5, 4, 8, 16),
+        base_dict(3e-7, 1e-5, 4, 8, 32),
+        base_dict(5e-7, 2e-5, 4, 16, 16),
+        base_dict(1e-7, 2e-5, 4, 16, 32),
+
+        base_dict(1e-7, 3e-5, 5, 8, 16),
+        base_dict(2e-7, 2e-5, 5, 8, 32),
+        base_dict(6e-7, 2e-5, 5, 16, 16),
+        base_dict(2e-7, 1e-5, 5, 16, 32)
+    ]
+    return dictionary
+
+
 def return_dictionary_best(base_dict):
     dictionary = {
         4: [

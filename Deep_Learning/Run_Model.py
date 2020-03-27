@@ -15,7 +15,7 @@ from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
 from Return_Train_Validation_Generators import return_generators, get_layers_dict_atrous, return_dictionary,\
-    return_dictionary_best_4layer, return_dictionary_new, return_base_dict
+    return_dictionary_best_4layer, return_dictionary_new_training, return_base_dict
 
 
 def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
@@ -140,10 +140,10 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     print(base_path)
     x,y = train_generator.__getitem__(0)
     epoch_i = 0
-    step_size_factor = 60
+    step_size_factor = 8
     num_cycles = 25
     step_size = len(train_generator)
-    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=0, cube_size=cube_size)
+    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=0)
     # epochs = step_size_factor
     # for _ in range(1,num_cycles):
     #     epochs += step_size_add + (step_size_factor * 2)
@@ -157,7 +157,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
         if run_best:
             overall_dictionary = return_dictionary_best_4layer(base_dict)
         else:
-            overall_dictionary = return_dictionary_new(base_dict)
+            overall_dictionary = return_dictionary_new_training(base_dict)
         for run_data in overall_dictionary:
             run_data['Architecture']['model_name'] = model_name
             run_data['Architecture']['batch_norm'] = batch_norm

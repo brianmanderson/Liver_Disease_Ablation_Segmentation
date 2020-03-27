@@ -11,7 +11,7 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
-find_lr = True
+find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR import find_best_lr
     find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300), path_desc='3.25_Learning_Rates_New_Training')
@@ -30,10 +30,10 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model import train_model
-    train_model(epochs=360, save_a_model=False, run_best=False, path_extension='Single_Images3D_1mm')
+    train_model(epochs=72, save_a_model=False, run_best=False, path_extension='Single_Images3D_1mm')
 
 make_opt_excel = False
 if make_opt_excel:
