@@ -30,7 +30,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = True
+run_200 = False
 if run_200:
     from Run_Model import train_model
     train_model(epochs=72, save_a_model=False, run_best=False, path_extension='Single_Images3D_None')
