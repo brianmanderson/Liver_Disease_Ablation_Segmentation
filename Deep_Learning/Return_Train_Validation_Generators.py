@@ -240,6 +240,8 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                                                 data_paths=paths_validation_generator, wanted_indexes=[1],expansion=expansion,
                                                 image_processors=image_processors_test)
     while True:
+        for i in range(len(validation_generator)):
+            x,y = validation_generator.__getitem__(i)
         for i in range(len(train_generator)):
             print(i)
             x, y = train_generator.__getitem__(i)
