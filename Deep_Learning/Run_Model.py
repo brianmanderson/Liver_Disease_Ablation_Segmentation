@@ -122,7 +122,8 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
                                 validation_data=validation_generator,steps_per_epoch=step_size)
 
 
-def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm'):
+def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
+                cube_size=(16,100,100),model_name = '3D_Fully_Atrous'):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -131,7 +132,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
-    cube_size = (16,100,100)
+
     num_patients = 1
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(liver_norm=norm_to_liver,
                                                                                         cube_size=cube_size,
@@ -150,7 +151,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     # epochs = epochs + epoch_i
     epochs = min([2000,epochs])
     model_params = {'activation':'elu', 'concat_not_add':False}
-    model_name = '3D_Fully_Atrous'  # change this
+
     if smoothing > 0:
         model_name += '{}_smoothing'.format(smoothing)
     for iteration in range(3):

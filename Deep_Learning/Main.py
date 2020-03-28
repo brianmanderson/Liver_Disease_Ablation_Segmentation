@@ -11,10 +11,14 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
+path_extension = 'Single_Images3D_None'
+cube_size = (16,100,100)
+path_desc='3.25_Learning_Rates_Cube_Training'
+model_name = '3D_Fully_Atrous_Cube_Training'
 find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR import find_best_lr
-    find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (16,100,100), path_desc='3.25_Learning_Rates_Cube_Training')
+    find_best_lr(path_extension=path_extension, cube_size=cube_size, path_desc=path_desc)
 '''
 Plot the LR, get the min and max from the images
 '''
@@ -22,8 +26,8 @@ plot_lr = False
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators import return_generators
-    _, morfeus_drive, _, _ = return_generators(path_extension='Single_Images3D_None')
-    path = os.path.join(morfeus_drive,'3.25_Learning_Rates_Cube_Training','Fully_Atrous')
+    _, morfeus_drive, _, _ = return_generators(path_extension=path_extension)
+    path = os.path.join(morfeus_drive,path_desc,'Fully_Atrous')
     make_plots(path)
 
 '''
@@ -33,7 +37,8 @@ decision based on
 run_200 = False
 if run_200:
     from Run_Model import train_model
-    train_model(epochs=72, save_a_model=False, run_best=False, path_extension='Single_Images3D_None')
+    train_model(epochs=72, save_a_model=False, run_best=False, path_extension=path_extension, cube_size=cube_size,
+                model_name=model_name)
 
 make_opt_excel = False
 if make_opt_excel:
@@ -41,7 +46,9 @@ if make_opt_excel:
     Need to run the model for ~ 200 epochs, then run Plot_Optimization_results
     '''
     from Optimization.Plot_Optimization_results import main
-    main(make_excel=False)
+    from Return_Train_Validation_Generators import return_generators
+    _, morfeus_drive, _, _ = return_generators(path_extension=path_extension)
+    main(make_excel=False, input_path= os.path.join(morfeus_drive,model_name))
 
 '''
 Now go to Evaluate_Model folder
@@ -54,4 +61,5 @@ decision based on
 run_200 = False
 if run_200:
     from Run_Model import train_model
-    train_model(run_best=True,save_a_model=True)
+    train_model(epochs=72, save_a_model=True, run_best=True, path_extension=path_extension, cube_size=cube_size,
+                model_name=model_name)

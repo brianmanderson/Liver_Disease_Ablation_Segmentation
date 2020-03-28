@@ -26,7 +26,6 @@ def run_model(layers_dict=None, out_path='',train_generator=None):
         print('\n\n{}\n\n'.format(out_path))
         LearningRateFinder(epochs=epochs, model=model, metrics=['accuracy', dice_coef_3D],out_path=out_path,loss=loss,
                            train_generator=train_generator, lower_lr=1e-7, high_lr=1e-2)
-        K.clear_session()
 
 
 def return_things(run_data):
@@ -68,6 +67,7 @@ def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300),
                     try:
                         run_model(layers_dict=layers_dict, out_path=out_path,
                                   train_generator=train_generator)
+                        K.clear_session()
                     except:
                         K.clear_session()
 
