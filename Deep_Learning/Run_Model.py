@@ -81,7 +81,9 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
             optimizer = SGD(lr=min_lr, momentum=0.9)
         print('Learning rate is {}'.format(min_lr))
         wait = 1
-        period = 5
+        period = 10
+        if save_a_model:
+            period = 2
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
@@ -119,7 +121,8 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         Model_val.compile(optimizer, loss=loss, metrics=['accuracy', dice_coef_3D])
         Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
                                 shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
-                                validation_data=validation_generator,steps_per_epoch=step_size)
+                                validation_data=validation_generator,steps_per_epoch=step_size,
+                                validation_freq=period)
 
 
 def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
@@ -141,7 +144,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     print(base_path)
     x,y = train_generator.__getitem__(0)
     epoch_i = 0
-    step_size_factor = 8
+    step_size_factor = 10
     num_cycles = 25
     step_size = len(train_generator)
     base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=0)

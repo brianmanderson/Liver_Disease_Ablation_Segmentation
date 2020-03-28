@@ -37,7 +37,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model import train_model
-    train_model(epochs=72, save_a_model=False, run_best=False, path_extension=path_extension, cube_size=cube_size,
+    train_model(epochs=120, save_a_model=False, run_best=False, path_extension=path_extension, cube_size=cube_size,
                 model_name=model_name)
 
 make_opt_excel = False
