@@ -64,15 +64,12 @@ def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300),
                         continue
                     print(out_path)
                     os.makedirs(out_path)
-                    run_model(layers_dict=layers_dict, out_path=out_path,
-                              train_generator=train_generator)
-                    K.clear_session()
-                    # try:
-                    #     run_model(layers_dict=layers_dict, out_path=out_path,
-                    #               train_generator=train_generator)
-                    #     K.clear_session()
-                    # except:
-                    #     K.clear_session()
+                    try:
+                        run_model(layers_dict=layers_dict, out_path=out_path,
+                                  train_generator=train_generator)
+                        K.clear_session()
+                    except:
+                        K.clear_session()
 
 
 if __name__ == '__main__':
