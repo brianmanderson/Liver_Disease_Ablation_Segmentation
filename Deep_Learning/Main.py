@@ -15,7 +15,7 @@ path_extension = 'Single_Images3D_None'
 cube_size = (16,100,100)
 path_desc='3.25_Learning_Rates_Cube_Training'
 model_name = '3D_Fully_Atrous_Cube_Training'
-find_lr = True
+find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR import find_best_lr
     find_best_lr(path_extension=path_extension, cube_size=cube_size, path_desc=path_desc)
@@ -34,7 +34,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model import train_model
     train_model(epochs=72, save_a_model=False, run_best=False, path_extension=path_extension, cube_size=cube_size,

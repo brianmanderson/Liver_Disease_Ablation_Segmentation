@@ -104,33 +104,33 @@ def return_dictionary(base_dict):
     return dictionary
 
 
-def return_dictionary_new(base_dict):
+def return_dictionary_cube(base_dict):
     # base_dict = lambda min_lr, max_lr, layers, filters, max_filters
     dictionary = [
         base_dict(1e-5, 1e-3, 1, 8, 16),
         base_dict(1e-5, 1e-3, 1, 8, 32),
         base_dict(1e-5, 8e-4, 1, 16, 16),
-        base_dict(8e-6, 1e-3, 1, 16, 32),
+        base_dict(8e-6, 8e-4, 1, 16, 32),
 
-        base_dict(8e-6, 8e-4, 2, 8, 16),
-        base_dict(8e-6, 8e-4, 2, 8, 32),
-        base_dict(1e-6, 4e-4, 2, 16, 16),
-        base_dict(1e-6, 4e-4, 2, 16, 32),
+        base_dict(8e-6, 6e-4, 2, 8, 16),
+        base_dict(1e-6, 8e-4, 2, 8, 32),
+        base_dict(1e-6, 3e-4, 2, 16, 16),
+        base_dict(1e-6, 2e-4, 2, 16, 32),
 
-        base_dict(4e-6, 5e-4, 3, 8, 16),
-        base_dict(4e-6, 5e-4, 3, 8, 32),
-        base_dict(4e-6, 3e-4, 3, 16, 16),
-        base_dict(3e-6, 1e-4, 3, 16, 32),
+        base_dict(5e-6, 2e-4, 3, 8, 16),
+        base_dict(1e-6, 6e-5, 3, 8, 32),
+        base_dict(4e-6, 1e-4, 3, 16, 16),
+        base_dict(1e-6, 8e-5, 3, 16, 32),
 
-        base_dict(3e-6, 2e-4, 4, 8, 16),
+        base_dict(1e-6, 1.3e-4, 4, 8, 16),
         base_dict(1e-6, 2e-4, 4, 8, 32),
         base_dict(2e-6, 1e-4, 4, 16, 16),
-        base_dict(4e-6, 1e-4, 4, 16, 32),
+        base_dict(2e-6, 1e-4, 4, 16, 32),
 
-        base_dict(2e-6, 1e-4, 5, 8, 16),
-        base_dict(1e-6, 5e-4, 5, 8, 32),
+        base_dict(1e-6, 1e-4, 5, 8, 16),
+        base_dict(1e-6, 1e-4, 5, 8, 32),
         base_dict(1e-6, 1e-4, 5, 16, 16),
-        base_dict(1e-6, 1e-4, 5, 16, 32)
+        base_dict(1e-6, 2e-5, 5, 16, 32)
     ]
     return dictionary
 
