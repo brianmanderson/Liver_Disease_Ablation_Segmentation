@@ -215,7 +215,7 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                               ]
     if cube_size is not None:
         image_processors_train += [
-                              Pull_Cube_sitk(annotation_index=2, max_cubes=np.inf, z_images=cube_size[0], rows=cube_size[1],
+                              Pull_Cube_sitk(annotation_index=2, max_cubes=12, z_images=cube_size[0], rows=cube_size[1],
                                              cols=cube_size[2])]
     image_processors_train += [
                               # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
