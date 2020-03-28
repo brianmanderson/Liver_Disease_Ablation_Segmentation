@@ -203,7 +203,7 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     mean_val = 67
     std_val = 36
     batch_size = 32
-    expansion = batch_size // 2
+    expansion = 16
     if get_mean_std:
         mean_val = 0
         std_val = 1
@@ -213,8 +213,10 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
                               Annotations_To_Categorical(num_of_classes=num_classes),
-                              Clip_Images(annotations_index=(1,2), bounding_box_expansion=(10, 20, 20),
-                                          min_images=batch_size,min_rows=300, min_cols=300)]
+                              Pull_Cube_sitk(annotation_index=2)
+                              # Clip_Images(annotations_index=(1,2), bounding_box_expansion=(10, 20, 20),
+                              #             min_images=batch_size,min_rows=None, min_cols=None)
+                              ]
     # if cube_size is not None:
     #     image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
     image_processors_train += [
@@ -232,15 +234,16 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                              Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
                                                          remove_liver_layer_indexes=(0, 2))
                              ]
-    train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=False, batch_size=batch_size, shuffle=True,
-                                           data_paths=paths, expansion=expansion, wanted_indexes=[2],
+    train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, batch_size=batch_size, shuffle=False,
+                                           data_paths=paths, expansion=expansion, wanted_indexes=[1],
                                            image_processors=image_processors_train)
     train_generator.wanted_indexes = [2]
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
-                                                data_paths=paths_validation_generator, expansion=expansion,
+                                                data_paths=paths_validation_generator, wanted_indexes=[1],expansion=expansion,
                                                 image_processors=image_processors_test)
-    while False:
+    while True:
         for i in range(len(train_generator)):
+            print(i)
             x, y = train_generator.__getitem__(i)
             xxx = 1
     if return_test:
@@ -280,5 +283,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    # return_generators(False, path_extension='Single_Images3D_1mm', cube_size = (32,300,300), return_test=False)
+    return_generators(False, path_extension='Single_Images3D_None', cube_size = (32,300,300), return_test=False)
     pass
