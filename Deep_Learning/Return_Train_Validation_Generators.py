@@ -192,7 +192,7 @@ def return_dictionary_best_4layer(base_dict):
 
 
 def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
-                      cube_size=None, path_extension='Single_Images3D', return_test=False):
+                      cube_size=(16,100,100), path_extension='Single_Images3D', return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
@@ -202,7 +202,6 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     num_classes = 3
     mean_val = 67
     std_val = 36
-    batch_size = 32
     expansion = 16
     if get_mean_std:
         mean_val = 0
@@ -212,13 +211,12 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     else:
         normalize = Normalize_Images(mean_val=mean_val,std_val=std_val)
     image_processors_train = [normalize,Ensure_Image_Proportions(512, 512),
-                              Annotations_To_Categorical(num_of_classes=num_classes),
-                              Pull_Cube_sitk(annotation_index=2)
-                              # Clip_Images(annotations_index=(1,2), bounding_box_expansion=(10, 20, 20),
-                              #             min_images=batch_size,min_rows=None, min_cols=None)
+                              Annotations_To_Categorical(num_of_classes=num_classes)
                               ]
-    # if cube_size is not None:
-    #     image_processors_train += [Pull_Cube_From_Image(desired_size=cube_size, samples=1)]
+    if cube_size is not None:
+        image_processors_train += [
+                              Pull_Cube_sitk(annotation_index=2, max_cubes=10, z_images=cube_size[0], rows=cube_size[1],
+                                             cols=cube_size[2])]
     image_processors_train += [
                               # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                               #                  inverse_image=inverse_images),
@@ -234,14 +232,14 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                              Mask_Pred_Within_Annotation(return_mask=True, liver_box=True, mask_image=False,
                                                          remove_liver_layer_indexes=(0, 2))
                              ]
-    train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, batch_size=batch_size, shuffle=False,
+    train_generator = Data_Generator_Class(by_patient=True,num_patients=num_patients, whole_patient=True, shuffle=False,
                                            data_paths=paths, expansion=expansion, wanted_indexes=[1],
                                            image_processors=image_processors_train)
     train_generator.wanted_indexes = [2]
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, wanted_indexes=[1],expansion=expansion,
                                                 image_processors=image_processors_test)
-    while True:
+    while False:
         for i in range(len(train_generator)):
             print(i)
             x, y = train_generator.__getitem__(i)
@@ -283,5 +281,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    return_generators(False, path_extension='Single_Images3D_None', cube_size = (32,300,300), return_test=False)
+    return_generators(False, path_extension='Single_Images3D_None', cube_size = (10,100,100), return_test=False)
     pass

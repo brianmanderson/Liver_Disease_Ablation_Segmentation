@@ -11,10 +11,10 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
-find_lr = False
+find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR import find_best_lr
-    find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300), path_desc='3.25_Learning_Rates_New_Training')
+    find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (16,100,100), path_desc='3.25_Learning_Rates_Cube_Training')
 '''
 Plot the LR, get the min and max from the images
 '''
@@ -22,8 +22,8 @@ plot_lr = False
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators import return_generators
-    _, morfeus_drive, _, _ = return_generators(path_extension='Single_Images3D_1mm')
-    path = os.path.join(morfeus_drive,'3.25_Learning_Rates_New_Training','Fully_Atrous')
+    _, morfeus_drive, _, _ = return_generators(path_extension='Single_Images3D_None')
+    path = os.path.join(morfeus_drive,'3.25_Learning_Rates_Cube_Training','Fully_Atrous')
     make_plots(path)
 
 '''
@@ -33,7 +33,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model import train_model
-    train_model(epochs=72, save_a_model=False, run_best=False, path_extension='Single_Images3D_1mm')
+    train_model(epochs=72, save_a_model=False, run_best=False, path_extension='Single_Images3D_None')
 
 make_opt_excel = False
 if make_opt_excel:

@@ -131,7 +131,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     norm_to_liver = True
     smoothing = 0.0
     weighted = False
-    cube_size = (30,300,300)
+    cube_size = (16,100,100)
     num_patients = 1
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(liver_norm=norm_to_liver,
                                                                                         cube_size=cube_size,
