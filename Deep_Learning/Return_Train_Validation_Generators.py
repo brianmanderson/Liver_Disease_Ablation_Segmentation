@@ -9,7 +9,7 @@ from _collections import OrderedDict
 
 def return_base_dict(step_size_factor=10, step_size_add=3):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
-        OrderedDict({'Architecture':{'model_name':'','new_training':True,'layers': layers,'atrous_blocks': 2,
+        OrderedDict({'Architecture':{'model_name':'','layers': layers,'atrous_blocks': 2,
                                      'filters':filters, 'max_filters':max_filters},
                      'Hyper_Parameters':{'min_lr':min_lr, 'max_lr':max_lr,
                                          'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
