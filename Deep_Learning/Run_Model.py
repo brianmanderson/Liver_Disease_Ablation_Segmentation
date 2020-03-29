@@ -126,7 +126,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
 
 
 def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
-                cube_size=(16,100,100),model_name = '3D_Fully_Atrous', step_size_factor=10):
+                cube_size=(16,100,100),model_name = '3D_Fully_Atrous', step_size_factor=10, step_size_add=0):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -146,7 +146,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     epoch_i = 0
     num_cycles = 25
     step_size = len(train_generator)
-    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=0)
+    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add)
     # epochs = step_size_factor
     # for _ in range(1,num_cycles):
     #     epochs += step_size_add + (step_size_factor * 2)
