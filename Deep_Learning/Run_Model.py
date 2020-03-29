@@ -88,7 +88,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
                                          save_weights_only=False, period=period, mode=mode)
-        tensorboard = TensorBoardImage(log_dir=tensorboard_output, write_graph=True, write_grads=False,num_images=3,
+        tensorboard = TensorBoardImage(log_dir=tensorboard_output, write_graph=True, write_grads=False,num_images=1,
                                        update_freq='epoch',  data_generator=validation_generator, image_frequency=period,
                                        write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor, mode='triangular2',
