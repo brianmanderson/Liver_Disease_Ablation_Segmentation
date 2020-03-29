@@ -144,14 +144,15 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     print(base_path)
     x,y = train_generator.__getitem__(0)
     epoch_i = 0
-    num_cycles = 25
+    num_cycles = 10
     step_size = len(train_generator)
-    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add)
-    # epochs = step_size_factor
-    # for _ in range(1,num_cycles):
-    #     epochs += step_size_add + (step_size_factor * 2)
-    # epochs = epochs + epoch_i
-    epochs = min([2000,epochs])
+    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add, save_a_model=save_a_model)
+    epochs = step_size_factor
+    for _ in range(1,num_cycles):
+        epochs += step_size_add + (step_size_factor * 2)
+    epochs += 2
+    epochs = min([1000,epochs])
+    epochs = max([300, epochs])
     model_params = {'activation':'elu', 'concat_not_add':False}
 
     if smoothing > 0:
@@ -167,8 +168,6 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
             run_data['Architecture']['mask_image'] = mask_image
             run_data['Architecture']['mask_pred'] = mask_pred
             run_data['Architecture']['mask_loss'] = mask_loss
-            if save_a_model:
-                run_data['Hyper_Parameters']['Save_Model'] = True
             things = return_things(run_data)
             things += ['{}_Iteration'.format(iteration)]
             layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
