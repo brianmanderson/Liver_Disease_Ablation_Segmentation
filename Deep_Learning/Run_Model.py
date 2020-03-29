@@ -125,7 +125,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
                                 validation_freq=period)
 
 
-def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
+def train_model(run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
                 cube_size=(16,100,100),model_name = '3D_Fully_Atrous', step_size_factor=10, step_size_add=0):
     mask_image = False
     mask_loss = False
