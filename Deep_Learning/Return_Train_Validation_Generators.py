@@ -168,7 +168,7 @@ def return_dictionary_new_training(base_dict):
 
 def return_dictionary_best(base_dict):
     dictionary = [
-        base_dict(3e-7, 1e-5, 4, 8, 32)
+        base_dict(1e-6, 2e-4, 4, 8, 32)
     ]
     return dictionary
 
