@@ -15,7 +15,7 @@ from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Callbacks.BMA_Callbacks import ModelCheckpoint_new, Add_LR_To_Tensorboard
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR
 from Return_Train_Validation_Generators import return_generators, get_layers_dict_atrous, return_dictionary,\
-    return_dictionary_best_4layer, return_dictionary_cube, return_base_dict
+    return_dictionary_best, return_dictionary_cube, return_base_dict
 
 
 def get_layers_dict(layers=1, filters=16, conv_blocks=1, num_atrous_blocks=4, max_blocks=2, max_filters=np.inf,
@@ -83,13 +83,13 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         wait = 1
         period = 10
         if save_a_model:
-            period = 2
+            period = 5
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
                                          save_weights_only=False, period=period, mode=mode)
         tensorboard = TensorBoardImage(log_dir=tensorboard_output, write_graph=True, write_grads=False,num_images=3,
-                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=5,
+                                       update_freq='epoch',  data_generator=validation_generator, image_frequency=period,
                                        write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor, mode='triangular2',
                          pre_cycle=pre_cycle, base_reduce_factor=2, scale_mode=scale_mode,
@@ -126,7 +126,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
 
 
 def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
-                cube_size=(16,100,100),model_name = '3D_Fully_Atrous'):
+                cube_size=(16,100,100),model_name = '3D_Fully_Atrous', step_size_factor=10):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -144,7 +144,6 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
     print(base_path)
     x,y = train_generator.__getitem__(0)
     epoch_i = 0
-    step_size_factor = 10
     num_cycles = 25
     step_size = len(train_generator)
     base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=0)
@@ -159,7 +158,7 @@ def train_model(epochs=50,run_best=False, save_a_model=False, path_extension='Si
         model_name += '{}_smoothing'.format(smoothing)
     for iteration in range(3):
         if run_best:
-            overall_dictionary = return_dictionary_best_4layer(base_dict)
+            overall_dictionary = return_dictionary_best(base_dict)
         else:
             overall_dictionary = return_dictionary_cube(base_dict)
         for run_data in overall_dictionary:

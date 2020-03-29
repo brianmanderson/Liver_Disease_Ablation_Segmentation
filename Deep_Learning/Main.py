@@ -34,7 +34,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = True
+run_200 = False
 if run_200:
     from Run_Model import train_model
     train_model(epochs=120, save_a_model=False, run_best=False, path_extension=path_extension, cube_size=cube_size,
@@ -48,7 +48,7 @@ if make_opt_excel:
     from Optimization.Plot_Optimization_results import main
     from Return_Train_Validation_Generators import return_generators
     _, morfeus_drive, _, _ = return_generators(path_extension=path_extension)
-    main(make_excel=False, input_path= os.path.join(morfeus_drive,model_name))
+    main(make_excel=True, input_path= os.path.join(morfeus_drive,'Keras',model_name))
 
 '''
 Now go to Evaluate_Model folder
@@ -58,8 +58,9 @@ Now go to Evaluate_Model folder
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model import train_model
-    train_model(epochs=72, save_a_model=True, run_best=True, path_extension=path_extension, cube_size=cube_size,
-                model_name=model_name)
+    for step_size_factor in [5, 10, 20, 40]:
+        train_model(epochs=step_size_factor*10 + 1, save_a_model=True, run_best=True, path_extension=path_extension,
+                    cube_size=cube_size, model_name=model_name)

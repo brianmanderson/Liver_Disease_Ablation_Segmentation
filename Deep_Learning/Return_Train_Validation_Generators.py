@@ -167,17 +167,9 @@ def return_dictionary_new_training(base_dict):
 
 
 def return_dictionary_best(base_dict):
-    dictionary = {
-        4: [
-            base_dict(1e-6, 2e-4, 32, 32, 2),
-        ],
-        6: [
-            base_dict(2e-7, 1e-4, 32, 32, 2)
-        ],
-        7: [
-            base_dict(2e-7, 2e-4, 32, 32, 2)
-        ],
-    }
+    dictionary = [
+        base_dict(3e-7, 1e-5, 4, 8, 32)
+    ]
     return dictionary
 
 
