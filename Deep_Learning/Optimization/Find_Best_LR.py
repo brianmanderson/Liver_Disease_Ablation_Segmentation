@@ -5,6 +5,7 @@ import tensorflow.python.keras.backend as K
 import tensorflow.compat.v1 as tf
 from Base_Deeplearning_Code.Models.Keras_Models import my_UNet
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D
+from tensorflow.python.keras.optimizers import SGD
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder, Adam
 from Return_Train_Validation_Generators import return_generators, return_base_dict, get_layers_dict_atrous, OrderedDict
 from tensorflow.python.keras.callbacks_v1 import TensorBoard
@@ -25,7 +26,7 @@ def run_model(layers_dict=None, out_path='',train_generator=None):
         epochs = 10
         print('\n\n{}\n\n'.format(out_path))
         LearningRateFinder(epochs=epochs, model=model, metrics=['accuracy', dice_coef_3D],out_path=out_path,loss=loss,
-                           train_generator=train_generator, lower_lr=1e-7, high_lr=1e-2)
+                           train_generator=train_generator, lower_lr=1e-7, high_lr=1e-2, optimizer=SGD)
 
 
 def return_things(run_data):
@@ -45,13 +46,13 @@ def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300),
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(path_extension=path_extension,
                                                                                         cube_size=cube_size)
     x,y = train_generator.__getitem__(0)
-    base_dict = return_base_dict()
+    base_dict = return_base_dict(sgd_opt=True)
     min_lr = 1e-7
     max_lr = 1e-2
     for iteration in [0, 1, 2]:
-        for layer in [1,2,3,4,5]:
-            for filters in [8, 16]:
-                for max_filters in [16, 32]:
+        for layer in [4]: #1,2,3,4,5
+            for filters in [8]: #, 16
+                for max_filters in [16]: #, 32
                     run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                          layers=layer)
                     layers_dict = get_layers_dict_atrous(**run_data['Architecture'])
