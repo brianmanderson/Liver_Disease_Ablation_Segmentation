@@ -61,8 +61,8 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model import train_model
-    for step_size_factor in [10, 20, 30]:
-        for add in [5, 10, 15]:
-            train_model(epochs=None, step_size_factor=step_size_factor,
+    for step_size_factor in [10, 20]:
+        for add in [10, 15]:
+            train_model(epochs=1000, step_size_factor=step_size_factor,
                         save_a_model=True, run_best=True, path_extension=path_extension,
                         cube_size=cube_size, model_name=model_name, step_size_add=add)
