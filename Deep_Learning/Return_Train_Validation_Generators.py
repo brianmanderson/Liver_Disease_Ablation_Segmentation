@@ -25,16 +25,19 @@ def get_layers_dict_atrous(layers=1, filters=16, atrous_blocks=2, max_atrous_blo
     atrous_block = lambda x, y, z: {'atrous': {'channels': x, 'atrous_rate': y, 'activations': z}}
     residual_block = lambda x: {'residual':x}
     for layer in range(layers-1):
-        encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])]) for _ in
-                    range(atrous_blocks)] + [activation]
+        encoding = []
+        for i in range(atrous_rate):
+            encoding += [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])]
+            encoding += [activation]
         if filters < max_filters:
             filters = int(filters * 2)
         layers_dict['Layer_' + str(layer)] = {'Encoding': encoding}
         if atrous_blocks < max_atrous_blocks:
             atrous_blocks = int(atrous_blocks * 2)
-    encoding = [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])
-                for _ in
-                range(atrous_blocks)] + [activation]
+    encoding = []
+    for i in range(atrous_rate):
+        encoding += [residual_block([atrous_block(filters, atrous_rate, ['elu' for _ in range(atrous_rate)])])]
+        encoding += [activation]
     layers_dict['Base'] = encoding
     layers_dict['Final_Steps'] = [{'convolution':{'channels': 16, 'kernel': (3, 3, 3), 'strides': (1, 1, 1), 'activation': 'elu'}},
                                   {'convolution':{'channels': 2, 'kernel': (1, 1, 1), 'strides': (1, 1, 1), 'activation': 'softmax'}}]
