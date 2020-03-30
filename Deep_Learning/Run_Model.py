@@ -82,8 +82,8 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         print('Learning rate is {}'.format(min_lr))
         wait = 1
         period = 10
-        if save_a_model:
-            period = 5
+        # if save_a_model:
+        #     period = 5
         monitor = 'val_loss' #dice_coef_3D
         mode = 'min'
         checkpoint = ModelCheckpoint_new(model_path_out, monitor=monitor, verbose=1, save_best_only=False,save_best_and_all=True,
