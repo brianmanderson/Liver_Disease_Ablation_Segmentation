@@ -17,7 +17,7 @@ def run_model(layers_dict=None, out_path='',train_generator=None):
     with tf.device('/gpu:0'):
         gpu_options = tf.GPUOptions()
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-        tf.keras.backend.set_session(sess)
+        K.set_session(sess)
         loss = 'categorical_crossentropy'
         model = my_UNet(kernel=(3, 3, 3), layers_dict=layers_dict, pool_type='Max', out_classes=2, mask_output=True
                         ).created_model
@@ -46,13 +46,13 @@ def find_best_lr(path_extension='Single_Images3D_1mm', cube_size = (30,300,300),
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(path_extension=path_extension,
                                                                                         cube_size=cube_size)
     x,y = train_generator.__getitem__(0)
-    base_dict = return_base_dict(sgd_opt=True)
+    base_dict = return_base_dict(sgd_opt=False)
     min_lr = 1e-7
     max_lr = 1e-2
     for iteration in [0, 1, 2]:
-        for layer in [4]: #1,2,3,4,5
-            for filters in [8]: #, 16
-                for max_filters in [16]: #, 32
+        for layer in [1,2,3,4,5]: #
+            for filters in [8, 16]: #, 16
+                for max_filters in [16, 32]: #, 32
                     run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                          layers=layer)
                     layers_dict = get_layers_dict_atrous(**run_data['Architecture'])

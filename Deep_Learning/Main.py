@@ -27,7 +27,7 @@ if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators import return_generators
     _, morfeus_drive, _, _ = return_generators(path_extension=path_extension)
-    path = os.path.join(morfeus_drive,path_desc,'Fully_Atrous','_model_name','SGD_Opt')
+    path = os.path.join(morfeus_drive,path_desc)
     make_plots(path)
 
 '''
