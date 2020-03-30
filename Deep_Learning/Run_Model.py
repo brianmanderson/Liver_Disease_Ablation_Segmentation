@@ -57,8 +57,8 @@ def return_things(run_data):
 
 def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
-              morfeus_drive='',base_path='', save_a_model=True,weighted=False, balance_beta=1.0, epoch_i = 0,
-              model_params=None,skip_cyclic_lr=False, opt_name='Adam',scale_mode='linear_cycle',step_size_add=0,**kwargs):
+              morfeus_drive='',base_path='', save_a_model=True,weighted=False, balance_beta=1.0, epoch_i = 0, sgd=False,
+              model_params=None,skip_cyclic_lr=False, scale_mode='linear_cycle',step_size_add=0,**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     with tf.device('/gpu:0'):
@@ -75,10 +75,10 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
 
         model_path_out = paths_class.model_path_out
         tensorboard_output = paths_class.tensorboard_path_out
-        if opt_name == 'Adam':
+        if not sgd:
             optimizer = Adam(lr=min_lr)
         else:
-            optimizer = SGD(lr=min_lr, momentum=0.9)
+            optimizer = SGD(lr=min_lr)
         print('Learning rate is {}'.format(min_lr))
         wait = 1
         period = 10
@@ -118,6 +118,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         if os.listdir(tensorboard_output):
             print('already done')
             return None
+        print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
         Model_val.compile(optimizer, loss=loss, metrics=['accuracy', dice_coef_3D])
         Model_val.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False, max_queue_size=50,
                                 shuffle=True, epochs=epochs, callbacks=callbacks, initial_epoch=epoch_i,
@@ -126,7 +127,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
 
 
 def train_model(epochs=None,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
-                cube_size=(16,100,100),model_name = '3D_Fully_Atrous', step_size_factor=10, step_size_add=0):
+                cube_size=(16,100,100),model_name = '3D_Fully_Atrous', step_size_factor=10, step_size_add=0, sgd=False):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -146,7 +147,8 @@ def train_model(epochs=None,run_best=False, save_a_model=False, path_extension='
     epoch_i = 0
     num_cycles = 10
     step_size = len(train_generator)
-    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add, save_a_model=save_a_model)
+    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add,
+                                 save_a_model=save_a_model, sgd_opt=sgd)
     if epochs is None:
         epochs = step_size_factor
         for _ in range(1,num_cycles):
@@ -160,7 +162,7 @@ def train_model(epochs=None,run_best=False, save_a_model=False, path_extension='
         model_name += '{}_smoothing'.format(smoothing)
     for iteration in range(3):
         if run_best:
-            overall_dictionary = return_dictionary_best(base_dict)
+            overall_dictionary = return_dictionary_best(base_dict, sgd=sgd)
         else:
             overall_dictionary = return_dictionary_cube(base_dict)
         for run_data in overall_dictionary:
@@ -187,7 +189,7 @@ def train_model(epochs=None,run_best=False, save_a_model=False, path_extension='
                           step_size=step_size,epoch_i=epoch_i,
                           validation_generator=validation_generator,save_a_model=save_a_model,
                           model_params=model_params, paths_class=paths_class,morfeus_drive=morfeus_drive,
-                          base_path=base_path, epochs=epochs, weighted=weighted,
+                          base_path=base_path, epochs=epochs, weighted=weighted,sgd=sgd,
                           write_images=write_images,**run_data['Architecture'],**run_data['Hyper_Parameters'])
                 K.clear_session()
             except:

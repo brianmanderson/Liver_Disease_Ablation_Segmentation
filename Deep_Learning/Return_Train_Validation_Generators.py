@@ -9,10 +9,11 @@ from _collections import OrderedDict
 
 def return_base_dict(step_size_factor=10, step_size_add=3, save_a_model=False,sgd_opt=False):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
-        OrderedDict({'Architecture':{'model_name':'','SGD_Opt':sgd_opt,'layers': layers,'atrous_blocks': 2,
+        OrderedDict({'Architecture':{'model_name':'','layers': layers,'atrous_blocks': 2,
                                      'filters':filters, 'max_filters':max_filters},
-                     'Hyper_Parameters':{'Save_Model':save_a_model,'Final':True,'min_lr':min_lr, 'max_lr':max_lr,
-                                         'step_size_factor': step_size_factor, 'step_size_add':step_size_add,
+                     'Hyper_Parameters':{'Save_Model':save_a_model,'Final':True,'SGD_Opt':sgd_opt, 'min_lr':min_lr,
+                                         'max_lr':max_lr, 'step_size_factor': step_size_factor,
+                                         'step_size_add':step_size_add,
                                          }
                      })
     return base_dict
@@ -169,10 +170,14 @@ def return_dictionary_new_training(base_dict):
     return dictionary
 
 
-def return_dictionary_best(base_dict):
+def return_dictionary_best(base_dict, sgd=False):
     dictionary = [
         base_dict(1e-6, 2e-4, 4, 8, 32)
     ]
+    if sgd:
+        dictionary = [
+            base_dict(1e-5, 7e-4, 4, 8, 32)
+        ]
     return dictionary
 
 
