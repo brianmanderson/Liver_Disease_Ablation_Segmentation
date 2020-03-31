@@ -7,9 +7,11 @@ import os, time
 from Return_Train_Validation_Generators import return_generators, sitk, plot_scroll_Image
 
 
-def create_prediction_files(is_test=False, path_ext = '', desc=''):
+def create_prediction_files(is_test=False, path_ext = '', desc='', model_name='weights-improvement-best_FWHM.hdf5'):
     path_extension = 'Single_Images3D' + path_ext
     cube_size = (30,300,300)
+    reader = sitk.ImageFileReader()
+    reader.LoadPrivateTagsOn()
     # cube_size = None
     num_patients = 1
     base_path, morfeus_drive, _, eval_generator = return_generators(liver_norm=True,
@@ -33,16 +35,42 @@ def create_prediction_files(is_test=False, path_ext = '', desc=''):
         for i in range(len(eval_generator)):
             image_path = eval_generator.image_list[i][0]
             image_name = ''.join(image_path.split('\\')[-1].split('_')[:-2])
+            load_path_index = image_path.index('Single_Images')
+            load_path = image_path[:load_path_index]
             print(image_name)
             if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
                 continue
             elif model_val is None:
-                model_val = load_model(r'D:\Liver_Disease_Ablation\weights-improvement-best_FWHM.hdf5',
+                model_val = load_model(r'D:\Liver_Disease_Ablation\{}'.format(model_name),
                                        custom_objects={'dice_coef_3D': dice_coef_3D})
             x,y = eval_generator.__getitem__(i)
-            sitk_image = sitk.ReadImage(image_path)
-            spacing = sitk_image.GetSpacing() + (1,)
-            pred = model_val.predict(x)
+            whole_patient_file_name = 'Overall_Data_{}'.format(image_path.split('\\')[-1].replace('_{}_image'.format(image_path.split('_')[-2]),''))
+            reader.SetFileName(os.path.join(load_path,whole_patient_file_name))
+            reader.ReadImageInformation()
+            spacing = reader.GetSpacing()
+            step = 200
+            pull = 160
+            gap = (step - pull) // 2
+            shift = pull
+            if x[0].shape[1] > step:
+                pred = np.zeros(x[0].shape[:-1] + (2,))
+                start = 0
+                while start < x[0].shape[1]:
+                    pred_cube = model_val.predict([x[0][:,start:start+step,...],x[1][:,start:start+step,...],x[2][:,start:start+step,...]])
+                    start_gap = gap
+                    stop_gap = gap
+                    if start == 0:
+                        start_gap = 0
+                    elif start + shift >= x[0].shape[1]:
+                        stop_gap = 0
+                    if stop_gap != 0:
+                        pred_cube = pred_cube[:, start_gap:-stop_gap, ...]
+                    else:
+                        pred_cube = pred_cube[:, start_gap:, ...]
+                    pred[:,start+start_gap:start+pred_cube.shape[1],...] = pred_cube
+                    start += shift
+            else:
+                pred = model_val.predict(x)
 
             truth = sitk.GetImageFromArray(np.squeeze(y[...,1]))
             truth.SetSpacing(spacing)
