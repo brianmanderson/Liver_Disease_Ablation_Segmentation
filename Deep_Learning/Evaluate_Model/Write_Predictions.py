@@ -76,6 +76,10 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_name='w
             truth.SetSpacing(spacing)
             sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
 
+            liver = sitk.GetImageFromArray(np.squeeze(x[1][...,0]))
+            liver.SetSpacing(spacing)
+            sitk.WriteImage(liver, os.path.join(pred_output_path, '{}_Liver.nii.gz'.format(image_name)))
+
             prediction = sitk.GetImageFromArray(np.squeeze(pred[...,1]))
             prediction.SetSpacing(spacing)
             prediction.SetOrigin(truth.GetOrigin())

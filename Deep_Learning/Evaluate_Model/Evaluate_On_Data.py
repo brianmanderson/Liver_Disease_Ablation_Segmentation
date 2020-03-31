@@ -11,29 +11,39 @@ from threading import Thread
 from multiprocessing import cpu_count
 from queue import *
 
-class Remove_Smallest_Structures(object):
-    def __init__(self):
-        self.Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
-        self.RelabelComponent = sitk.RelabelComponentImageFilter()
-        self.RelabelComponent.SortByObjectSizeOn()
-
-    def process(self, annotation_handle):
-        label_image = self.Connected_Component_Filter.Execute(annotation_handle)
-        label_image = self.RelabelComponent.Execute(label_image)
-        output = sitk.BinaryThreshold(sitk.Cast(label_image,sitk.sitkFloat32), lowerThreshold=0.1,upperThreshold=1.0)
-        return output
-
 
 class Fill_Binary_Holes(object):
-    def __init__(self):
+    def __init__(self, kernel_radius=(5,5,1)):
         self.BinaryfillFilter = sitk.BinaryFillholeImageFilter()
         self.BinaryfillFilter.SetFullyConnected(True)
         self.BinaryfillFilter = sitk.BinaryMorphologicalClosingImageFilter()
-        self.BinaryfillFilter.SetKernelRadius((5,5,1))
+        self.BinaryfillFilter.SetKernelRadius(kernel_radius)
         self.BinaryfillFilter.SetKernelType(sitk.sitkBall)
 
     def process(self, pred_handle):
-        return self.BinaryfillFilter.Execute(pred_handle)
+        output = self.BinaryfillFilter.Execute(pred_handle)
+        return output
+
+
+class Threshold_and_Expand(object):
+    def __init__(self, seed_threshold_value=0.8, lower_threshold_value=0.2):
+        self.threshold_value = seed_threshold_value
+        self.Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
+        self.RelabelComponent = sitk.RelabelComponentImageFilter()
+        self.Connected_Threshold = sitk.ConnectedThresholdImageFilter()
+        self.Connected_Threshold.SetLower(lower_threshold_value)
+        self.Connected_Threshold.SetUpper(2)
+        self.stats = sitk.LabelShapeStatisticsImageFilter()
+
+    def process(self, prediction):
+        thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=self.threshold_value)
+        connected_image = self.Connected_Component_Filter.Execute(thresholded_image)
+        self.stats.Execute(connected_image)
+        seeds = [self.stats.GetCentroid(l) for l in self.stats.GetLabels()]
+        seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
+        self.Connected_Threshold.SetSeedList(seeds)
+        output = self.Connected_Threshold.Execute(prediction)
+        return output
 
 
 class OverlapMeasures(Enum):
@@ -59,6 +69,9 @@ class run_metrics(object):
                 out_dict[name]['{}_{}'.format(metric, i)] = []
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
+        truth_array = sitk.GetArrayFromImage(truth)
+        volume = truth_array[truth_array == 1].shape[0] * np.prod(truth.GetSpacing()) / 1000
+        out_dict['Volume'] = volume
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
 
@@ -76,11 +89,16 @@ class run_metrics(object):
         statistics_image_filter.Execute(reference_surface)
         num_reference_surface_pixels = int(statistics_image_filter.GetSum())
         Binary_Threshold = sitk.BinaryThresholdImageFilter()
+        fill_binary = Fill_Binary_Holes()
         print(metric)
         for i, metric_value in enumerate(metric_range):
             print(metric_value)
-            Binary_Threshold.SetLowerThreshold(metric_value)
-            threshold_pred = Binary_Threshold.Execute(prediction)
+            threshold_and_expand = Threshold_and_Expand(seed_threshold_value=0.8, lower_threshold_value=metric_value)
+            # Binary_Threshold.SetLowerThreshold(metric_value)
+            threshold_pred = threshold_and_expand.process(prediction)
+            threshold_pred = fill_binary.process(threshold_pred)
+            # sitk.WriteImage(threshold_pred, file.replace('_Image', '_PredictionOutput'))
+            # threshold_pred = Binary_Threshold.Execute(prediction)
             overlap_measures_filter.Execute(truth, threshold_pred)
             overlap_results[i, OverlapMeasures.jaccard.value] = overlap_measures_filter.GetJaccardCoefficient()
             overlap_results[i, OverlapMeasures.dice.value] = overlap_measures_filter.GetDiceCoefficient()
@@ -162,16 +180,16 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     out_dict = {}
     for name, _ in OverlapMeasures.__members__.items():
-        out_dict[name] = {'Patient_ID':['']}
+        out_dict[name] = {'Patient_ID':[''], 'Volume': ['']}
     for name, _ in SurfaceDistanceMeasures.__members__.items():
-        out_dict[name] = {'Patient_ID':['']}
+        out_dict[name] = {'Patient_ID':[''], 'Volume': ['']}
     metric = 'Threshold'
     metric_range = threshold_range
-    if not os.path.exists(out_path):
-        os.makedirs(out_path)
     for name in out_dict.keys():
         for i in metric_range:
             out_dict[name]['{}_{}'.format(metric,i)] = [i]
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
     new_out_dict = {}
     stuff = [new_out_dict, metric, metric_range]
     q = Queue(maxsize=thread_count)
@@ -191,10 +209,18 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
         t.join()
 
     for pat_id in new_out_dict.keys():
-        for metric_name in new_out_dict[pat_id].keys():
+        print(pat_id)
+        for metric_name, _ in OverlapMeasures.__members__.items():
             out_dict[metric_name]['Patient_ID'].append(pat_id)
+            out_dict[metric_name]['Volume'].append(new_out_dict[pat_id]['Volume'])
             for measured_name in new_out_dict[pat_id][metric_name].keys():
                 out_dict[metric_name][measured_name] += new_out_dict[pat_id][metric_name][measured_name]
+        for metric_name, _ in SurfaceDistanceMeasures.__members__.items():
+            out_dict[metric_name]['Patient_ID'].append(pat_id)
+            out_dict[metric_name]['Volume'].append(new_out_dict[pat_id]['Volume'])
+            for measured_name in new_out_dict[pat_id][metric_name].keys():
+                out_dict[metric_name][measured_name] += new_out_dict[pat_id][metric_name][measured_name]
+
     for measured_name in out_dict.keys():
         df = pd.DataFrame(out_dict[measured_name])
         df.to_excel(os.path.join(out_path,'Out_Data_{}_{}.xlsx'.format(desc,measured_name)),index=0)

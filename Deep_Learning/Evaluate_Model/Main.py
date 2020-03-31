@@ -13,24 +13,24 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 
 model_name = 'weights-improvement-best_cube_600.hdf5'
-create_prediction = True
 desc = 'Cube_Training'
+create_prediction = True
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
     create_prediction_files(is_test=False, path_ext='_None', desc=desc, model_name=model_name)
 
-    # create_prediction_files(is_test=True, path_ext='_None', desc=desc, model_name=model_name)
+    create_prediction_files(is_test=True, path_ext='_None', desc=desc, model_name=model_name)
 
 evaluate_prediction = False
 if evaluate_prediction:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data import create_metric_chart, os
     path = r'D:\Liver_Disease_Ablation\Predictions_None\Validation{}'.format(desc)
-    create_metric_chart(path=path,desc=desc,threshold_range = [.1,.2,.3,.4,.5,.6,.7,.8,.9],
-                        out_path=os.path.join('.','Threshold_Expand'))
+    create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Seed'),
+                        threshold_range = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7])
 
 evaluate_test = False
 if evaluate_test:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data import create_metric_chart, os
-    create_metric_chart(desc=desc,threshold_range = [.3],
-                        path = r'D:\Liver_Disease_Ablation\Predictions_1mm\TestFWHM',
+    create_metric_chart(desc=desc,threshold_range = [.4],
+                        path = r'D:\Liver_Disease_Ablation\Predictions_None\Test{}'.format(desc),
                         out_path=os.path.join('.','Test_Output'))

@@ -248,7 +248,6 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
         test_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                               data_paths=paths_test_generator, expansion=expansion,
                                               image_processors=image_processors_test)
-        x,y = test_generator.__getitem__(16)
         return base_path, morfeus_drive, 0, test_generator
     # x,y = validation_generator.__getitem__(0)
     # while True:
