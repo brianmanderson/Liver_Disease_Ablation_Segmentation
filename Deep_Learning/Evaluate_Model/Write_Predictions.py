@@ -67,7 +67,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_name='w
                         pred_cube = pred_cube[:, start_gap:-stop_gap, ...]
                     else:
                         pred_cube = pred_cube[:, start_gap:, ...]
-                    pred[:,start+start_gap:start+pred_cube.shape[1],...] = pred_cube
+                    pred[:,start+start_gap:start + start_gap + pred_cube.shape[1],...] = pred_cube
                     start += shift
             else:
                 pred = model_val.predict(x)
