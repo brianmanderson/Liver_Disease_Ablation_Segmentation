@@ -61,7 +61,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model import train_model
-    sgd=True
+    sgd=False
     for step_size_factor in [20]:
         for add in [10]:
             train_model(epochs=1005, step_size_factor=step_size_factor,
