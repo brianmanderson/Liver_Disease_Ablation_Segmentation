@@ -11,3 +11,4 @@
 /Deep_Learning/Evaluate_Model/__pycache__/
 __pycache__/
 *.py[cod]
+/Deep_Learning/password.txt
