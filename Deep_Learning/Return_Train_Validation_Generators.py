@@ -239,7 +239,7 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, wanted_indexes=[1],expansion=expansion,
                                                 image_processors=image_processors_test)
-    while True:
+    while False:
         for i in range(1,len(train_generator)):
             print(i)
             x, y = train_generator.__getitem__(i)
@@ -281,5 +281,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
+    # return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
     pass
