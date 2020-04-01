@@ -14,7 +14,7 @@ def run_LiTs_to_NIFTII():
 
 
 def main():
-    create_niftii_images = True
+    create_niftii_images = False
     if create_niftii_images:
         run_LiTs_to_NIFTII()
     separate_to_train_etc = False
@@ -25,11 +25,10 @@ def main():
     if make_single_images:
         path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
         path = r'D:\Liver_Disease_Ablation'
-        desired_output_spacing = (0.89648, 0.89648, 3)
         desired_output_spacing = (None, None, None)
         extension = 32
-        write_images = True
-        re_write_pickle = False
+        write_images = False
+        re_write_pickle = True
         run_main(path,desired_output_spacing,extension, write_images, re_write_pickle, file_ext='_None')
 
 

@@ -1,19 +1,10 @@
-__author__ = 'Brian M Anderson'
-# Created on 2/8/2020
+from Base_Deeplearning_Code.Send_Email_To_Phone.Send_Email_Module import Send_Email_Class
+import os
 
-from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback import CyclicLR, Half_Drop
-from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image, plt
-
-
-step_size = 50
-step_size_factor = 3
-lrate = CyclicLR(base_lr=1e-5,max_lr=1e-3,step_size=step_size,step_size_factor=step_size_factor,base_reduce_factor=2.0, mode='triangular2',
-                 step_size_factor_scale=lambda x: x+2, scale_mode='exp_cycle')
-iterations = []
-lr = []
-for i in range(step_size_factor*step_size*20):
-    iterations.append(i/step_size)
-    lr.append(lrate.clr())
-    lrate.trn_iterations += 1
-    lrate.clr_iterations += 1
-xxx = 1
+fid = open(os.path.join('.', 'password.txt'))
+line = fid.readline()
+fid.close()
+data = line.split(',')
+email_class_object = Send_Email_Class(email_address=data[0], password=data[1])
+email_class_object.set_outbound_email(data[2])
+email_class_object.send_email('test')

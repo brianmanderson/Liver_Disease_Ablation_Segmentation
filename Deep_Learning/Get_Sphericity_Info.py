@@ -10,6 +10,7 @@ import os, time
 import numpy as np
 from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Deep_Learning.Base_Deeplearning_Code.Data_Generators.Image_Processors import get_bounding_box_indexes
+from Deep_Learning.Base_Deeplearning_Code.Send_Email_To_Phone.Send_Email_Module import Send_Email_Class
 import pandas as pd
 
 
@@ -51,7 +52,7 @@ class Create_Sphericity(object):
     def process(self,out_dict, path=r'D:\Liver_Disease_Ablation\Train\Overall_mask_LiTs_y8.nii.gz'):
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         RelabelComponent = sitk.RelabelComponentImageFilter()
-        temp_dict = {'Patient_ID': [], 'Tumor_ID': [], 'Sphericity': [], 'Volume':[]}
+        temp_dict = {'Patient_ID': [], 'Tumor_ID': [], 'Sphericity': [], 'Volume_cm3':[],'Voxels':[]}
         annotation = sitk.ReadImage(path)
         pat_id = path.split('_y')[1].split('.nii')[0]
         print(pat_id)
@@ -69,7 +70,8 @@ class Create_Sphericity(object):
             SurfaceArea, Volume, diameters = cShape.calculate_coefficients(maskArray, pixelSpacing)
             sphericity = (36 * np.pi * Volume ** 2) ** (1.0 / 3.0) / SurfaceArea
             temp_dict['Sphericity'].append(sphericity)
-            temp_dict['Volume'].append(Volume)
+            temp_dict['Volume_cm3'].append(Volume/10000)
+            temp_dict['Voxels'].append(np.sum(maskArray))
         out_dict[pat_id] = temp_dict
         return None
 
@@ -110,16 +112,24 @@ def make_sphericity_excel(thread_count=int(cpu_count() * .9 - 1),out_path=os.pat
         t.join()
     stop = time.time()
     print('Took {} seconds'.format(stop-start))
-    out_dict = {'Patient_ID':[], 'Tumor_ID':[],'Sphericity':[],'Volume':[]}
+    out_dict = {'Patient_ID':[], 'Tumor_ID':[],'Sphericity':[],'Volume_cm3':[],'Voxels':[]}
     for pat_id in overall_dict.keys():
         out_dict['Patient_ID'] += overall_dict[pat_id]['Patient_ID']
         out_dict['Tumor_ID'] += overall_dict[pat_id]['Tumor_ID']
         out_dict['Sphericity'] += overall_dict[pat_id]['Sphericity']
-        out_dict['Volume'] += overall_dict[pat_id]['Volume']
+        out_dict['Volume_cm3'] += overall_dict[pat_id]['Volume_cm3']
+        out_dict['Voxels'] += overall_dict[pat_id]['Voxels']
     data_frame = pd.DataFrame(out_dict)
     data_frame.to_excel(out_path,index=0)
+    # fid = open(os.path.join('.','password.txt'))
+    # line = fid.readline()
+    # fid.close()
+    # data = line.split(',')
+    # email_class_object = Send_Email_Class(data[0], data[1])
+    # email_class_object.set_outbound_email(data[2])
+    # email_class_object.send_email('test')
     return None
 
 
 if __name__ == '__main__':
-    make_sphericity_excel(out_path=os.path.join('.','Sphericity.xlsx')) #, thread_count=1
+    make_sphericity_excel(out_path=os.path.join('.','Sphericity.xlsx'), thread_count=1) #, thread_count=1
