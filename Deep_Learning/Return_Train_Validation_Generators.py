@@ -216,7 +216,8 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     if cube_size is not None:
         image_processors_train += [
                               Pull_Cube_sitk(annotation_index=2, max_cubes=cube_size[0], z_images=cube_size[1],
-                                             rows=cube_size[2], cols=cube_size[3], min_volume=0, min_voxels=300)]
+                                             rows=cube_size[2], cols=cube_size[3], min_volume=0, min_voxels=300,
+                                             max_volume=np.inf, max_voxels=1350000)]
     image_processors_train += [
                               # Threshold_Images(lower_bound=lower_bound, upper_bound=upper_bound,
                               #                  inverse_image=inverse_images),
@@ -238,7 +239,7 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
     validation_generator = Data_Generator_Class(by_patient=True,num_patients=1, whole_patient=True, shuffle=False,
                                                 data_paths=paths_validation_generator, wanted_indexes=[1],expansion=expansion,
                                                 image_processors=image_processors_test)
-    while False:
+    while True:
         for i in range(1,len(train_generator)):
             print(i)
             x, y = train_generator.__getitem__(i)
@@ -280,5 +281,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    # return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
+    return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
     pass
