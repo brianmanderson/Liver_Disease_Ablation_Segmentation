@@ -14,7 +14,7 @@ def run_LiTs_to_NIFTII():
 
 
 def main():
-    create_niftii_images = False
+    create_niftii_images = True
     if create_niftii_images:
         run_LiTs_to_NIFTII()
     separate_to_train_etc = False
