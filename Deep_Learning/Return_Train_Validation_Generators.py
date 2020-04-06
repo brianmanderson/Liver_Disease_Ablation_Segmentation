@@ -240,7 +240,7 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                                                 data_paths=paths_validation_generator, wanted_indexes=[1],expansion=expansion,
                                                 image_processors=image_processors_test)
     while False:
-        for i in range(1,len(train_generator)):
+        for i in range(1,2):
             print(i)
             x, y = train_generator.__getitem__(i)
             print(x[0].shape[0])
@@ -251,9 +251,6 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
                                               image_processors=image_processors_test)
         return base_path, morfeus_drive, 0, test_generator
     # x,y = validation_generator.__getitem__(0)
-    # while True:
-    #     x,y = train_generator.__getitem__(0)
-    #     xxx = 1
     if get_mean_std:
         livers = []
         diseases = []
@@ -281,5 +278,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    # return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
+    return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
     pass

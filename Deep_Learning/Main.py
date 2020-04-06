@@ -14,7 +14,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 path_extension = 'Single_Images3D_None'
 cube_size = (8, 32, 100, 100)
 path_desc='3.25_Learning_Rates_Cube_Training'
-model_name = '3D_Fully_Atrous_Cube_Training_20_120_120'
+model_name = '3D_Fully_Atrous_Variable_Cube_Training_8_32_100_100'
 find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR import find_best_lr

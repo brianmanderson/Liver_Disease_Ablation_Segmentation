@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Deep_Learning" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Pre_Processing" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Pre_Processing/Raystation_Modules" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

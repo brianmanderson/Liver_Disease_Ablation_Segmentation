@@ -17,7 +17,6 @@ def export_roi(patient, case, exam, roi, base_export_path=''):
     return None
 
 
-
 def main():
     patient_db = get_current("PatientDB")
     base_export_path = 'D:\Liver_Disease_Ablation\Raystation_Exports'
