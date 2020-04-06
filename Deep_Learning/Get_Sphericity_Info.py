@@ -52,7 +52,8 @@ class Create_Sphericity(object):
     def process(self,out_dict, path=r'D:\Liver_Disease_Ablation\Train\Overall_mask_LiTs_y8.nii.gz'):
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         RelabelComponent = sitk.RelabelComponentImageFilter()
-        temp_dict = {'Patient_ID': [], 'Tumor_ID': [], 'Sphericity': [], 'Volume_cm3':[],'Voxels':[]}
+        temp_dict = {'Group':[],'Patient_ID': [], 'Tumor_ID': [], 'Sphericity': [], 'Volume_cm3':[],'Voxels':[]}
+        group = path.split('\\')[-2]
         annotation = sitk.ReadImage(path)
         pat_id = path.split('_y')[1].split('.nii')[0]
         print(pat_id)
@@ -64,6 +65,7 @@ class Create_Sphericity(object):
         pixelSpacing = np.array(label_image.GetSpacing()[::-1])
         for value in range(1,np.max(base_mask)+1):
             print(value)
+            temp_dict['Group'].append(group)
             temp_dict['Patient_ID'].append('Lits_{}'.format(pat_id))
             temp_dict['Tumor_ID'].append(value)
             maskArray = base_mask == value
@@ -96,13 +98,15 @@ def make_sphericity_excel(thread_count=int(cpu_count() * .9 - 1),out_path=os.pat
         t = Thread(target=worker_def, args=(A,))
         t.start()
         threads.append(t)
-    path = r'D:\Liver_Disease_Ablation\Train'
-    files = os.listdir(path)
-    files = [i for i in files if i.find('Overall_mask') == 0]
+    path_base = r'D:\Liver_Disease_Ablation'
     inputs = []
     overall_dict = {}
-    for file in files:
-        inputs.append({'path':os.path.join(path,file),'out_dict':overall_dict})
+    for folder in ['Train','Test','Validation']:
+        path = os.path.join(path_base,folder)
+        files = os.listdir(path)
+        files = [i for i in files if i.find('Overall_mask') == 0]
+        for file in files:
+            inputs.append({'path':os.path.join(path,file),'out_dict':overall_dict})
     start = time.time()
     for data in inputs:
         q.put(data)
@@ -112,8 +116,9 @@ def make_sphericity_excel(thread_count=int(cpu_count() * .9 - 1),out_path=os.pat
         t.join()
     stop = time.time()
     print('Took {} seconds'.format(stop-start))
-    out_dict = {'Patient_ID':[], 'Tumor_ID':[],'Sphericity':[],'Volume_cm3':[],'Voxels':[]}
+    out_dict = {'Group':[],'Patient_ID':[], 'Tumor_ID':[],'Sphericity':[],'Volume_cm3':[],'Voxels':[]}
     for pat_id in overall_dict.keys():
+        out_dict['Group'] += overall_dict[pat_id]['Group']
         out_dict['Patient_ID'] += overall_dict[pat_id]['Patient_ID']
         out_dict['Tumor_ID'] += overall_dict[pat_id]['Tumor_ID']
         out_dict['Sphericity'] += overall_dict[pat_id]['Sphericity']
@@ -132,4 +137,4 @@ def make_sphericity_excel(thread_count=int(cpu_count() * .9 - 1),out_path=os.pat
 
 
 if __name__ == '__main__':
-    make_sphericity_excel(out_path=os.path.join('.','Sphericity.xlsx'), thread_count=1) #, thread_count=1
+    make_sphericity_excel(out_path=os.path.join('.','Sphericity.xlsx')) #, thread_count=1
