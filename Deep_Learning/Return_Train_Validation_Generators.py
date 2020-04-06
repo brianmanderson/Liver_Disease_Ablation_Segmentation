@@ -278,5 +278,5 @@ def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
 
 
 if __name__ == '__main__':
-    return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
+    # return_generators(False, path_extension='Single_Images3D_None', cube_size=(8, 32, 100, 100), return_test=False)
     pass
