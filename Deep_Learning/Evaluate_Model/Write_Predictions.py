@@ -9,13 +9,10 @@ from Return_Train_Validation_Generators import return_generators, sitk, plot_scr
 
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_name='weights-improvement-best_FWHM.hdf5'):
     path_extension = 'Single_Images3D' + path_ext
-    cube_size = (30,300,300)
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
-    # cube_size = None
     num_patients = 1
     base_path, morfeus_drive, _, eval_generator = return_generators(liver_norm=True,
-                                                                    cube_size=cube_size,
                                                                     path_extension=path_extension,
                                                                     num_patients=num_patients,
                                                                     return_test=is_test)

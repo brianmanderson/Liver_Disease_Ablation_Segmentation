@@ -12,8 +12,8 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 
-model_name = 'weights-improvement-best_cube_600.hdf5'
-desc = 'Cube_Training'
+model_name = 'weights-improvement-best_cube_training.hdf5'
+desc = 'Multi_Cube_Training'
 create_prediction = True
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
@@ -21,7 +21,7 @@ if create_prediction:
 
     create_prediction_files(is_test=True, path_ext='_None', desc=desc, model_name=model_name)
 
-evaluate_prediction = False
+evaluate_prediction = True
 if evaluate_prediction:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data import create_metric_chart, os
     path = r'D:\Liver_Disease_Ablation\Predictions_None\Validation{}'.format(desc)
