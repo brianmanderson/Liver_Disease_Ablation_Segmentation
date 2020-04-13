@@ -192,7 +192,7 @@ def return_dictionary_best_4layer(base_dict):
 
 
 def return_generators(get_mean_std=False, liver_norm=True,num_patients=1,
-                      cube_size=(16,100,100), path_extension='Single_Images3D', return_test=False):
+                      cube_size=None, path_extension='Single_Images3D', return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
