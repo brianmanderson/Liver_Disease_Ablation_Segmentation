@@ -93,7 +93,7 @@ class run_metrics(object):
         print(metric)
         for i, metric_value in enumerate(metric_range):
             print(metric_value)
-            threshold_and_expand = Threshold_and_Expand(seed_threshold_value=0.8, lower_threshold_value=metric_value)
+            threshold_and_expand = Threshold_and_Expand(seed_threshold_value=.95, lower_threshold_value=metric_value)
             # Binary_Threshold.SetLowerThreshold(metric_value)
             threshold_pred = threshold_and_expand.process(prediction)
             threshold_pred = fill_binary.process(threshold_pred)
