@@ -8,7 +8,7 @@ from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2))
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
@@ -63,22 +63,28 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     test_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
 
     train_generator = Data_Generator_Class(record_names=train_path)
+    validation_generator = Data_Generator_Class(record_names=validation_path)
     num_classes = 2
-    train_processors = [
+    train_processors = validation_processors = [
         Expand_Dimensions(axis=-1, on_images=True, on_annotations=True),
-        Return_Add_Mult_Disease()
+        Ensure_Image_Proportions(image_rows=120, image_cols=120),
+        Return_Add_Mult_Disease(),
+        Cast_Data({'image': 'float32', 'annotation': 'float32'}),
                         ]
     train_processors += [
         {'shuffle':len(train_generator)//10},
         {'batch':batch_size},
-        Cast_Data({'image': 'float32', 'annotation': 'float32', 'lung': 'float32'}),
+        Return_Outputs(wanted_keys),
+        {'repeat'}
+    ]
+    validation_processors += [
         Return_Outputs(wanted_keys),
         {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
-    # data_set = iter(train_generator.data_set)
-    # data = next(data_set)
-    validation_generator = None
+    validation_generator.compile_data_set(image_processors=validation_processors)
+    data_set = iter(validation_generator.data_set)
+    data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
 
 

@@ -12,13 +12,13 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 path_extension = 'Single_Images3D_None'
-cube_size = (8, 32, 100, 100)
+cube_size = (16, 16, 120, 120)
 path_desc='TF2_Learning_Rates'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
 find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
-    find_best_lr(optimizer='SGD')
+    find_best_lr(optimizer='SGD', batch_size=16, path_desc=path_desc)
 '''
 Plot the LR, get the min and max from the images
 '''
