@@ -34,7 +34,10 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         optimizer = tf.keras.optimizers.Adam()
     optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(optimizer)
     print('Learning rate is {}'.format(min_lr))
-    period = 10
+
+    if os.listdir(tensorboard_output):
+        print('already done')
+        return None
     checkpoint = ModelCheckpoint(model_path_out, monitor='val_sparse_categorical_mean_dsc',
                                  save_freq='epoch', save_best_only=False, save_weights_only=False, mode='max',
                                  verbose=1)
@@ -42,7 +45,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + step_size_add)
-    add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set)
+    add_images = Add_Images_and_LR(log_dir=tensorboard_output, add_images=False)
     callbacks = [tensorboard, checkpoint, add_images]
     if not skip_cyclic_lr:
         callbacks += [lrate]
@@ -50,9 +53,6 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
         callbacks += [checkpoint]
     model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
     Model_val = model.created_model
-    if os.listdir(tensorboard_output):
-        print('already done')
-        return None
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
@@ -66,7 +66,7 @@ def train_model(epochs=None,run_best=False, save_a_model=False, batch_size=16,mo
 
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=batch_size)
     print(base_path)
-    epoch_i = 0
+
     num_cycles = 10
     step_size = len(train_generator)
     base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add,
@@ -78,7 +78,7 @@ def train_model(epochs=None,run_best=False, save_a_model=False, batch_size=16,mo
         epochs += 2
         epochs = min([1000,epochs])
         epochs = max([300, epochs])
-    model_params = {'activation':'elu', 'concat_not_add':False}
+
 
     for iteration in range(3):
         if run_best:
