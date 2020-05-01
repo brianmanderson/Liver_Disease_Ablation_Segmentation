@@ -8,6 +8,26 @@ from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 
 
+def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
+    things = []
+    for top_key in keys:
+        model_info = run_data[top_key]
+        for key in model_info:
+            if model_info[key] is not False:
+                if model_info[key] is True:
+                    things.append('{}'.format(key))
+                else:
+                    things.append('{}_{}'.format(model_info[key],key))
+    return things
+
+
+def return_dictionary(base_dict):
+    dictionary = [
+        base_dict(min_lr=1e-5, max_lr=1e-2, layers=1, filters=8, max_filters=16)
+    ]
+    return dictionary
+
+
 def get_layers_dict(layers=1, filters=16, max_filters=np.inf, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2))
