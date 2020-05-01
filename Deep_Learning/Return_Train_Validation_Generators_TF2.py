@@ -14,7 +14,7 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, **kwargs):
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
     num_conv_blocks = 2
     layers_dict = return_hollow_layers_dict(layers)
-    pool = (4,4,4)
+    pool = (2, 2, 2)
     for layer in range(layers - 1):
         encoding = []
         for _ in range(num_conv_blocks):
@@ -65,26 +65,33 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     train_generator = Data_Generator_Class(record_names=train_path)
     validation_generator = Data_Generator_Class(record_names=validation_path)
     num_classes = 2
-    train_processors = validation_processors = [
+    train_processors, validation_processors = [], []
+    base_processors = [
         Expand_Dimensions(axis=-1, on_images=True, on_annotations=True),
-        Ensure_Image_Proportions(image_rows=120, image_cols=120),
-        Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float32', 'annotation': 'float32'}),
                         ]
+    train_processors += base_processors
+    validation_processors += base_processors
     train_processors += [
+        Ensure_Image_Proportions(image_rows=120, image_cols=120),
+        Return_Add_Mult_Disease(),
+        Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
         {'shuffle':len(train_generator)//10},
         {'batch':batch_size},
         Return_Outputs(wanted_keys),
         {'repeat'}
     ]
     validation_processors += [
+        Return_Add_Mult_Disease(),
+        Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
+        {'batch':1},
         Return_Outputs(wanted_keys),
         {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    data_set = iter(validation_generator.data_set)
-    data = next(data_set)
+    # data_set = iter(validation_generator.data_set)
+    # data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
 
 

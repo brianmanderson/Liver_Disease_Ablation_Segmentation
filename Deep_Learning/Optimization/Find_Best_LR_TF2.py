@@ -5,6 +5,7 @@ import tensorflow as tf
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict
+from Base_Deeplearning_Code.Callbacks.TF2_Callbacks import SparseCategoricalMeanDSC
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
@@ -19,14 +20,6 @@ def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
                 else:
                     things.append('{}_{}'.format(model_info[key],key))
     return things
-
-
-def run_model(layers_dict=None, out_path='', train_generator=None):
-    model = my_UNet(layers_dict=layers_dict, image_size=(16, 120, 120, 1), mask_output=True).created_model
-    LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'], out_path=out_path,
-                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                       steps_per_epoch=len(train_generator),
-                       train_generator=train_generator.data_set, lower_lr=1e-7, high_lr=1e-2)
 
 
 def find_best_lr(optimizer='SGD', batch_size=16, path_desc=''):
@@ -51,8 +44,22 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc=''):
                         continue
                     os.makedirs(out_path)
                     print(out_path)
-                    run_model(layers_dict=layers_dict, out_path=out_path,
-                              train_generator=train_generator)
+                    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
+                                    mask_output=True).created_model
+                    # optimizer = tf.keras.optimizers.Adam()
+                    # optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(optimizer)
+                    # model.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                    #               metrics=[tf.keras.metrics.SparseCategoricalAccuracy(),
+                    #                        SparseCategoricalMeanDSC(num_classes=2)])
+                    # model.fit(train_generator.data_set, epochs=5, steps_per_epoch=20,
+                    #           validation_data=validation_generator.data_set, validation_steps=5)
+                    # data = next(iter(validation_generator.data_set))
+                    # pred = model(data[0])
+                    LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'],
+                                       out_path=out_path,
+                                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                                       steps_per_epoch=len(train_generator),
+                                       train_generator=train_generator.data_set, lower_lr=1e-7, high_lr=1e-2)
                     tf.keras.backend.clear_session()
 
 

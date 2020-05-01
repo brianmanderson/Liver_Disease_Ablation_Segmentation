@@ -49,4 +49,4 @@ if make_TF2_images:
                         Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3, power_val_c=2**3),
                         Distribute_into_3D()]
     write_tf_record(os.path.join(path, 'Validation'), record_name='Validation', image_processors=image_processors,
-                    is_3D=True, rewrite=True, shuffle=True, thread_count=10)
+                    is_3D=True, rewrite=False, shuffle=True, thread_count=10)
