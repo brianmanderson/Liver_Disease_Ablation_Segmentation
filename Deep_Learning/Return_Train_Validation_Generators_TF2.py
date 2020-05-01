@@ -8,6 +8,40 @@ from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 
 
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf):
+    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
+                                pooling_type='Max', pool_size=(2,2,2))
+    dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
+    num_conv_blocks = 2
+    layers_dict = return_hollow_layers_dict(layers)
+    pool = (4,4,4)
+    for layer in range(layers - 1):
+        encoding = []
+        for _ in range(num_conv_blocks):
+            encoding.append(lc.atrous_layer(filters, **dfkw))
+        if layer != 0:
+            encoding = [lc.residual_layer(encoding, **dfkw)]
+        layers_dict['Layer_' + str(layer)]['Encoding'] = encoding
+        if filters < max_filters:
+            filters = int(filters*2)
+        decoding = []
+        for _ in range(num_conv_blocks):
+            decoding.append(lc.atrous_layer(filters, **dfkw))
+        decoding = [lc.residual_layer(decoding, **dfkw)]
+        layers_dict['Layer_' + str(layer)]['Decoding'] = decoding
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool)
+        pool = (2,2,2)
+    block = []
+    for _ in range(num_conv_blocks):
+        block.append([lc.atrous_layer(filters, **dfkw)])
+    block = [lc.residual_layer(block, **dfkw)]
+    layers_dict['Base'] = block
+    layers_dict['Final_Steps'] = [lc.convolution_layer(16, **dfkw),
+                                  lc.convolution_layer(2, batch_norm=False, activation='softmax')]
+    return layers_dict
+
+
 def return_base_dict(step_size_factor=10, step_size_add=3, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
         OrderedDict({'Architecture':{'model_name':'','layers': layers,

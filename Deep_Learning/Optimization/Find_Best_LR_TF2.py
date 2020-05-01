@@ -26,9 +26,9 @@ def find_best_lr(optimizer='SGD'):
     min_lr = 1e-7
     max_lr = 1e-2
     for iteration in [0, 1, 2]:
-        for layer in [1,2,3,4,5]: #
+        for layer in [1,2,3,4]: #
             for filters in [8, 16]: #, 16
-                for max_filters in [16, 32]: #, 32
+                for max_filters in [32, 64, 128]: #, 32
                     run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                          layers=layer)
                     layers_dict = get_layers_dict_atrous(**run_data['Architecture'])

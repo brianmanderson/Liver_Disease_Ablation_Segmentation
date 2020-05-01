@@ -18,7 +18,7 @@ model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
 find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
-    find_best_lr(path_extension=path_extension, cube_size=cube_size, path_desc=path_desc)
+    find_best_lr(optimizer='SGD')
 '''
 Plot the LR, get the min and max from the images
 '''
@@ -58,7 +58,7 @@ Now go to Evaluate_Model folder
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = True
+run_200 = False
 if run_200:
     from Run_Model import train_model
     sgd=False
