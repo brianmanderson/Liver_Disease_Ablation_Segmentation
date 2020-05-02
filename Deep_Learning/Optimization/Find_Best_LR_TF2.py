@@ -46,7 +46,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc=''):
                                        out_path=out_path,
                                        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                                        steps_per_epoch=len(train_generator),
-                                       train_generator=train_generator.data_set, lower_lr=1e-7, high_lr=1e-2)
+                                       train_generator=train_generator.data_set, lower_lr=1e-5, high_lr=1)
                     tf.keras.backend.clear_session()
 
 

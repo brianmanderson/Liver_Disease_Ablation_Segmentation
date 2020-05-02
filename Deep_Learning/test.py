@@ -1,10 +1,9 @@
-from Base_Deeplearning_Code.Send_Email_To_Phone.Send_Email_Module import Send_Email_Class
+plot_lr = False
+path_desc='TF2_Learning_Rates'
 import os
-
-fid = open(os.path.join('.', 'password.txt'))
-line = fid.readline()
-fid.close()
-data = line.split(',')
-email_class_object = Send_Email_Class(email_address=data[0], password=data[1])
-email_class_object.set_outbound_email(data[2])
-email_class_object.send_email('test')
+if plot_lr:
+    from Optimization.Plot_Best_LR import make_plots
+    from Return_Train_Validation_Generators_TF2 import return_generators
+    _, morfeus_drive, _, _ = return_generators()
+    path = os.path.join(morfeus_drive,path_desc)
+    make_plots(path)

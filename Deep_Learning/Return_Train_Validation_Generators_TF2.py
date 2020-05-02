@@ -23,7 +23,7 @@ def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
 
 def return_dictionary(base_dict):
     dictionary = [
-        base_dict(min_lr=1e-5, max_lr=1e-2, layers=1, filters=8, max_filters=16)
+        base_dict(min_lr=1e-3, max_lr=1e-2, layers=1, filters=8, max_filters=16)
     ]
     return dictionary
 

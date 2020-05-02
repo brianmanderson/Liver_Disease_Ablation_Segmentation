@@ -90,7 +90,8 @@ def train_model(epochs=None,run_best=False, save_a_model=False, batch_size=16,mo
             things = return_things(run_data)
             things += ['{}_Iteration'.format(iteration)]
             layers_dict = get_layers_dict(**run_data['Architecture'])
-            paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model)
+            paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                                            is_keras_model=False)
             paths_class.define_model_things(model_name, things)
             tensorboard_output = paths_class.tensorboard_path_out
             print(tensorboard_output)
