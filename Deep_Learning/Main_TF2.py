@@ -39,7 +39,7 @@ run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
     optimizer = 'SGD'
-    bn_before_activation = False
+    bn_before_activation = True
     train_model(epochs=50, save_a_model=False, bn_before_activation=bn_before_activation, model_name=model_name, optimizer=optimizer)
 
 make_opt_excel = False
