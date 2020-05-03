@@ -46,7 +46,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + step_size_add)
     add_images = Add_Images_and_LR(log_dir=tensorboard_output, add_images=False)
-    callbacks = [tensorboard, checkpoint, add_images]
+    callbacks = [tensorboard, add_images]
     if not skip_cyclic_lr:
         callbacks += [lrate]
     if save_a_model:
