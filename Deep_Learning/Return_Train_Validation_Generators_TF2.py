@@ -23,7 +23,26 @@ def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
 
 def return_dictionary(base_dict):
     dictionary = [
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=64)
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=8, max_filters=32),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=8, max_filters=64),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=8, max_filters=128),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=32),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=64),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=128),
+
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=8, max_filters=32),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=8, max_filters=64),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=8, max_filters=128),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=16, max_filters=32),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=16, max_filters=64),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=16, max_filters=128),
+
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=8, max_filters=32),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=8, max_filters=64),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=8, max_filters=128),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=16, max_filters=32),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=16, max_filters=64),
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=16, max_filters=128),
     ]
     return dictionary
 

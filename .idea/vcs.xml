@@ -9,6 +9,9 @@
     <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Cyclical_Learning_Rate" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators/Fill_Missing_Segments" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators/Image_Processors_Module" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators/Image_Processors_Module/Plot_And_Scroll_Images" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators/Image_Processors_Module/Resample_Class" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators/Plot_And_Scroll_Images" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Data_Generators/Resample_Class" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Deep_Learning/Base_Deeplearning_Code/Finding_Optimization_Parameters" vcs="Git" />
@@ -23,6 +26,9 @@
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Dicom_RT_and_Images_to_Mask" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Dicom_RT_and_Images_to_Mask/Plot_And_Scroll_Images" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images/Image_Processors_Module" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images/Image_Processors_Module/Plot_And_Scroll_Images" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images/Image_Processors_Module/Resample_Class" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images/Plot_And_Scroll_Images" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Make_Single_Images/Resample_Class" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Pre_Processing/Nifti_To_Dicom" vcs="Git" />
