@@ -61,7 +61,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
                   steps_per_epoch=len(train_generator))
 
 
-def train_model(epochs=None,run_best=False, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
+def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
                 step_size_factor=8, step_size_add=0, optimizer='SGD'):
 
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=batch_size)
@@ -81,12 +81,10 @@ def train_model(epochs=None,run_best=False, save_a_model=False, batch_size=16,mo
 
 
     for iteration in range(3):
-        if run_best:
-            overall_dictionary = return_dictionary_best(base_dict, sgd=sgd)
-        else:
-            overall_dictionary = return_dictionary(base_dict)
+        overall_dictionary = return_dictionary(base_dict)
         for run_data in overall_dictionary:
             run_data['Architecture']['model_name'] = model_name
+            run_data['Architecture']['bn_after_activation'] = not bn_before_activation
             things = return_things(run_data)
             things += ['{}_Iteration'.format(iteration)]
             layers_dict = get_layers_dict(**run_data['Architecture'])

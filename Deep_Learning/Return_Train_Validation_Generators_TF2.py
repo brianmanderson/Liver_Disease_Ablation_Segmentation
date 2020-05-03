@@ -23,14 +23,14 @@ def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
 
 def return_dictionary(base_dict):
     dictionary = [
-        base_dict(min_lr=1e-3, max_lr=1e-2, layers=1, filters=8, max_filters=16)
+        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=64)
     ]
     return dictionary
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, **kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activation=True, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
-                                pooling_type='Max', pool_size=(2,2,2))
+                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=bn_before_activation)
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
     num_conv_blocks = 2
     layers_dict = return_hollow_layers_dict(layers)
