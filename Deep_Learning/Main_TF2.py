@@ -15,10 +15,11 @@ path_extension = 'Single_Images3D_None'
 cube_size = (16, 16, 120, 120)
 path_desc='TF2_Learning_Rates'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
-find_lr = False
+find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
-    find_best_lr(optimizer='SGD', batch_size=16, path_desc=path_desc)
+    bn_before_activation = False
+    find_best_lr(optimizer='SGD', batch_size=16, path_desc=path_desc, bn_before_activation=bn_before_activation)
 '''
 Plot the LR, get the min and max from the images
 '''
@@ -34,7 +35,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = True
+run_200 = False
 if run_200:
     from Run_Model_TF2 import train_model
     optimizer = 'SGD'

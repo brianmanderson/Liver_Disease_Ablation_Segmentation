@@ -9,19 +9,20 @@ from Base_Deeplearning_Code.Callbacks.TF2_Callbacks import SparseCategoricalMean
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
-def find_best_lr(optimizer='SGD', batch_size=16, path_desc=''):
+def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activation=True):
     base_dict = return_base_dict(optimizer=optimizer)
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0, 1, 2]:
-        for layer in [2, 3, 4]:
-            for filters in [8, 16]:
-                for max_filters in [32, 64, 128]:
+        for layer in [2]:#, 3, 4]:
+            for filters in [16]: #8
+                for max_filters in [64]:#32, 64, 128
                     base_path, morfeus_drive, train_generator, validation_generator = return_generators(
                         batch_size=batch_size)
                     run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                          layers=layer)
-                    layers_dict = get_layers_dict(**run_data['Architecture'])
+                    run_data['Architecture']['bn_after_activation'] = not bn_before_activation
+                    layers_dict = get_layers_dict(**run_data['Architecture'], bn_before_activation=bn_before_activation)
                     things = return_things(run_data, keys=['Architecture'])
                     things.append('{}_Iteration'.format(iteration))
                     out_path = os.path.join(morfeus_drive,path_desc,'Fully_Atrous')

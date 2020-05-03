@@ -87,7 +87,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
             run_data['Architecture']['bn_after_activation'] = not bn_before_activation
             things = return_things(run_data)
             things += ['{}_Iteration'.format(iteration)]
-            layers_dict = get_layers_dict(**run_data['Architecture'])
+            layers_dict = get_layers_dict(**run_data['Architecture'], bn_before_activation=bn_before_activation)
             paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                             is_keras_model=False)
             paths_class.define_model_things(model_name, things)
