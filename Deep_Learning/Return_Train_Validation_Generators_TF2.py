@@ -10,6 +10,14 @@ from tensorboard.plugins.hparams import api as hp
 from tensorboard.plugins.hparams.keras import Callback
 
 
+def return_hyper_parameters():
+    HP_NUM_LAYERS = hp.HParam('layers', hp.Discrete([2, 3, 4]))
+    HP_FILTERS = hp.HParam('filters', hp.Discrete([8, 16]))
+    HP_MAX_FILTERS = hp.HParam('max_filters', hp.Discrete([32, 64, 128]))
+    hp_dict = {'layers':HP_NUM_LAYERS, 'filters':HP_FILTERS, 'max_filters':HP_MAX_FILTERS}
+    return hp_dict
+
+
 def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
     hyper_param_dict = {}
     for layer_key in run_data['Architecture']:
