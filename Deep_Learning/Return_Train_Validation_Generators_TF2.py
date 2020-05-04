@@ -111,7 +111,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     test_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
 
     train_generator = Data_Generator_Class(record_names=train_path)
-    validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=False)
+    validation_generator = Data_Generator_Class(record_names=validation_path)
     num_classes = 2
     train_processors, validation_processors = [], []
     base_processors = [
@@ -135,8 +135,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
         Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
         {'batch':1},
         Return_Outputs(wanted_keys),
-        {'repeat'},
-        {'prefetch'}
+        {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
