@@ -58,7 +58,7 @@ def return_things(run_data):
 def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,paths_class=None,
               step_size_factor=5, train_generator=None, batch_norm=False,mask_pred=False,pre_cycle=0,write_images=True,load_path=None,
               morfeus_drive='',base_path='', save_a_model=True,weighted=False, balance_beta=1.0, epoch_i = 0, sgd=False,
-              model_params=None,skip_cyclic_lr=False, scale_mode='linear_cycle',step_size_add=0,**kwargs):
+              model_params=None,skip_cyclic_lr=False, scale_mode='linear_cycle',**kwargs):
     if step_size is None:
         step_size = len(train_generator)
     with tf.device('/gpu:0'):
@@ -93,7 +93,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
                                        write_images=write_images)
         lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor, mode='triangular2',
                          pre_cycle=pre_cycle, base_reduce_factor=2, scale_mode=scale_mode,
-                         step_size_factor_scale=lambda x: x + step_size_add)
+                         step_size_factor_scale=lambda x: x + 0)
         early_stopping = EarlyStopping_BMA(monitor=monitor,min_delta=0,patience=15,verbose=1,mode=mode,
                                            max_delta=1.0,baseline=2.2,restore_best_weights=True,wait=wait)
         # early_stopping = EarlyStopping(monitor=monitor, patience=15, verbose=1, mode=mode)
@@ -127,7 +127,7 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
 
 
 def train_model(epochs=None,run_best=False, save_a_model=False, path_extension='Single_Images3D_1mm',
-                cube_size=(8, 20, 120, 120),model_name = '3D_Fully_Atrous', step_size_factor=10, step_size_add=0, sgd=False):
+                cube_size=(8, 20, 120, 120),model_name = '3D_Fully_Atrous', step_size_factor=10, sgd=False):
     mask_image = False
     mask_loss = False
     mask_pred = True
@@ -147,12 +147,12 @@ def train_model(epochs=None,run_best=False, save_a_model=False, path_extension='
     epoch_i = 0
     num_cycles = 10
     step_size = len(train_generator)
-    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add,
+    base_dict = return_base_dict(step_size_factor=step_size_factor,
                                  save_a_model=save_a_model, sgd_opt=sgd)
     if epochs is None:
         epochs = step_size_factor
         for _ in range(1,num_cycles):
-            epochs += step_size_add + (step_size_factor * 2)
+            epochs += (step_size_factor * 2)
         epochs += 2
         epochs = min([1000,epochs])
         epochs = max([300, epochs])

@@ -68,4 +68,4 @@ if run_200:
         for add in [10]:
             train_model(epochs=1005, step_size_factor=step_size_factor,
                         save_a_model=True, run_best=True, path_extension=path_extension,
-                        cube_size=cube_size, model_name=model_name, step_size_add=add, sgd=sgd)
+                        cube_size=cube_size, model_name=model_name, sgd=sgd)

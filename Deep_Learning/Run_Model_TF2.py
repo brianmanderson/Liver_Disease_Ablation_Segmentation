@@ -6,16 +6,17 @@ from Base_Deeplearning_Code.Callbacks.TF2_Callbacks import Add_Images_and_LR, Sp
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
-
+import pandas as pd
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
 from Return_Train_Validation_Generators_TF2 import return_generators, get_layers_dict, return_base_dict,\
-    return_things, return_dictionary
+    return_hparams, return_dictionary, load_obj, OrderedDict
+from tensorboard.plugins.hparams.keras import Callback
 
 
 def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
               paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', save_a_model=True,
-              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', step_size_add=0, **kwargs):
+              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -44,9 +45,12 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
     tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch=0)
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
-                     step_size_factor_scale=lambda x: x + step_size_add)
+                     step_size_factor_scale=lambda x: x)
     # add_images = Add_Images_and_LR(log_dir=tensorboard_output, add_images=False)
     callbacks = [tensorboard]#, add_images]
+    if hparams is not None:
+        hp_callback = Callback(tensorboard_output, hparams=hparams)
+        callbacks += [hp_callback]
     if not skip_cyclic_lr:
         callbacks += [lrate]
     if save_a_model:
@@ -62,29 +66,39 @@ def run_model(min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
-                step_size_factor=8, step_size_add=0, optimizer='SGD'):
+                step_size_factor=8, optimizer='SGD'):
 
     base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=batch_size)
     print(base_path)
 
+
+    excel_path = os.path.join(morfeus_drive,'parameters_list_by_trial_id.xlsx')
     num_cycles = 10
     step_size = len(train_generator)
-    base_dict = return_base_dict(step_size_factor=step_size_factor, step_size_add=step_size_add,
+    base_dict = return_base_dict(step_size_factor=step_size_factor,
                                  save_a_model=save_a_model, optimizer=optimizer)
     if epochs is None:
         epochs = step_size_factor
         for _ in range(1,num_cycles):
-            epochs += step_size_add + (step_size_factor * 2)
+            epochs += (step_size_factor * 2)
         epochs += 2
         epochs = min([1000,epochs])
         epochs = max([300, epochs])
-
+    trial_id = 0
     for iteration in range(3):
         overall_dictionary = return_dictionary(base_dict)
         for run_data in overall_dictionary:
-            run_data['Architecture']['model_name'] = model_name
+            trial_id += 1
             run_data['Architecture']['bn_after_activation'] = not bn_before_activation
-            things = return_things(run_data)
+        def make_excel_out_dict(all_previous_dicts, run_data):
+            current_run = {}
+            sub_model = run_data['Architecture']
+            for key in sub_model:
+                if key not in all_previous_dicts:
+                    all_previous_dicts[key] = []
+
+            hparams = return_hparams(run_data)
+            things += ['Test']
             things += ['{}_Iteration'.format(iteration)]
             layers_dict = get_layers_dict(**run_data['Architecture'], bn_before_activation=bn_before_activation)
             paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
@@ -98,7 +112,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
             run_model(layers_dict=layers_dict, train_generator=train_generator,
                       step_size=step_size, optimizer=optimizer,
                       validation_generator=validation_generator,save_a_model=save_a_model,
-                      paths_class=paths_class,morfeus_drive=morfeus_drive,
+                      paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
                       base_path=base_path, epochs=epochs,**run_data['Architecture'],**run_data['Hyper_Parameters'])
 
 

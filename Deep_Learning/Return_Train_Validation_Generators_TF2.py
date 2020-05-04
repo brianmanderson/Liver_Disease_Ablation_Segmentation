@@ -7,7 +7,19 @@ from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_
 from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 from tensorboard.plugins.hparams import api as hp
-from tensorboard.plugins.hparams.keras import Callback
+
+
+def return_pandas_df(excel_path, features_list=['layers','filters','max_filters','min_lr','max_lr']):
+    if not os.path.exists(excel_path):
+        out_dict = OrderedDict()
+        out_dict['Trial_ID'] = []
+        for key in features_list:
+            out_dict[key] = []
+        df = pd.DataFrame(out_dict)
+        df.to_excel(excel_path, index=0)
+    else:
+        df = pd.read_excel(excel_path)
+    return df
 
 
 def return_hyper_parameters():
@@ -18,24 +30,15 @@ def return_hyper_parameters():
     return hp_dict
 
 
-def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
-    hyper_param_dict = {}
+def return_hparams(run_data):
+    hparams = None
     for layer_key in run_data['Architecture']:
-        for key in run_data['Architecture'][layer_key]:
-            data = run_data['Architecture'][layer_key][key]
-            if type(data) in [int, float]:
-                hyper_param_dict[key] = hp.Discrete(data)
-            xxx = 1
-    things = []
-    for top_key in keys:
-        model_info = run_data[top_key]
-        for key in model_info:
-            if model_info[key] is not False:
-                if model_info[key] is True:
-                    things.append('{}'.format(key))
-                else:
-                    things.append('{}_{}'.format(model_info[key],key))
-    return things
+        data = run_data['Architecture'][layer_key]
+        if type(data) is int:
+            if hparams is None:
+                hparams = {}
+            hparams[hp.HParam(layer_key, hp.Discrete([run_data['Architecture'][layer_key]]))] = run_data['Architecture'][layer_key]
+    return hparams
 
 
 def return_dictionary(base_dict):
@@ -98,13 +101,12 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
     return layers_dict
 
 
-def return_base_dict(step_size_factor=10, step_size_add=3, save_a_model=False,optimizer='Adam'):
+def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
         OrderedDict({'Architecture':{'model_name':'','layers': layers,
                                      'filters':filters, 'max_filters':max_filters},
                      'Hyper_Parameters':{'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
-                                         'max_lr':max_lr, 'step_size_factor': step_size_factor,
-                                         'step_size_add':step_size_add,
+                                         'max_lr':max_lr, 'step_size_factor': step_size_factor
                                          }
                      })
     return base_dict
@@ -119,7 +121,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     test_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
 
     train_generator = Data_Generator_Class(record_names=train_path)
-    validation_generator = Data_Generator_Class(record_names=validation_path)
+    validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=True)
     num_classes = 2
     train_processors, validation_processors = [], []
     base_processors = [
