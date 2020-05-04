@@ -1,6 +1,4 @@
 ./Activations/
-./__pycache__/
-./.idea/
 /Deep_Learning/Activations/
 /Deep_Learning/__pycache__/
 /Deep_Learning/Evaluate_Model/Area/
@@ -14,3 +12,5 @@ __pycache__/
 /Deep_Learning/password.txt
 /Deep_Learning/~$Sphericity.xlsx
 /Paper/~$ief Methods - Liver Disease.docx
+**.idea**
+**__pycache**
