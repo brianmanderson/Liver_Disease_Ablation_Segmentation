@@ -15,14 +15,14 @@ path_extension = 'Single_Images3D_None'
 cube_size = (16, 16, 120, 120)
 path_desc='TF2_Learning_Rates'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
-find_lr = False
+find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
     find_best_lr(optimizer='Adam', batch_size=16, path_desc=path_desc)
 '''
 Plot the LR, get the min and max from the images
 '''
-plot_lr = True
+plot_lr = False
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators_TF2 import return_generators
