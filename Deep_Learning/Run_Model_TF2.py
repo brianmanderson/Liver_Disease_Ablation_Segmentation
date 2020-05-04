@@ -85,7 +85,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
         epochs = max([300, epochs])
     epochs = 5
     for iteration in range(3):
-        overall_dictionary = return_dictionary(base_dict)
+        overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
         for run_data in overall_dictionary:
             run_data['Iteration'] = iteration
             data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
@@ -98,7 +98,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
             data_frame = data_frame.append(current_run_df, ignore_index=True)
             data_frame.to_excel(excel_path, index=0)
 
-            hparams = return_hparams(run_data)
+            hparams = return_hparams(run_data, features_list=features_list)
 
             layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
             paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,

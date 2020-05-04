@@ -5,20 +5,15 @@ import tensorflow as tf
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict, return_hyper_parameters
-from Base_Deeplearning_Code.Callbacks.TF2_Callbacks import SparseCategoricalMeanDSC
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
 def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activation=True):
     base_dict = return_base_dict(optimizer=optimizer)
-    if optimizer == 'SGD':
-        min_lr = 1e-7
-        max_lr = 1
-    else:
-        min_lr = 1e-10
-        max_lr = 1
+    min_lr = 1e-7
+    max_lr = 1
     hp_dict = return_hyper_parameters()
-    for iteration in [1]:
+    for iteration in [0]:
         for layer in hp_dict['layers'].domain.values:
             for filters in hp_dict['filters'].domain.values:
                 for max_filters in hp_dict['max_filters'].domain.values:

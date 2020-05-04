@@ -42,40 +42,23 @@ def return_hyper_parameters():
     return hp_dict
 
 
-def return_hparams(run_data):
+def return_hparams(run_data, features_list):
     hparams = None
-    for layer_key in run_data:
-        data = run_data[layer_key]
-        if type(data) is int:
+    for layer_key in features_list:
+        if layer_key in run_data.keys():
             if hparams is None:
-                hparams = {}
+                hparams = OrderedDict()
             hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = run_data[layer_key]
     return hparams
 
 
-def return_dictionary(base_dict):
-    dictionary = [
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=8, max_filters=32),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=8, max_filters=64),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=8, max_filters=128),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=32),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=64),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=2, filters=16, max_filters=128),
-
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=8, max_filters=32),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=8, max_filters=64),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=8, max_filters=128),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=16, max_filters=32),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=16, max_filters=64),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=3, filters=16, max_filters=128),
-
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=8, max_filters=32),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=8, max_filters=64),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=8, max_filters=128),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=16, max_filters=32),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=16, max_filters=64),
-        base_dict(min_lr=1e-4, max_lr=8e-2, layers=4, filters=16, max_filters=128),
-    ]
+def return_dictionary(base_dict, optimizer='SGD'):
+    if optimizer == 'SGD':
+        dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
+                      in [16, 32] for k in [32, 64, 128]]
+    else:
+        dictionary = [base_dict(min_lr=1e-5, max_lr=1e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
+                      in [16, 32] for k in [32, 64, 128]]
     return dictionary
 
 
