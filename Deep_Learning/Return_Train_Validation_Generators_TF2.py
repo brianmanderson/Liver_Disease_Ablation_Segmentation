@@ -6,7 +6,18 @@ from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Image_Proces
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_Functions, return_hollow_layers_dict
 from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
+import pandas as pd
 from tensorboard.plugins.hparams import api as hp
+
+
+def return_current_df(run_data, features_list=['layers', 'filters', 'max_filters', 'min_lr', 'max_lr']):
+    out_dict = OrderedDict()
+    for feature in features_list:
+        val = None
+        if feature in run_data:
+            val = run_data[feature]
+        out_dict[feature] = [val]
+    return pd.DataFrame(out_dict)
 
 
 def return_pandas_df(excel_path, features_list=['layers','filters','max_filters','min_lr','max_lr']):
@@ -19,7 +30,8 @@ def return_pandas_df(excel_path, features_list=['layers','filters','max_filters'
         df.to_excel(excel_path, index=0)
     else:
         df = pd.read_excel(excel_path)
-    return df
+    out_features = [i for i in df.keys() if i not in ['Trial_ID']]
+    return df, out_features
 
 
 def return_hyper_parameters():
@@ -32,12 +44,12 @@ def return_hyper_parameters():
 
 def return_hparams(run_data):
     hparams = None
-    for layer_key in run_data['Architecture']:
-        data = run_data['Architecture'][layer_key]
+    for layer_key in run_data:
+        data = run_data[layer_key]
         if type(data) is int:
             if hparams is None:
                 hparams = {}
-            hparams[hp.HParam(layer_key, hp.Discrete([run_data['Architecture'][layer_key]]))] = run_data['Architecture'][layer_key]
+            hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = run_data[layer_key]
     return hparams
 
 
@@ -103,11 +115,9 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
-        OrderedDict({'Architecture':{'model_name':'','layers': layers,
-                                     'filters':filters, 'max_filters':max_filters},
-                     'Hyper_Parameters':{'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
-                                         'max_lr':max_lr, 'step_size_factor': step_size_factor
-                                         }
+        OrderedDict({'model_name':'','layers': layers, 'filters':filters, 'max_filters':max_filters,
+                     'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
+                     'max_lr':max_lr, 'step_size_factor': step_size_factor
                      })
     return base_dict
 
