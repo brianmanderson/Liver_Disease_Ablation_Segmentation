@@ -6,9 +6,18 @@ from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Image_Proces
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_Functions, return_hollow_layers_dict
 from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
+from tensorboard.plugins.hparams import api as hp
+from tensorboard.plugins.hparams.keras import Callback
 
 
 def return_things(run_data, keys=['Architecture','Hyper_Parameters']):
+    hyper_param_dict = {}
+    for layer_key in run_data['Architecture']:
+        for key in run_data['Architecture'][layer_key]:
+            data = run_data['Architecture'][layer_key][key]
+            if type(data) in [int, float]:
+                hyper_param_dict[key] = hp.Discrete(data)
+            xxx = 1
     things = []
     for top_key in keys:
         model_info = run_data[top_key]
@@ -102,7 +111,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     test_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
 
     train_generator = Data_Generator_Class(record_names=train_path)
-    validation_generator = Data_Generator_Class(record_names=validation_path)
+    validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=False)
     num_classes = 2
     train_processors, validation_processors = [], []
     base_processors = [
@@ -115,17 +124,19 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(),
         Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
-        {'shuffle':len(train_generator)//10},
+        {'shuffle':len(train_generator)//5},
         {'batch':batch_size},
         Return_Outputs(wanted_keys),
-        {'repeat'}
+        {'repeat'},
+        {'prefetch'}
     ]
     validation_processors += [
         Return_Add_Mult_Disease(),
         Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
         {'batch':1},
         Return_Outputs(wanted_keys),
-        {'repeat'}
+        {'repeat'},
+        {'prefetch'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
