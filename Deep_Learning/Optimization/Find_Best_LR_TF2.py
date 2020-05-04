@@ -18,7 +18,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
         min_lr = 1e-10
         max_lr = 1
     hp_dict = return_hyper_parameters()
-    for iteration in range(3):
+    for iteration in [0]:
         for layer in hp_dict['layers'].domain.values:
             for filters in hp_dict['filters'].domain.values:
                 for max_filters in hp_dict['max_filters'].domain.values:
@@ -56,7 +56,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                                        out_path=out_path, optimizer=lr_opt,
                                        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                                        steps_per_epoch=len(train_generator),
-                                       train_generator=train_generator.data_set, lower_lr=1e-5, high_lr=1)
+                                       train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
                     tf.keras.backend.clear_session()
 
 
