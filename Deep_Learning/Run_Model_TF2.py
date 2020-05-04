@@ -88,9 +88,10 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
         overall_dictionary = return_dictionary(base_dict)
         for run_data in overall_dictionary:
             run_data['Iteration'] = iteration
-            data_frame, features_list = return_pandas_df(excel_path, features_list=list(run_data.keys()))
-            run_data['Trial_ID'] = len(data_frame['Trial_ID'])
-            current_run_df = return_current_df(run_data, features_list=data_frame.columns)
+            data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
+            trial_id = len(data_frame['Trial_ID'])
+            run_data['Trial_ID'] = trial_id
+            current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
             if np.min(current_run_df[features_list].isin(data_frame[features_list]).values,axis=1).any():
                 print('Already done')
                 continue

@@ -13,11 +13,12 @@ from tensorboard.plugins.hparams import api as hp
 def return_current_df(run_data, features_list=['layers', 'filters', 'max_filters', 'min_lr', 'max_lr']):
     out_dict = OrderedDict()
     for feature in features_list:
-        val = None
+        val = ''
         if feature in run_data:
             val = run_data[feature]
         out_dict[feature] = [val]
-    return pd.DataFrame(out_dict)
+    out_features = [i for i in out_dict.keys() if i not in ['Trial_ID']]
+    return pd.DataFrame(out_dict), out_features
 
 
 def return_pandas_df(excel_path, features_list=['layers','filters','max_filters','min_lr','max_lr']):
@@ -30,8 +31,7 @@ def return_pandas_df(excel_path, features_list=['layers','filters','max_filters'
         df.to_excel(excel_path, index=0)
     else:
         df = pd.read_excel(excel_path)
-    out_features = [i for i in df.keys() if i not in ['Trial_ID']]
-    return df, out_features
+    return df
 
 
 def return_hyper_parameters():
@@ -115,7 +115,7 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
-        OrderedDict({'model_name':'','layers': layers, 'filters':filters, 'max_filters':max_filters,
+        OrderedDict({'layers': layers, 'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
                      })
