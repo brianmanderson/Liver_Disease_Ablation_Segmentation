@@ -41,7 +41,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     checkpoint = ModelCheckpoint(model_path_out, monitor='val_sparse_categorical_mean_dsc',
                                  save_freq='epoch', save_best_only=False, save_weights_only=False, mode='max',
                                  verbose=1)
-    tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch=0)
+    tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch='25,50', histogram_freq=10, write_graph=True)
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x)
@@ -61,7 +61,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
     Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks,
                   validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-                  steps_per_epoch=len(train_generator))
+                  steps_per_epoch=len(train_generator), validation_freq=5)
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
@@ -83,7 +83,6 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
         epochs += 2
         epochs = min([1000,epochs])
         epochs = max([300, epochs])
-    epochs = 5
     for iteration in range(3):
         overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
         for run_data in overall_dictionary:

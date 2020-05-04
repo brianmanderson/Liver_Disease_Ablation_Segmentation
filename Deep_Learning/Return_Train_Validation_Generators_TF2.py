@@ -114,7 +114,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     test_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
 
     train_generator = Data_Generator_Class(record_names=train_path)
-    validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=True)
+    validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=False)
     num_classes = 2
     train_processors, validation_processors = [], []
     base_processors = [
