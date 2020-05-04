@@ -18,7 +18,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
         min_lr = 1e-10
         max_lr = 1
     hp_dict = return_hyper_parameters()
-    for iteration in [0]:
+    for iteration in [1]:
         for layer in hp_dict['layers'].domain.values:
             for filters in hp_dict['filters'].domain.values:
                 for max_filters in hp_dict['max_filters'].domain.values:
