@@ -91,7 +91,9 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
             trial_id = len(data_frame['Trial_ID'])
             run_data['Trial_ID'] = trial_id
             current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
-            if np.min(current_run_df[features_list].isin(data_frame[features_list]).values,axis=1).any():
+            current_array = current_run_df[features_list].values
+            base_array = data_frame[features_list].values
+            if current_array in base_array:
                 print('Already done')
                 continue
             data_frame = data_frame.append(current_run_df, ignore_index=True)
