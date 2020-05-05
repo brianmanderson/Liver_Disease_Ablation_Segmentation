@@ -113,7 +113,8 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     return base_dict
 
 
-def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_vals'],'outputs':['annotation']}, return_test=False):
+def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_vals'],'outputs':['annotation']},
+                      return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
