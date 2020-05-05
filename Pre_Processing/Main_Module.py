@@ -47,6 +47,6 @@ if make_TF2_images:
                     is_3D=True, rewrite=False, shuffle=True, thread_count=10)
     image_processors = [Normalize_to_annotation(annotation_value_list=[1,2]),
                         Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3, power_val_c=2**3),
-                        Distribute_into_3D()]
+                        Distribute_into_3D(max_z=272, mirror_small_bits=False)]
     write_tf_record(os.path.join(path, 'Validation'), record_name='Validation', image_processors=image_processors,
-                    is_3D=True, rewrite=False, shuffle=True, thread_count=10)
+                    is_3D=True, rewrite=True, shuffle=True, thread_count=10)
