@@ -134,16 +134,16 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
+        Return_Outputs(wanted_keys),
         {'shuffle':len(train_generator)//3},
         {'batch':batch_size},
-        Return_Outputs(wanted_keys),
         {'repeat'}
     ]
     validation_processors += [
         Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
-        {'batch':1},
         Return_Outputs(wanted_keys),
+        {'batch':1},
         {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
