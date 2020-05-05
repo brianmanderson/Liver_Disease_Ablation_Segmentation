@@ -59,9 +59,9 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
-    Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks,
-                  validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-                  steps_per_epoch=step_size, validation_freq=5)
+    Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks)
+                  # validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
+                  # steps_per_epoch=step_size, validation_freq=5)
     tf.keras.backend.clear_session()
 
 
