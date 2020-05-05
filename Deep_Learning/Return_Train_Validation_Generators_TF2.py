@@ -44,9 +44,15 @@ def return_hyper_parameters():
     return hp_dict
 
 
-def return_hparams(run_data, features_list):
+def return_hparams(run_data, features_list, excluded_keys=['iteration','save']):
     hparams = None
     for layer_key in features_list:
+        break_out = False
+        for exclude in excluded_keys:
+            if layer_key.lower().find(exclude) != -1:
+                break_out = True
+        if break_out:
+            continue
         if layer_key in run_data.keys():
             if hparams is None:
                 hparams = OrderedDict()
@@ -121,23 +127,21 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     train_processors, validation_processors = [], []
     base_processors = [
         Expand_Dimensions(axis=-1, on_images=True, on_annotations=True),
-        Cast_Data({'image': 'float32', 'annotation': 'float32'}),
                         ]
     train_processors += base_processors
     validation_processors += base_processors
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(),
-        Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
-        {'shuffle':len(train_generator)//5},
+        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
+        {'shuffle':len(train_generator)//3},
         {'batch':batch_size},
         Return_Outputs(wanted_keys),
-        {'repeat'},
-        {'prefetch'}
+        {'repeat'}
     ]
     validation_processors += [
         Return_Add_Mult_Disease(),
-        Cast_Data({'mask': 'float32', 'sum_vals': 'float32'}),
+        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
         {'batch':1},
         Return_Outputs(wanted_keys),
         {'repeat'}
@@ -145,6 +149,9 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
     # data_set = iter(validation_generator.data_set)
+    # for _ in range(len(validation_generator)):
+    #     data = next(data_set)
+    #     print(data[1][0].shape)
     # data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
 

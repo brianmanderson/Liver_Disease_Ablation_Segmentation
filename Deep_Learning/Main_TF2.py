@@ -13,6 +13,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 path_extension = 'Single_Images3D_None'
 cube_size = (16, 16, 120, 120)
+batch_size = 16
 path_desc='TF2_Learning_Rates'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
 find_lr = False
@@ -38,7 +39,8 @@ run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
     for optimizer in ['Adam','SGD']:
-        train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer)
+        train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer,
+                    batch_size=batch_size)
 
 make_opt_excel = False
 if make_opt_excel:
