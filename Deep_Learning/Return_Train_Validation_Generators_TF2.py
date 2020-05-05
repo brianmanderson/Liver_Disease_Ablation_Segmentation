@@ -135,9 +135,9 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
         Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
         Return_Outputs(wanted_keys),
-        {'cache': validation_path[0].replace('.tfrecord', '_cache.tfrecord')},
-        {'shuffle':len(train_generator)//3},
-        {'batch':batch_size},
+        {'cache': os.path.join(base_path,'Train')},
+        {'shuffle': len(train_generator)//3},
+        {'batch': batch_size},
         {'repeat'}
     ]
     validation_processors += [
@@ -145,7 +145,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
         Return_Outputs(wanted_keys),
         {'batch':1},
-        {'cache':validation_path[0].replace('.tfrecord','_cache.tfrecord')},
+        {'cache': os.path.join(base_path,'Validation')},
         {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
