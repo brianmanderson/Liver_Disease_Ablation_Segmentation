@@ -85,7 +85,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
             current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
             current_array = current_run_df[features_list].values
             base_array = data_frame[features_list].values
-            if np.any(base_array) and np.max(np.min(np.isin(base_array,current_array),axis=1)):
+            if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
                 print('Already done')
                 continue
             print(current_run_df)
