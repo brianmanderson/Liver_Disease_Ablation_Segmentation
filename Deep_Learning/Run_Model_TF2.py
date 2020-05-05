@@ -62,30 +62,21 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks,
                   validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
                   steps_per_epoch=len(train_generator), validation_freq=5)
+    tf.keras.backend.clear_session()
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
                 step_size_factor=8, optimizer='SGD'):
 
-    base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=batch_size)
-    print(base_path)
-
-
-    excel_path = os.path.join(morfeus_drive,'parameters_list_by_trial_id.xlsx')
-    num_cycles = 10
-    step_size = len(train_generator)
     base_dict = return_base_dict(step_size_factor=step_size_factor,
                                  save_a_model=save_a_model, optimizer=optimizer)
-    if epochs is None:
-        epochs = step_size_factor
-        for _ in range(1,num_cycles):
-            epochs += (step_size_factor * 2)
-        epochs += 2
-        epochs = min([1000,epochs])
-        epochs = max([300, epochs])
     for iteration in range(3):
         overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
         for run_data in overall_dictionary:
+            base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=batch_size)
+            excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
+            step_size = len(train_generator)
+            print(base_path)
             run_data['Iteration'] = iteration
             data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
             trial_id = len(data_frame['Trial_ID'])

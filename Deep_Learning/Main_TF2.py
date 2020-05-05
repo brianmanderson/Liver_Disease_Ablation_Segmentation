@@ -38,7 +38,7 @@ run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
     for optimizer in ['Adam','SGD']:
-        train_model(epochs=151, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer)
+        train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer)
 
 make_opt_excel = False
 if make_opt_excel:
