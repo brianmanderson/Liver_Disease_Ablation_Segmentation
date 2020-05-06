@@ -68,49 +68,48 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
-                step_size_factor=8, optimizer='SGD'):
+                step_size_factor=8, optimizer='SGD', iteration=0):
     base_path, morfeus_drive = return_paths()
     base_dict = return_base_dict(step_size_factor=step_size_factor,
                                  save_a_model=save_a_model, optimizer=optimizer)
-    for iteration in range(3):
-        overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
-        for run_data in overall_dictionary:
-            run_data['batch_size'] = batch_size
-            excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
-            print(base_path)
-            run_data['Iteration'] = iteration
-            data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
-            trial_id = 0
-            while trial_id in data_frame['Trial_ID'].values:
-                trial_id += 1
-            run_data['Trial_ID'] = trial_id
-            current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
-            current_array = current_run_df[features_list].values
-            base_array = data_frame[features_list].values
-            if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
-                print('Already done')
-                continue
-            print(current_run_df)
-            data_frame = data_frame.append(current_run_df, ignore_index=True)
-            data_frame.to_excel(excel_path, index=0)
-            _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
-            step_size = len(train_generator)
-            hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
+    overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
+    for run_data in overall_dictionary:
+        run_data['batch_size'] = batch_size
+        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
+        print(base_path)
+        run_data['Iteration'] = iteration
+        data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
+        trial_id = 0
+        while trial_id in data_frame['Trial_ID'].values:
+            trial_id += 1
+        run_data['Trial_ID'] = trial_id
+        current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
+        current_array = current_run_df[features_list].values
+        base_array = data_frame[features_list].values
+        if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
+            print('Already done')
+            continue
+        print(current_run_df)
+        data_frame = data_frame.append(current_run_df, ignore_index=True)
+        data_frame.to_excel(excel_path, index=0)
+        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
+        step_size = len(train_generator)
+        hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
-            layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
-            paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
-                                            is_keras_model=False)
-            paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
-            tensorboard_output = paths_class.tensorboard_path_out
-            print(tensorboard_output)
-            if os.listdir(tensorboard_output):
-                print('already done')
-                continue
-            run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                      step_size=step_size, optimizer=optimizer,
-                      validation_generator=validation_generator,save_a_model=save_a_model,
-                      paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
-                      base_path=base_path, epochs=epochs,**run_data)
+        layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                                        is_keras_model=False)
+        paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
+        tensorboard_output = paths_class.tensorboard_path_out
+        print(tensorboard_output)
+        if os.listdir(tensorboard_output):
+            print('already done')
+            continue
+        run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
+                  step_size=step_size, optimizer=optimizer,
+                  validation_generator=validation_generator,save_a_model=save_a_model,
+                  paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
+                  base_path=base_path, epochs=epochs,**run_data)
 
 
 if __name__ == '__main__':
