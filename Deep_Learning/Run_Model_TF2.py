@@ -45,8 +45,10 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x)
-    # add_images = Add_Images_and_LR(log_dir=tensorboard_output, add_images=False)
-    callbacks = [tensorboard]#, add_images]
+    add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
+                                   number_of_images=len(validation_generator), add_images=True, image_frequency=10,
+                                   threshold_x=True)
+    callbacks = [tensorboard, add_images]
     if hparams is not None:
         hp_callback = Callback(tensorboard_output, hparams=hparams, trial_id='Trial_ID:{}'.format(trial_id))
         callbacks += [hp_callback]

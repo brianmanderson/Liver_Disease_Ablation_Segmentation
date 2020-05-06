@@ -151,9 +151,12 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    # data_set = iter(validation_generator.data_set)
-    # for _ in range(len(validation_generator)):
-    #     data = next(data_set)
+    data_set = iter(validation_generator.data_set)
+    for i in range(2):
+        for _ in range(len(validation_generator)):
+            x, y = next(data_set)
+            print(x[0].shape)
+            xxx = 1
     #     print(data[1][0].shape)
     # data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
