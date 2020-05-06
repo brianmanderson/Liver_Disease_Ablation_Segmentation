@@ -99,8 +99,9 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
         block.append([lc.atrous_layer(filters, **dfkw)])
     block = [lc.residual_layer(block, **dfkw)]
     layers_dict['Base'] = block
-    layers_dict['Final_Steps'] = [lc.convolution_layer(16, **dfkw),
-                                  lc.convolution_layer(2, batch_norm=False, activation='softmax')]
+    final_steps = [lc.convolution_layer(16, **dfkw),
+                   lc.convolution_layer(2, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
     return layers_dict
 
 
@@ -113,7 +114,7 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     return base_dict
 
 
-def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_vals'],'outputs':['annotation']},
+def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
                       return_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
@@ -134,7 +135,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(),
-        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
+        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
         {'cache': os.path.join(base_path,'Train')},
         {'shuffle': len(train_generator)//3},
@@ -143,7 +144,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask','sum_
     ]
     validation_processors += [
         Return_Add_Mult_Disease(),
-        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'float16', 'sum_vals': 'float16'}),
+        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
         {'batch':1},
         {'cache': os.path.join(base_path,'Validation')},
