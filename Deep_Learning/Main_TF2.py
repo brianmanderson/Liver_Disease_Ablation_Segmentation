@@ -38,11 +38,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
-    for iteration in range(3):
-        for batch_size in [8, 16]:
-            for optimizer in ['Adam','SGD']:
-                train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer,
-                            batch_size=batch_size, iteration=iteration)
+    train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name)
 
 make_opt_excel = False
 if make_opt_excel:
