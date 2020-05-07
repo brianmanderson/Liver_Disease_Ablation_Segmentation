@@ -65,6 +65,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
                   validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
                   validation_freq=5)
     tf.keras.backend.clear_session()
+    return None
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch_size=16,model_name = '3D_Fully_Atrous',
@@ -111,7 +112,8 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
                   validation_generator=validation_generator,save_a_model=save_a_model,
                   paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
                   base_path=base_path, epochs=epochs,**run_data)
-        return None # close model and restart from SubProcess
+        return None # break out!
+
 
 if __name__ == '__main__':
     pass
