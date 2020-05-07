@@ -41,8 +41,11 @@ if run_200:
     for iteration in range(3):
         for batch_size in [8, 16]:
             for optimizer in ['Adam','SGD']:
-                train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer,
-                            batch_size=batch_size, iteration=iteration)
+                try:
+                    train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, optimizer=optimizer,
+                                batch_size=batch_size, iteration=iteration)
+                except:
+                    continue
 
 make_opt_excel = False
 if make_opt_excel:
