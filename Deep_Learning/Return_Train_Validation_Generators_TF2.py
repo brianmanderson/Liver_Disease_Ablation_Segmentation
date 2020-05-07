@@ -155,7 +155,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    for generator in [train_generator, validation_generator]:
+    for generator in [validation_generator, train_generator]:
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)
