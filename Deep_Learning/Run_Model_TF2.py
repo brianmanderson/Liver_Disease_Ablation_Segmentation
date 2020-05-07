@@ -74,6 +74,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
                                  save_a_model=save_a_model, optimizer=optimizer)
     overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
     for run_data in overall_dictionary:
+        tf.random.set_seed(iteration)
         run_data['batch_size'] = batch_size
         excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
         print(base_path)
