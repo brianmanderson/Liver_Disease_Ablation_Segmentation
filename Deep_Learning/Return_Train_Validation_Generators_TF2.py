@@ -88,7 +88,10 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
             filters = int(filters*2)
         decoding = []
         for _ in range(num_conv_blocks):
-            decoding.append(lc.atrous_layer(filters, **dfkw))
+            if layer == 0:
+                decoding.append(lc.atrous_layer(min([filters,32]), **dfkw))
+            else:
+                decoding.append(lc.atrous_layer(filters, **dfkw))
         decoding = [lc.residual_layer(decoding, **dfkw)]
         layers_dict['Layer_' + str(layer)]['Decoding'] = decoding
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
@@ -164,5 +167,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators()
+    return_generators()
     pass
