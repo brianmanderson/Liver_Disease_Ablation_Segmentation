@@ -167,5 +167,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators()
+    return_generators()
     pass

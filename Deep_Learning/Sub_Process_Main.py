@@ -11,10 +11,11 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
-args = 'python .\Main_TF2.py {}'.format(gpu)
+args = "python Main_TF2.py {}".format(gpu)
+args = "python Return_Train_Validation_Generators_TF2.py {}".format(gpu)
 num_models = 18
 iterations = 3
 for _ in range(num_models * iterations):
     print('Running iteration now')
-    call(args=args)
+    call(args=args, shell=True)
     # Popen(args, stdin=None, stdout=PIPE, stderr=None, shell=False, universal_newlines=True).communicate()
