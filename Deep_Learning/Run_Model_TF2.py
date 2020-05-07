@@ -111,7 +111,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, batch
                   validation_generator=validation_generator,save_a_model=save_a_model,
                   paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
                   base_path=base_path, epochs=epochs,**run_data)
-        return None # close model and restart
+        return None # close model and restart from SubProcess
 
 if __name__ == '__main__':
     pass
