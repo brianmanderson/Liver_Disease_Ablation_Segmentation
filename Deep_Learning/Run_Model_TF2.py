@@ -3,7 +3,7 @@ __author__ = 'Brian M Anderson'
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 import tensorflow as tf
 from Base_Deeplearning_Code.Callbacks.TF2_Callbacks import Add_Images_and_LR, SparseCategoricalMeanDSC
-from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
+from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
@@ -56,6 +56,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         callbacks += [lrate]
     if save_a_model:
         callbacks += [checkpoint]
+    callbacks += [EarlyStopping(patience=20, verbose=1)]
     model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
     Model_val = model.created_model
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
