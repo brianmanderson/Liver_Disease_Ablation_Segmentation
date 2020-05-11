@@ -60,6 +60,11 @@ def return_hparams(run_data, features_list, excluded_keys=['iteration','save']):
     return hparams
 
 
+def return_best_dictionary(base_dict):
+    dictionary = [base_dict(min_lr=1e-5, max_lr=1e-2, layers=2, filters=32, max_filters=128)] # Adam
+    return dictionary
+
+
 def return_dictionary(base_dict, optimizer='SGD', fully_atrous=False):
     if not fully_atrous:
         if optimizer == 'SGD':
