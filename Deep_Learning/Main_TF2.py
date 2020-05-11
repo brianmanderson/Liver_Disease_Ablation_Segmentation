@@ -16,7 +16,7 @@ cube_size = (16, 16, 120, 120)
 batch_size = 16
 path_desc='TF2_Learning_Rates'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
-fully_atrous = False
+fully_atrous = True
 if fully_atrous:
     path_desc='TF2_Learning_Rates_Fully_Atrous'
     model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training_Fully_Atrous'
@@ -43,7 +43,7 @@ run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
     train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, fully_atrous=fully_atrous,
-                run_best=True)
+                run_best=False)
 
 make_opt_excel = False
 if make_opt_excel:
