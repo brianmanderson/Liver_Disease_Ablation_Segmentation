@@ -60,6 +60,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                                            steps_per_epoch=len(train_generator),
                                            train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
                         tf.keras.backend.clear_session()
+                        return None # repeat!
 
 
 if __name__ == '__main__':

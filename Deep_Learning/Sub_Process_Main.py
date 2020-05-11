@@ -15,7 +15,7 @@ args = "python Main_TF2.py {}".format(gpu)
 # args = "python Return_Train_Validation_Generators_TF2.py {}".format(gpu)
 num_models = 18
 iterations = 3
-for _ in range(num_models * iterations):
+for _ in range(100):
     print('Running iteration now')
     call(args=args, shell=True)
     # Popen(args, stdin=None, stdout=PIPE, stderr=None, shell=False, universal_newlines=True).communicate()

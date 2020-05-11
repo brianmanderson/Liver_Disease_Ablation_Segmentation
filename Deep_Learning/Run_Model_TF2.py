@@ -9,7 +9,7 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Clas
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
 from Return_Train_Validation_Generators_TF2 import return_generators, get_layers_dict, return_base_dict,\
-    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths
+    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_atrous_base_dict, get_atrous_layers_dict
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -70,18 +70,24 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
-                step_size_factor=8):
+                step_size_factor=8, fully_atrous=False):
     for iteration in range(3):
         for batch_size in [8, 16]:
             for optimizer in ['Adam','SGD']:
                 base_path, morfeus_drive = return_paths()
-                base_dict = return_base_dict(step_size_factor=step_size_factor,
-                                             save_a_model=save_a_model, optimizer=optimizer)
-                overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
+                if fully_atrous:
+                    base_dict = return_atrous_base_dict(step_size_factor=step_size_factor,
+                                                        save_a_model=save_a_model, optimizer=optimizer)
+                else:
+                    base_dict = return_base_dict(step_size_factor=step_size_factor,
+                                                 save_a_model=save_a_model, optimizer=optimizer)
+                overall_dictionary = return_dictionary(base_dict, optimizer=optimizer, fully_atrous=fully_atrous)
                 for run_data in overall_dictionary:
                     tf.random.set_seed(iteration)
                     run_data['batch_size'] = batch_size
                     excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
+                    if fully_atrous:
+                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_fully_atrous.xlsx')
                     print(base_path)
                     run_data['Iteration'] = iteration
                     data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
