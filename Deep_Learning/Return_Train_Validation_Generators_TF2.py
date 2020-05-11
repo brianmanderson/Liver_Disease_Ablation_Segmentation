@@ -70,10 +70,10 @@ def return_dictionary(base_dict, optimizer='SGD', fully_atrous=False):
                           in [16, 32] for k in [32, 64, 128]]
     else:
         if optimizer == 'SGD':
-            dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, conv_lambda=a, filters=j, max_filters=k) for i in [2, 3, 4] for j
+            dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, conv_lambda=a, filters=j, max_filters=k) for i in [1, 2, 3, 4] for j
                           in [16, 32] for k in [32, 64, 128] for a in [0, 1, 2]]
         else:
-            dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, conv_lambda=a, filters=j, max_filters=k) for i in [2, 3, 4] for j
+            dictionary = [base_dict(min_lr=2e-6, max_lr=2.5e-3, layers=i, conv_lambda=a, filters=j, max_filters=k) for i in [1, 2, 3, 4] for j
                           in [16, 32] for k in [32, 64, 128] for a in [0, 1, 2]]
     return dictionary
 
