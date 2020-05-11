@@ -72,7 +72,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
                 step_size_factor=8, fully_atrous=False):
     for iteration in range(3):
-        for batch_size in [8, 16]:
+        for batch_size in [16]:
             for optimizer in ['Adam','SGD']:
                 base_path, morfeus_drive = return_paths()
                 if fully_atrous:
@@ -90,6 +90,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                         excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_fully_atrous.xlsx')
                     print(base_path)
                     run_data['Iteration'] = iteration
+                    run_data['Trial_ID'] = 0
                     data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
                     trial_id = 0
                     while trial_id in data_frame['Trial_ID'].values:
