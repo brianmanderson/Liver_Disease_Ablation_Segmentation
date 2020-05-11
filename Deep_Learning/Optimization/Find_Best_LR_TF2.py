@@ -29,7 +29,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                             layers_dict = get_atrous_layers_dict(**run_data, bn_before_activation=True)
                         else:
                             layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
-                        things = ['layers_{}'.format(layer), 'filters_{}'.format(filters),
+                        things = ['layers_{}'.format(layer), 'conv_lambda_{}'.format(conv_lambda),'filters_{}'.format(filters),
                                   'max_filters_{}'.format(max_filters), 'Optimizer_{}'.format(optimizer)]
                         things.append('{}_Iteration'.format(iteration))
                         out_path = os.path.join(morfeus_drive,path_desc,'Fully_Atrous')
