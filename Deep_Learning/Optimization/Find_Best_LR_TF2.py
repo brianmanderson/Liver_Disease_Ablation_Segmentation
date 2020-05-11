@@ -5,7 +5,7 @@ import tensorflow as tf
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict,\
-    return_hyper_parameters, get_atrous_layers_dict, return_atrous_base_dict
+    return_hyper_parameters, get_atrous_layers_dict, return_atrous_base_dict, return_paths
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
@@ -21,8 +21,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
             for filters in [16, 32]:
                 for max_filters in [32, 64, 128]:
                     for conv_lambda in [0, 1, 2]:
-                        base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-                            batch_size=batch_size)
+                        base_path, morfeus_drive = return_paths()
                         run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                              layers=layer, conv_lambda=conv_lambda)
                         if fully_atrous:
@@ -36,9 +35,12 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                         for thing in things:
                             out_path = os.path.join(out_path,thing)
                         if os.path.exists(out_path):
+                            print('already done')
                             continue
                         os.makedirs(out_path)
                         print(out_path)
+                        base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+                            batch_size=batch_size)
                         model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
                                         mask_output=True).created_model
                         # optimizer = tf.keras.optimizers.Adam()
