@@ -17,7 +17,7 @@ batch_size = 16
 path_desc='TF2_Learning_Rates'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
 fully_atrous = False
-run_best = True
+run_best = False
 if fully_atrous:
     path_desc='TF2_Learning_Rates_Fully_Atrous'
     model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training_Fully_Atrous'
