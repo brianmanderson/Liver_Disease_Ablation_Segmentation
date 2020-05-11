@@ -17,8 +17,8 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0]:
-        for optimizer in ['SGD','Adam']:
-            for layer in [1,2,3,4]:
+        for optimizer in ['Adam']:
+            for layer in [1,2]:
                 for filters in [16, 32]:
                     for max_filters in [32, 64, 128]:
                         for conv_lambda in [0, 1, 2]:
