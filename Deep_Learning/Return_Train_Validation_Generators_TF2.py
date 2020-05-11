@@ -70,6 +70,27 @@ def return_dictionary(base_dict, optimizer='SGD'):
     return dictionary
 
 
+def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_blocks=2, conv_lambda=0, bn_before_activation=True, **kwargs):
+    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
+                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=bn_before_activation)
+    dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
+    layers_dict = {}
+    for layer in range(layers):
+        encoding = []
+        for _ in range(num_conv_blocks):
+            encoding.append(lc.atrous_layer(filters, **dfkw))
+        if layer != 0:
+            encoding = [lc.residual_layer(encoding, **dfkw)]
+        layers_dict['Layer_{}'.format(layer)] = {'Encoding':encoding}
+        if filters < max_filters:
+            filters = int(filters*2)
+        num_conv_blocks += conv_lambda
+    final_steps = [lc.convolution_layer(32, **dfkw),
+                   lc.convolution_layer(2, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
+    return layers_dict
+
+
 def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activation=True, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=bn_before_activation)
@@ -95,7 +116,7 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
         decoding = [lc.residual_layer(decoding, **dfkw)]
         layers_dict['Layer_' + str(layer)]['Decoding'] = decoding
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters)
         pool = (2,2,2)
     block = []
     for _ in range(num_conv_blocks):
@@ -111,6 +132,14 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, bn_before_activati
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, filters, max_filters: \
         OrderedDict({'layers': layers, 'filters':filters, 'max_filters':max_filters,
+                     'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
+                     'max_lr':max_lr, 'step_size_factor': step_size_factor
+                     })
+    return base_dict
+
+def return_atrous_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
+    base_dict = lambda min_lr, max_lr, layers, conv_lambda, filters, max_filters: \
+        OrderedDict({'layers': layers, 'conv_lambda':conv_lambda, 'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
                      })

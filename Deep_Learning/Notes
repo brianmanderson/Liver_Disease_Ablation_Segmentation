@@ -1,16 +1,1 @@
-Looks like weighting is not improving output...
-
-Noticed that Maxpooling was predicting the entire liver, inverting images
-
-Don't need to invert images, had no real benefit
-
-Looks like 4 atrous blocks was doing great, realized that it was actually reducing back down to 1 after the first batch
-think I'll set the max to be 1 and daisy chain
-
-Clip and padding was adding 0's because it was multiple layers
-
-3D_Atrous_strided_livernorm was best, dice 0.35
-
-switched back to norming on above 50% liver
-
-Selected 4, 6, and 7 layers, atrous_rate:2, filters=32 as the best 3 for further consideration
+best at first iteration is batch size 16, 128 max_filters, 2 layers, 32 filters
