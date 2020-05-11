@@ -77,6 +77,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
     if run_best:
         optimizers = ['Adam']
         save_a_model = True
+        epochs = 200
     for iteration in range(3):
         for batch_size in [16]:
             for optimizer in optimizers:
