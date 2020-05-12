@@ -14,11 +14,13 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
     max_lr = 1
     for iteration in [0]:
         for optimizer in ['Adam']:
-            for layer in [1, 2, 3]:
+            for layer in [1, 2]:
                 for filters in [32]:
                     for max_filters in [128]:
-                        for num_conv_blocks in [1, 2, 3]:
-                            for conv_lambda in [0, 1, 2]:
+                        for num_conv_blocks in [4, 6]:
+                            for conv_lambda in [0, 2]:
+                                if layer == 1 and conv_lambda > 0:
+                                    continue
                                 base_path, morfeus_drive = return_paths()
                                 run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                                      layers=layer, conv_lambda=conv_lambda, num_conv_blocks=num_conv_blocks)
