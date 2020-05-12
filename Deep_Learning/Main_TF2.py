@@ -14,17 +14,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 path_extension = 'Single_Images3D_None'
 cube_size = (16, 16, 120, 120)
 batch_size = 16
-path_desc='TF2_Learning_Rates'
+path_desc='TF2_Learning_Rates_new'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
-fully_atrous = False
 run_best = False
-if fully_atrous:
-    path_desc='TF2_Learning_Rates_Fully_Atrous'
-    model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training_Fully_Atrous'
 find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
-    find_best_lr(optimizer='Adam', batch_size=16, path_desc=path_desc, fully_atrous=fully_atrous)
+    find_best_lr(optimizer='Adam', batch_size=16, path_desc=path_desc)
 '''
 Plot the LR, get the min and max from the images
 '''

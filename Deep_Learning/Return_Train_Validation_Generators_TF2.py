@@ -104,19 +104,17 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     return layers_dict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, bn_before_activation=True, **kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
-                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=bn_before_activation)
+                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
-    num_conv_blocks = 2
     layers_dict = return_hollow_layers_dict(layers)
     pool = (2, 2, 2)
     for layer in range(layers - 1):
         encoding = []
         for _ in range(num_conv_blocks):
             encoding.append(lc.atrous_layer(filters, **dfkw))
-        if layer != 0:
-            encoding = [lc.residual_layer(encoding, **dfkw)]
+        encoding = [lc.residual_layer(encoding, **dfkw)]
         layers_dict['Layer_' + str(layer)]['Encoding'] = encoding
         if filters < max_filters:
             filters = int(filters*2)
@@ -140,8 +138,9 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, bn_
 
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
-    base_dict = lambda min_lr, max_lr, layers, conv_lambda, filters, max_filters: \
-        OrderedDict({'layers': layers, 'conv_lambda':conv_lambda, 'filters':filters, 'max_filters':max_filters,
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, conv_lambda, filters, max_filters: \
+        OrderedDict({'layers': layers,'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
+                     'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
                      })

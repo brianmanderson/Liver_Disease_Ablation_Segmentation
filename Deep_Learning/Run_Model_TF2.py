@@ -72,7 +72,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
-                step_size_factor=8, fully_atrous=False, run_best=False):
+                step_size_factor=8, run_best=False):
     optimizers = ['Adam','SGD']
     if run_best:
         optimizers = ['Adam']
