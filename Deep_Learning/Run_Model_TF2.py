@@ -111,6 +111,8 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     data_frame.to_excel(excel_path, index=0)
                     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
                     step_size = len(train_generator)
+                    ignore_list = ['step_size_factor','max_lr','batch_size','Optimizer']
+                    features_list = [i for i in features_list if i not in ignore_list]
                     hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
                     layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
