@@ -47,7 +47,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x)
     add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
-                                   number_of_images=len(validation_generator), add_images=True, image_frequency=10,
+                                   number_of_images=len(validation_generator), add_images=save_a_model, image_frequency=10,
                                    threshold_x=True)
     callbacks = [tensorboard, add_images]
     if hparams is not None:
