@@ -71,6 +71,14 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     return None
 
 
+def compare_base_current(data_frame, current_run_df, features_list):
+    current_array = current_run_df[features_list].values
+    base_array = data_frame[features_list].values
+    if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
+        return True
+    return False
+
+
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
                 step_size_factor=8, run_best=False):
     optimizers = ['Adam']
@@ -100,11 +108,8 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     while trial_id in data_frame['Trial_ID'].values:
                         trial_id += 1
                     run_data['Trial_ID'] = trial_id
-                    features_list = [i for i in data_frame.columns if i != 'Trial_ID'] # Trial_ID is always unique...
-                    current_run_df, features_list = return_current_df(run_data, features_list=features_list)
-                    current_array = current_run_df[features_list].values
-                    base_array = data_frame[features_list].values
-                    if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
+                    current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
+                    if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
                         print('Already done')
                         continue
                     print(current_run_df)
