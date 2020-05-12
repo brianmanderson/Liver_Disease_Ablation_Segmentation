@@ -17,7 +17,7 @@ batch_size = 16
 path_desc='TF2_Learning_Rates_new'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
 run_best = False
-find_lr = True
+find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
     find_best_lr(optimizer='Adam', batch_size=16, path_desc=path_desc)
@@ -29,18 +29,17 @@ if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators_TF2 import return_paths
     _, morfeus_drive = return_paths()
-    path = os.path.join(morfeus_drive,path_desc)
+    path = os.path.join(morfeus_drive,path_desc, 'Fully_Atrous')
     make_plots(path)
 
 '''
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
-    train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, fully_atrous=fully_atrous,
-                run_best=run_best)
+    train_model(epochs=101, step_size_factor=10, save_a_model=False, model_name=model_name, run_best=run_best)
 
 make_opt_excel = False
 if make_opt_excel:

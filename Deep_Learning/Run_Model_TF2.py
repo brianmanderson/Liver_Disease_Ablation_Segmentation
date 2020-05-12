@@ -82,22 +82,16 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
         for batch_size in [16]:
             for optimizer in optimizers:
                 base_path, morfeus_drive = return_paths()
-                if fully_atrous:
-                    base_dict = return_atrous_base_dict(step_size_factor=step_size_factor,
-                                                        save_a_model=save_a_model, optimizer=optimizer)
-                else:
-                    base_dict = return_base_dict(step_size_factor=step_size_factor,
-                                                 save_a_model=save_a_model, optimizer=optimizer)
+                base_dict = return_base_dict(step_size_factor=step_size_factor,
+                                             save_a_model=save_a_model, optimizer=optimizer)
                 if run_best:
                     overall_dictionary = return_best_dictionary(base_dict)
                 else:
-                    overall_dictionary = return_dictionary(base_dict, optimizer=optimizer, fully_atrous=fully_atrous)
+                    overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
                 for run_data in overall_dictionary:
                     tf.random.set_seed(iteration)
                     run_data['batch_size'] = batch_size
                     excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
-                    if fully_atrous:
-                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_fully_atrous.xlsx')
                     print(base_path)
                     run_data['Iteration'] = iteration
                     run_data['Trial_ID'] = 0

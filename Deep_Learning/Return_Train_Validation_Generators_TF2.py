@@ -65,21 +65,43 @@ def return_best_dictionary(base_dict):
     return dictionary
 
 
-def return_dictionary(base_dict, optimizer='SGD', fully_atrous=False):
-    if not fully_atrous:
-        if optimizer == 'SGD':
-            dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
-                          in [16, 32] for k in [32, 64, 128]]
-        else:
-            dictionary = [base_dict(min_lr=1e-5, max_lr=1e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
-                          in [16, 32] for k in [32, 64, 128]]
+def return_dictionary(base_dict, optimizer='SGD'):
+    if optimizer == 'SGD':
+        dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
+                      in [16, 32] for k in [32, 64, 128]]
     else:
-        if optimizer == 'SGD':
-            dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, conv_lambda=a, filters=j, max_filters=k) for i in [1, 2, 3, 4] for j
-                          in [16, 32] for k in [32, 64, 128] for a in [0, 1, 2]]
-        else:
-            dictionary = [base_dict(min_lr=2e-6, max_lr=2.5e-3, layers=i, conv_lambda=a, filters=j, max_filters=k) for i in [1, 2, 3, 4] for j
-                          in [16, 32] for k in [32, 64, 128] for a in [0, 1, 2]]
+        # dictionary = [base_dict(min_lr=1e-5, max_lr=1e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
+        #               in [16, 32] for k in [32, 64, 128]]
+        dictionary = [
+            base_dict(min_lr=1e-5, max_lr=1e-2, layers=3, num_conv_blocks=2, conv_lambda=0, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=2e-6, max_lr=3e-3, layers=1, num_conv_blocks=1,conv_lambda=0, filters=32, max_filters=128),
+            base_dict(min_lr=2e-6, max_lr=2e-3, layers=1, num_conv_blocks=2, conv_lambda=0, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=1e-6, max_lr=2e-3, layers=1, num_conv_blocks=3, conv_lambda=0, filters=32,
+                      max_filters=128),
+
+            base_dict(min_lr=1e-6, max_lr=2e-3, layers=2, num_conv_blocks=1, conv_lambda=0, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=1e-6, max_lr=1.5e-3, layers=2, num_conv_blocks=1, conv_lambda=1, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=1e-6, max_lr=1.5e-3, layers=2, num_conv_blocks=1, conv_lambda=2, filters=32,
+                      max_filters=128),
+
+            base_dict(min_lr=1e-6, max_lr=1.25e-3, layers=2, num_conv_blocks=2, conv_lambda=0, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=1e-6, max_lr=2e-3, layers=2, num_conv_blocks=2, conv_lambda=1, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=1e-6, max_lr=2e-3, layers=2, num_conv_blocks=2, conv_lambda=2, filters=32,
+                      max_filters=128),
+
+            base_dict(min_lr=8e-7, max_lr=1e-3, layers=3, num_conv_blocks=1, conv_lambda=0, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=8e-7, max_lr=2e-4, layers=3, num_conv_blocks=1, conv_lambda=1, filters=32,
+                      max_filters=128),
+            base_dict(min_lr=8e-7, max_lr=2e-4, layers=3, num_conv_blocks=1, conv_lambda=2, filters=32,
+                      max_filters=128)
+                      ]
     return dictionary
 
 
