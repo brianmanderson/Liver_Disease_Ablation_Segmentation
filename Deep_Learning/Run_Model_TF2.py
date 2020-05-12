@@ -58,7 +58,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if save_a_model:
         callbacks += [checkpoint]
     else:
-        callbacks += [EarlyStopping(patience=4, verbose=1)]
+        callbacks += [EarlyStopping(patience=5, verbose=1)]
     model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
     Model_val = model.created_model
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
