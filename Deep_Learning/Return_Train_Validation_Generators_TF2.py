@@ -19,7 +19,7 @@ def return_current_df(run_data, features_list=['layers', 'filters', 'max_filters
             if type(val) is bool:
                 val = int(val)
         out_dict[feature] = [val]
-    out_features = [i for i in out_dict.keys() if i not in ['Trial_ID']]
+    out_features = [i for i in out_dict.keys()]
     return pd.DataFrame(out_dict), out_features
 
 
