@@ -117,7 +117,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     data_frame.to_excel(excel_path, index=0)
                     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
                     step_size = len(train_generator)
-                    hparams = return_hparams(run_data, features_list=features_list + ['Trial_ID'], excluded_keys=[])
+                    hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
                     layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
                     paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
