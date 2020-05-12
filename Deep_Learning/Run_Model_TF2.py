@@ -39,15 +39,16 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if os.listdir(tensorboard_output):
         print('already done')
         return None
-    checkpoint = ModelCheckpoint(model_path_out, monitor='val_sparse_categorical_mean_dsc',
-                                 save_freq='epoch', save_best_only=False, save_weights_only=False, mode='max',
+    checkpoint = ModelCheckpoint(os.path.join(model_path_out,'cp-best.ckpt'), monitor='val_loss',
+                                 save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
     tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch='300,401', histogram_freq=5, write_graph=False)
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x)
+    val_frequency = 10
     add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
-                                   number_of_images=len(validation_generator), add_images=save_a_model, image_frequency=10,
+                                   number_of_images=len(validation_generator), add_images=True, image_frequency=20,
                                    threshold_x=True)
     callbacks = [tensorboard, add_images]
     if hparams is not None:
@@ -56,7 +57,8 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if not skip_cyclic_lr:
         callbacks += [lrate]
     if save_a_model:
-        callbacks += [checkpoint]
+        val_frequency = 5
+    callbacks += [checkpoint]
     # else:
     #     callbacks += [EarlyStopping(patience=5, verbose=1)]
     model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
@@ -66,7 +68,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
     Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks, steps_per_epoch=step_size,
                   validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-                  validation_freq=5)
+                  validation_freq=val_frequency)
     tf.keras.backend.clear_session()
     return None
 
