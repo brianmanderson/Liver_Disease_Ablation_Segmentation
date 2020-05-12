@@ -114,6 +114,8 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
                         print('Already done')
                         continue
+                    layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
                     print(current_run_df)
                     data_frame = data_frame.append(current_run_df, ignore_index=True)
                     data_frame.to_excel(excel_path, index=0)
@@ -122,6 +124,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
                     layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
                     paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                                     is_keras_model=False)
                     paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))

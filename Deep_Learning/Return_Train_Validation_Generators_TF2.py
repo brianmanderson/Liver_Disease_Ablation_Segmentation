@@ -130,17 +130,23 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
     layers_dict = return_hollow_layers_dict(layers)
     pool = (2, 2, 2)
+    final_steps = [lc.convolution_layer(filters, **dfkw),
+                   lc.convolution_layer(2, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
     for layer in range(layers - 1):
         encoding = []
         for _ in range(num_conv_blocks):
             encoding.append(lc.atrous_layer(filters, **dfkw))
-        encoding = [lc.residual_layer(encoding, **dfkw)]
+        if layer != 0:
+            encoding[-1]['atrous']['activation'][-1] = None
+            encoding = [lc.residual_layer(encoding, **dfkw)]
         layers_dict['Layer_' + str(layer)]['Encoding'] = encoding
         if filters < max_filters:
             filters = int(filters*2)
         decoding = []
         for _ in range(num_conv_blocks):
             decoding.append(lc.atrous_layer(filters, **dfkw))
+        decoding[-1]['atrous']['activation'][-1] = None
         decoding = [lc.residual_layer(decoding, **dfkw)]
         layers_dict['Layer_' + str(layer)]['Decoding'] = decoding
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
@@ -148,12 +154,11 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         num_conv_blocks += conv_lambda
     block = []
     for _ in range(num_conv_blocks):
-        block.append([lc.atrous_layer(filters, **dfkw)])
-    block = [lc.residual_layer(block, **dfkw)]
+        block.append(lc.atrous_layer(filters, **dfkw))
+    if layers > 1:
+        block[-1]['atrous']['activation'][-1] = None
+        block = [lc.residual_layer(block, **dfkw)]
     layers_dict['Base'] = block
-    final_steps = [lc.convolution_layer(16, **dfkw),
-                   lc.convolution_layer(2, batch_norm=False, activation='softmax')]
-    layers_dict['Final_Steps'] = final_steps
     return layers_dict
 
 
