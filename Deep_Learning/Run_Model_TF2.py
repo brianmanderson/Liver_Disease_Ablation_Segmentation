@@ -42,7 +42,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     checkpoint = ModelCheckpoint(os.path.join(model_path_out,'cp-best.ckpt'), monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
-    tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch='300,401', histogram_freq=5, write_graph=False)
+    tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch='300,401', histogram_freq=5, write_graph=True)
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x)
