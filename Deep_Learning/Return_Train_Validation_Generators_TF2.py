@@ -73,8 +73,6 @@ def return_dictionary(base_dict, optimizer='SGD'):
         # dictionary = [base_dict(min_lr=1e-5, max_lr=1e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
         #               in [16, 32] for k in [32, 64, 128]]
         dictionary = [
-            base_dict(min_lr=1e-5, max_lr=1e-2, layers=3, num_conv_blocks=2, conv_lambda=0, filters=32,
-                      max_filters=128),
             base_dict(min_lr=2e-6, max_lr=3e-3, layers=1, num_conv_blocks=1,conv_lambda=0, filters=32, max_filters=128),
             base_dict(min_lr=2e-6, max_lr=2e-3, layers=1, num_conv_blocks=2, conv_lambda=0, filters=32,
                       max_filters=128),
