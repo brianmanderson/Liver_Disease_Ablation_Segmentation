@@ -113,7 +113,7 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     return layers_dict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, **kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, factor=2, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
@@ -125,9 +125,6 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
     first = True
     for layer in range(layers - 1):
         layers_dict['Layer_' + str(layer)]['Encoding'] = []
-        factor = 2
-        if num_conv_blocks % 3 == 0:
-            factor = 3
         encoding = []
         subtract = 1 if num_conv_blocks % factor != 0 else 0
         for i in range((num_conv_blocks // factor - subtract) * factor):
@@ -169,9 +166,6 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters)
         num_conv_blocks += conv_lambda
-    factor = 2
-    if num_conv_blocks % 3 == 0:
-        factor = 3
     base = []
     subtract = 1 if num_conv_blocks % factor != 0 else 0
     layers_dict['Base'] = []
@@ -195,8 +189,8 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
 
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
-    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, conv_lambda, filters, max_filters: \
-        OrderedDict({'layers': layers,'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, conv_lambda, filters, max_filters, factor: \
+        OrderedDict({'factor':factor, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
                      'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
