@@ -206,7 +206,10 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         base = []
         for i in range(num_conv_blocks % factor + factor):
             base.append(block(filters, **dfkw))
-        base[-1][key]['activation'][-1] = None
+        if atrous:
+            base[-1][key]['activation'][-1] = None
+        else:
+            base[-1][key]['activation'] = None
         base = [lc.residual_layer(base, **dfkw)]
         layers_dict['Base'] += base
     return layers_dict
