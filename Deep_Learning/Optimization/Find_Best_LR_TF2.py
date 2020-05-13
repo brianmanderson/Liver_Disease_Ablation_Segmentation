@@ -14,22 +14,28 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
     max_lr = 1
     for iteration in [0]:
         for optimizer in ['Adam']:
-            for factor in [1,2]:
+            for atrous in [False, True]:
                 for layer in [3, 2, 1]:
                     for filters in [32]:
                         for max_filters in [128]:
-                            for num_conv_blocks in [2, 1]:
+                            for num_conv_blocks in [4, 3, 2, 1]:
+                                if num_conv_blocks > 2 and atrous:
+                                    continue
                                 for conv_lambda in [2, 1, 0]:
                                     if layer == 1 and conv_lambda > 0:
                                         continue
                                     base_path, morfeus_drive = return_paths()
                                     run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                                          layers=layer, conv_lambda=conv_lambda, num_conv_blocks=num_conv_blocks,
-                                                         factor=factor)
+                                                         atrous=atrous)
                                     layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
-                                    things = ['factor_{}'.format(factor),'layers_{}'.format(layer),'num_conv_blocks_{}'.format(num_conv_blocks),
+                                    things = ['layers_{}'.format(layer),'num_conv_blocks_{}'.format(num_conv_blocks),
                                               'conv_lambda_{}'.format(conv_lambda),'filters_{}'.format(filters),
                                               'max_filters_{}'.format(max_filters), 'Optimizer_{}'.format(optimizer)]
+                                    if atrous:
+                                        things = ['atrous'] + things
+                                    else:
+                                        things = ['conv'] + things
                                     things.append('{}_Iteration'.format(iteration))
                                     out_path = os.path.join(morfeus_drive,path_desc,'Fully_Atrous')
                                     for thing in things:

@@ -113,9 +113,17 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     return layers_dict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, factor=2, max_conv_blocks=4, **kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, atrous=True,**kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
+    if atrous:
+        factor = 1
+        key = 'atrous'
+        block = lc.atrous_layer
+    else:
+        key = 'convolution'
+        factor = 2
+        block = lc.convolution_layer
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
     layers_dict = return_hollow_layers_dict(layers)
     pool = (2, 2, 2)
@@ -128,10 +136,13 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         encoding = []
         subtract = 1 if num_conv_blocks % factor != 0 else 0
         for i in range((num_conv_blocks // factor - subtract) * factor):
-            encoding.append(lc.atrous_layer(filters, **dfkw))
+            encoding.append(block(filters, **dfkw))
             if (i + 1) % factor == 0:
                 if not first:
-                    encoding[-1]['atrous']['activation'][-1] = None
+                    if atrous:
+                        encoding[-1][key]['activation'][-1] = None
+                    else:
+                        encoding[-1][key]['activation'] = None
                     encoding = [lc.residual_layer(encoding, **dfkw)]
                 layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
                 encoding = []
@@ -139,8 +150,11 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         if num_conv_blocks % factor != 0:
             encoding = []
             for i in range(num_conv_blocks % factor + factor):
-                encoding.append(lc.atrous_layer(filters, **dfkw))
-            encoding[-1]['atrous']['activation'][-1] = None
+                encoding.append(block(filters, **dfkw))
+            if atrous:
+                encoding[-1][key]['activation'][-1] = None
+            else:
+                encoding[-1][key]['activation'] = None
             encoding = [lc.residual_layer(encoding, **dfkw)]
             layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters, activation=None)
@@ -150,10 +164,13 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         layers_dict['Layer_' + str(layer)]['Decoding'] = []
         decoding = [lc.activation_layer('elu')]
         for i in range((num_conv_blocks // factor - subtract) * factor):
-            decoding.append(lc.atrous_layer(filters, **dfkw))
+            decoding.append(block(filters, **dfkw))
             if (i + 1) % factor == 0:
                 if not first:
-                    decoding[-1]['atrous']['activation'][-1] = None
+                    if atrous:
+                        decoding[-1][key]['activation'][-1] = None
+                    else:
+                        decoding[-1][key]['activation'] = None
                     decoding = [lc.residual_layer(decoding, **dfkw)]
                 layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
                 decoding = []
@@ -161,8 +178,11 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         if num_conv_blocks % factor != 0:
             decoding = []
             for i in range(num_conv_blocks % factor + factor):
-                decoding.append(lc.atrous_layer(filters, **dfkw))
-            decoding[-1]['atrous']['activation'][-1] = None
+                decoding.append(block(filters, **dfkw))
+            if atrous:
+                decoding[-1][key]['activation'][-1] = None
+            else:
+                decoding[-1][key]['activation'] = None
             decoding = [lc.residual_layer(decoding, **dfkw)]
             layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
         num_conv_blocks += conv_lambda
@@ -171,10 +191,13 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
     subtract = 1 if num_conv_blocks % factor != 0 else 0
     layers_dict['Base'] = []
     for i in range((num_conv_blocks // factor - subtract) * factor):
-        base.append(lc.atrous_layer(filters, **dfkw))
+        base.append(block(filters, **dfkw))
         if (i + 1) % factor == 0:
             if not first:
-                base[-1]['atrous']['activation'][-1] = None
+                if atrous:
+                    base[-1][key]['activation'][-1] = None
+                else:
+                    base[-1][key]['activation'] = None
                 base = [lc.residual_layer(base, **dfkw)]
             layers_dict['Base'] += base
             base = []
@@ -182,16 +205,16 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
     if num_conv_blocks % factor != 0:
         base = []
         for i in range(num_conv_blocks % factor + factor):
-            base.append(lc.atrous_layer(filters, **dfkw))
-        base[-1]['atrous']['activation'][-1] = None
+            base.append(block(filters, **dfkw))
+        base[-1][key]['activation'][-1] = None
         base = [lc.residual_layer(base, **dfkw)]
         layers_dict['Base'] += base
     return layers_dict
 
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
-    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, conv_lambda, filters, max_filters, factor: \
-        OrderedDict({'factor':factor, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, conv_lambda, filters, max_filters, atrous: \
+        OrderedDict({'atrous':atrous, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
                      'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
