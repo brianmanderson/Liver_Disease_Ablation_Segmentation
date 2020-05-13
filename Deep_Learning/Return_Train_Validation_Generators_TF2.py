@@ -229,12 +229,14 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
             encoding = []
             for i in range(num_conv_blocks % factor + factor):
                 encoding.append(block(filters, **dfkw))
-            if atrous:
-                encoding[-1][key]['activation'][-1] = None
-            else:
-                encoding[-1][key]['activation'] = None
-            encoding = [lc.residual_layer(encoding, **dfkw)]
+            if not first:
+                if atrous:
+                    encoding[-1][key]['activation'][-1] = None
+                else:
+                    encoding[-1][key]['activation'] = None
+                encoding = [lc.residual_layer(encoding, **dfkw)]
             layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+        first = False
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
                                                                      lc.convolution_layer(filters, **dfkw)]
         if filters < max_filters:
@@ -285,11 +287,12 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         base = []
         for i in range(num_conv_blocks % factor + factor):
             base.append(block(filters, **dfkw))
-        if atrous:
-            base[-1][key]['activation'][-1] = None
-        else:
-            base[-1][key]['activation'] = None
-        base = [lc.residual_layer(base, **dfkw)]
+        if not first:
+            if atrous:
+                base[-1][key]['activation'][-1] = None
+            else:
+                base[-1][key]['activation'] = None
+            base = [lc.residual_layer(base, **dfkw)]
         layers_dict['Base'] += base
     return layers_dict
 
