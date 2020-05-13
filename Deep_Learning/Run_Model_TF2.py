@@ -9,8 +9,7 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Clas
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
 from Return_Train_Validation_Generators_TF2 import return_generators, get_layers_dict, return_base_dict,\
-    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, \
-    return_atrous_base_dict, get_atrous_layers_dict, return_best_dictionary
+    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -98,6 +97,10 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     overall_dictionary = return_best_dictionary(base_dict)
                 else:
                     overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
+                overall_dictionary = np.asarray(overall_dictionary)
+                perm = np.arange(len(overall_dictionary))
+                np.random.shuffle(perm)
+                overall_dictionary = overall_dictionary[perm]
                 for run_data in overall_dictionary:
                     tf.random.set_seed(iteration)
                     run_data['batch_size'] = batch_size
