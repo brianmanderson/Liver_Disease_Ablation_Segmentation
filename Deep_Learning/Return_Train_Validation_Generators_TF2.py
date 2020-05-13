@@ -235,12 +235,13 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
                 encoding[-1][key]['activation'] = None
             encoding = [lc.residual_layer(encoding, **dfkw)]
             layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
-        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters, activation=None)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
+                                                                     lc.convolution_layer(filters, **dfkw)]
         if filters < max_filters:
             filters = int(filters*2)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, batch_norm=True, strides=(2,2,2), activation=None)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=(2,2,2), **dfkw)
         layers_dict['Layer_' + str(layer)]['Decoding'] = []
-        decoding = [lc.activation_layer('elu')]
+        decoding = []
         for i in range((num_conv_blocks // factor - subtract) * factor):
             decoding.append(block(filters, **dfkw))
             if (i + 1) % factor == 0:
@@ -341,7 +342,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    for generator in [validation_generator, train_generator]:
+    for generator in []: #validation_generator, train_generator
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)

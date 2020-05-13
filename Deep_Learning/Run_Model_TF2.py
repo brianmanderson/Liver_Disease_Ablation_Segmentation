@@ -58,9 +58,8 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if save_a_model:
         val_frequency = 5
     callbacks += [checkpoint]
-    # else:
-    #     callbacks += [EarlyStopping(patience=5, verbose=1)]
-    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
+    callbacks += [EarlyStopping(patience=15, verbose=1)]
+    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=False)
     Model_val = model.created_model
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -81,12 +80,11 @@ def compare_base_current(data_frame, current_run_df, features_list):
 
 
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
-                step_size_factor=8, run_best=False):
+                step_size_factor=8, run_best=False, debug=False):
     optimizers = ['Adam']
     if run_best:
         optimizers = ['Adam']
         save_a_model = True
-        epochs = 200
     for iteration in range(3):
         for batch_size in [16]:
             for optimizer in optimizers:
@@ -100,8 +98,31 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                 overall_dictionary = np.asarray(overall_dictionary)
                 perm = np.arange(len(overall_dictionary))
                 np.random.shuffle(perm)
-                overall_dictionary = overall_dictionary[perm]
+                # overall_dictionary = overall_dictionary[perm]
+                if debug:
+                    i = 0
+                    _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
                 for run_data in overall_dictionary:
+                    if debug:
+                        layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                        model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
+                                        concat_not_add=True)
+                        Model_val = model.created_model
+                        Model_val.compile(optimizer,
+                                          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                                          metrics=[tf.keras.metrics.SparseCategoricalAccuracy(),
+                                                   SparseCategoricalMeanDSC(num_classes=2)])
+                        callbacks = []
+                        i += 1
+                        if os.path.exists(r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i)):
+                            continue
+                        k = TensorBoard(log_dir=r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i), profile_batch=0, histogram_freq=5, write_graph=True)
+                        k.set_model(Model_val)
+                        k.on_train_begin()
+                        tf.keras.backend.clear_session()
+                        continue
+                    if debug:
+                        return None
                     tf.random.set_seed(iteration)
                     run_data['batch_size'] = batch_size
                     excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
