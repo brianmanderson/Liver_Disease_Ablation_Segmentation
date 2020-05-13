@@ -139,64 +139,69 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
         factor = 2
         if num_conv_blocks % 3 == 0:
             factor = 3
-        elif num_conv_blocks < 3:
-            factor = 999
         encoding = []
-        for i in range(num_conv_blocks):
+        subtract = 1 if num_conv_blocks % factor != 0 else 0
+        for i in range((num_conv_blocks // factor - subtract) * factor):
             encoding.append(lc.atrous_layer(filters, **dfkw))
-            if num_conv_blocks > 3:
-                if (i + 1) % factor == 0:
-                    if not first:
-                        encoding[-1]['atrous']['activation'][-1] = None
-                        encoding = [lc.residual_layer(encoding, **dfkw)]
-                    layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
-                    encoding = []
-                    first = False
-        if factor == 999:
+            if (i + 1) % factor == 0:
+                if not first:
+                    encoding[-1]['atrous']['activation'][-1] = None
+                    encoding = [lc.residual_layer(encoding, **dfkw)]
+                layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+                encoding = []
+                first = False
+        if num_conv_blocks % factor != 0:
+            encoding = []
+            for i in range(num_conv_blocks % factor + factor):
+                encoding.append(lc.atrous_layer(filters, **dfkw))
             encoding[-1]['atrous']['activation'][-1] = None
             encoding = [lc.residual_layer(encoding, **dfkw)]
-            layers_dict['Layer_' + str(layer)]['Encoding'] = encoding
+            layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
         if filters < max_filters:
             filters = int(filters*2)
         layers_dict['Layer_' + str(layer)]['Decoding'] = []
         decoding = []
-        for i in range(num_conv_blocks):
+        for i in range((num_conv_blocks // factor - subtract) * factor):
             decoding.append(lc.atrous_layer(filters, **dfkw))
-            if num_conv_blocks > 3:
-                if (i + 1) % factor == 0:
-                    if not first:
-                        decoding[-1]['atrous']['activation'][-1] = None
-                        decoding = [lc.residual_layer(decoding, **dfkw)]
-                    layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
-                    decoding = []
-                    first = False
-        if factor == 999:
+            if (i + 1) % factor == 0:
+                if not first:
+                    decoding[-1]['atrous']['activation'][-1] = None
+                    decoding = [lc.residual_layer(decoding, **dfkw)]
+                layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
+                decoding = []
+                first = False
+        if num_conv_blocks % factor != 0:
+            decoding = []
+            for i in range(num_conv_blocks % factor + factor):
+                decoding.append(lc.atrous_layer(filters, **dfkw))
             decoding[-1]['atrous']['activation'][-1] = None
             decoding = [lc.residual_layer(decoding, **dfkw)]
-            layers_dict['Layer_' + str(layer)]['Decoding'] = decoding
+            layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters)
         num_conv_blocks += conv_lambda
     factor = 2
     if num_conv_blocks % 3 == 0:
         factor = 3
-    elif num_conv_blocks < 3:
-        factor = 999
-    block = []
-    for i in range(num_conv_blocks):
-        block.append(lc.atrous_layer(filters, **dfkw))
-        if num_conv_blocks > 3:
-            if (i + 1) % factor == 0:
-                if not first:
-                    block[-1]['atrous']['activation'][-1] = None
-                    block = [lc.residual_layer(block, **dfkw)]
-                layers_dict['Base'] += block
-                block = []
-                first = False
-    if factor == 999:
-        block[-1]['atrous']['activation'][-1] = None
-        block = [lc.residual_layer(block, **dfkw)]
-        layers_dict['Base'] = block
+    base = []
+    subtract = 1 if num_conv_blocks % factor != 0 else 0
+    layers_dict['Base'] = []
+    for i in range((num_conv_blocks // factor - subtract) * factor):
+        base.append(lc.atrous_layer(filters, **dfkw))
+        if (i + 1) % factor == 0:
+            if not first:
+                base[-1]['atrous']['activation'][-1] = None
+                base = [lc.residual_layer(base, **dfkw)]
+            layers_dict['Base'] += base
+            base = []
+            first = False
+    if num_conv_blocks % factor != 0:
+        base = []
+        for i in range(num_conv_blocks % factor + factor):
+            base.append(lc.atrous_layer(filters, **dfkw))
+        base[-1]['atrous']['activation'][-1] = None
+        base = [lc.residual_layer(base, **dfkw)]
+        layers_dict['Base'] += base
     return layers_dict
 
 
