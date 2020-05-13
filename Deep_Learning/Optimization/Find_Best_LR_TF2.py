@@ -18,7 +18,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                 for layer in [3, 2, 1]:
                     for filters in [32]:
                         for max_filters in [128]:
-                            for num_conv_blocks in [4, 3, 2]:
+                            for num_conv_blocks in [2, 1]:
                                 for conv_lambda in [2, 1, 0]:
                                     if layer == 1 and conv_lambda > 0:
                                         continue
