@@ -113,7 +113,7 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     return layers_dict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, factor=2, **kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, factor=2, max_conv_blocks=4, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
     dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
@@ -143,10 +143,12 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
             encoding[-1]['atrous']['activation'][-1] = None
             encoding = [lc.residual_layer(encoding, **dfkw)]
             layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters, activation=None)
         if filters < max_filters:
             filters = int(filters*2)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, batch_norm=True, strides=(2,2,2), activation=None)
         layers_dict['Layer_' + str(layer)]['Decoding'] = []
-        decoding = []
+        decoding = [lc.activation_layer('elu')]
         for i in range((num_conv_blocks // factor - subtract) * factor):
             decoding.append(lc.atrous_layer(filters, **dfkw))
             if (i + 1) % factor == 0:
@@ -163,9 +165,8 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
             decoding[-1]['atrous']['activation'][-1] = None
             decoding = [lc.residual_layer(decoding, **dfkw)]
             layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
-        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.pooling_layer(pool_size=pool)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = lc.upsampling_layer(pool_size=pool, channels=filters)
         num_conv_blocks += conv_lambda
+        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
     base = []
     subtract = 1 if num_conv_blocks % factor != 0 else 0
     layers_dict['Base'] = []
