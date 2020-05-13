@@ -39,7 +39,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
-    train_model(epochs=301, step_size_factor=10, save_a_model=False, model_name=model_name, run_best=run_best, debug=False)
+    train_model(epochs=301, step_size_factor=12, save_a_model=False, model_name=model_name, run_best=run_best, debug=False)
 
 make_opt_excel = False
 if make_opt_excel:
