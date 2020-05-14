@@ -15,7 +15,7 @@ from tensorboard.plugins.hparams.keras import Callback
 
 def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
               paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', save_a_model=True,
-              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None, **kwargs):
+              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,concat=True, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -59,7 +59,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         val_frequency = 5
     callbacks += [checkpoint]
     callbacks += [EarlyStopping(patience=15, verbose=1)]
-    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
+    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=concat)
     Model_val = model.created_model
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -82,6 +82,7 @@ def compare_base_current(data_frame, current_run_df, features_list):
 def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
                 step_size_factor=8, run_best=False, debug=False):
     optimizers = ['Adam']
+    concat = True
     if run_best:
         optimizers = ['Adam']
         save_a_model = True
@@ -103,6 +104,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                     i = 0
                     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
                 for run_data in overall_dictionary:
+                    run_data['concat'] = concat
                     if debug:
                         layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
                         model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
@@ -158,7 +160,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                               step_size=step_size, optimizer=optimizer,
                               validation_generator=validation_generator,save_a_model=save_a_model,
                               paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
-                              base_path=base_path, epochs=epochs,**run_data)
+                              base_path=base_path, concat=concat, epochs=epochs,**run_data)
                     return None # break out!
 
 
