@@ -59,7 +59,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         val_frequency = 5
     callbacks += [checkpoint]
     callbacks += [EarlyStopping(patience=15, verbose=1)]
-    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=False)
+    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True)
     Model_val = model.created_model
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -98,7 +98,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                 overall_dictionary = np.asarray(overall_dictionary)
                 perm = np.arange(len(overall_dictionary))
                 np.random.shuffle(perm)
-                overall_dictionary = overall_dictionary[perm]
+                # overall_dictionary = overall_dictionary[perm]
                 if debug:
                     i = 0
                     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
