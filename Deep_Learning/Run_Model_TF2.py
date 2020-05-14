@@ -44,8 +44,8 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch='300,401', histogram_freq=5, write_graph=True)
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=2, scale_mode=scale_mode,
-                     step_size_factor_scale=lambda x: x)
-    val_frequency = 10
+                     step_size_factor_scale=lambda x: x + 2)
+    val_frequency = 5
     add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
                                    number_of_images=len(validation_generator), add_images=True, image_frequency=20,
                                    threshold_x=True)
@@ -55,10 +55,8 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         callbacks += [hp_callback]
     if not skip_cyclic_lr:
         callbacks += [lrate]
-    if save_a_model:
-        val_frequency = 5
     callbacks += [checkpoint]
-    callbacks += [EarlyStopping(patience=15, verbose=1)]
+    callbacks += [EarlyStopping(patience=5, verbose=1)]
     model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=concat)
     Model_val = model.created_model
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
