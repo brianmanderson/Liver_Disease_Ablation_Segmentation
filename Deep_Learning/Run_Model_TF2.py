@@ -160,7 +160,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
                               step_size=step_size, optimizer=optimizer,
                               validation_generator=validation_generator,save_a_model=save_a_model,
                               paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
-                              base_path=base_path, concat=concat, epochs=epochs,**run_data)
+                              base_path=base_path, epochs=epochs,**run_data)
                     return None # break out!
 
 
