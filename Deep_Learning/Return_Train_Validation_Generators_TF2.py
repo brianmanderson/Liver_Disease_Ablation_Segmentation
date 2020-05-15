@@ -203,7 +203,7 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     return layers_dict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=6, atrous=True,**kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, atrous=True,**kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
     if atrous:
