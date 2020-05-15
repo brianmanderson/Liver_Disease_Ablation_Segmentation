@@ -187,21 +187,21 @@ def return_dictionary(base_dict, optimizer='SGD'):
                       min_lr=6e-7, max_lr=3e-4, max_conv_blocks=4),
 
             base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=6),
+                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
             base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=6),
+                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
             base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=6),
+                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
             base_dict(atrous=False, layers=4, num_conv_blocks=4, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=8e-4, max_conv_blocks=6),
+                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
 
             base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
                       min_lr=6e-7, max_lr=1e-3, max_conv_blocks=8),
 
             base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=8),
+                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=8),
             base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=8)
+                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=8)
                       ]
     return dictionary
 
