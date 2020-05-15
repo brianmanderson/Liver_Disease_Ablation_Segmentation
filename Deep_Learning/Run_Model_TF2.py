@@ -38,16 +38,22 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if os.listdir(tensorboard_output):
         print('already done')
         return None
-    checkpoint = ModelCheckpoint(os.path.join(model_path_out,'cp-best.ckpt'), monitor='val_loss',
+    checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
+    image_frequency = 20
+    val_frequency = 5
+    if run_best:
+        image_frequency = 10
+        val_frequency = 1
+        checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.ckpt')
+    checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
     tensorboard = TensorBoard(log_dir=tensorboard_output, profile_batch='300,401', histogram_freq=5, write_graph=True)
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=5, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + 2, reduction_factor=5)
-    val_frequency = 5
     add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
-                                   number_of_images=len(validation_generator), add_images=True, image_frequency=20,
+                                   number_of_images=len(validation_generator), add_images=True, image_frequency=image_frequency,
                                    threshold_x=True)
     callbacks = [tensorboard, add_images]
     if hparams is not None:

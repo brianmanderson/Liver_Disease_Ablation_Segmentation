@@ -203,7 +203,7 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     return layers_dict
 
 
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, atrous=True,**kwargs):
+def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=6, atrous=True,**kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
     if atrous:
@@ -310,9 +310,9 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
 
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
-    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, conv_lambda, filters, max_filters, atrous: \
-        OrderedDict({'atrous':atrous, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
-                     'filters':filters, 'max_filters':max_filters,
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, max_filters, atrous: \
+        OrderedDict({'atrous':atrous, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
+                     'conv_lambda':conv_lambda, 'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
                      })
