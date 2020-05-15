@@ -1,7 +1,7 @@
 __author__ = 'Brian M Anderson'
 # Created on 1/30/2020
-from Base_Deeplearning_Code.Finding_Optimization_Parameters.History_Plotter import create_excel_from_event, \
-    plot_from_excel, os, np, partial, pd
+from Base_Deeplearning_Code.Finding_Optimization_Parameters.History_Plotter_TF2 import create_excel_from_event, \
+    plot_from_excel, os, pd
 from plotnine import *
 
 
@@ -9,8 +9,7 @@ def main(make_excel = False, input_path = r'K:\Morfeus\BMAnderson\Modular_Projec
     out_path = '.'
     excel_out_path = os.path.join(out_path, 'Model_Optimization.xlsx')
     if make_excel or not os.path.exists(excel_out_path):
-        create_excel_from_event(input_path=input_path,excel_out_path=excel_out_path,
-                                names=['Layers','Conv_Layers','num_atrous_blocks','atrous_rate','filters','max_filters','min_lr','max_lr'])
+        create_excel_from_event(input_path=input_path,excel_out_path=excel_out_path, names=['Trial_ID'])
 
     data = pd.read_excel(excel_out_path)
     data = data.dropna()

@@ -61,7 +61,13 @@ def return_hparams(run_data, features_list, excluded_keys=['iteration','save']):
 
 
 def return_best_dictionary(base_dict):
-    dictionary = [base_dict(min_lr=1e-5, max_lr=1e-2, layers=2, filters=32, max_filters=128)] # Adam
+    dictionary = [base_dict(atrous=False, layers=3, num_conv_blocks=4, conv_lambda=1, filters=32, max_filters=128,
+                            min_lr=6e-7, max_lr=2e-3),
+                  base_dict(atrous=False, layers=3, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
+                            min_lr=6e-7, max_lr=2e-3),
+                  base_dict(atrous=False, layers=3, num_conv_blocks=1, conv_lambda=2, filters=32, max_filters=128,
+                            min_lr=6e-7, max_lr=2e-3),
+                  ]
     return dictionary
 
 
