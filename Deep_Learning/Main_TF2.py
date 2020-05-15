@@ -16,7 +16,7 @@ cube_size = (16, 16, 120, 120)
 batch_size = 16
 path_desc='TF2_Learning_Rates_new'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
-find_lr = True
+find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
     find_best_lr(optimizer='Adam', batch_size=16, path_desc=path_desc)
@@ -35,10 +35,10 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
-    run_best = True
+    run_best = False
     train_model(epochs=301, model_name=model_name, run_best=run_best, debug=False)
 
 make_opt_excel = False

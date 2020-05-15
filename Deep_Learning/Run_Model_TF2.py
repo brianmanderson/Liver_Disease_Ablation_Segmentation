@@ -91,7 +91,7 @@ def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model
     if run_best:
         save_a_model = True
     for iteration in range(3):
-        for step_size_factor in [4, 6]:
+        for step_size_factor in [6]:
             for batch_size in [16]:
                 for optimizer in optimizers:
                     base_path, morfeus_drive = return_paths()
