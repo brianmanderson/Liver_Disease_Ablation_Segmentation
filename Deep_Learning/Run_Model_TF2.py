@@ -84,89 +84,90 @@ def compare_base_current(data_frame, current_run_df, features_list):
     return False
 
 
-def train_model(epochs=None,bn_before_activation=True, save_a_model=False, model_name = '3D_Fully_Atrous',
+def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                 run_best=False, debug=False):
     optimizers = ['Adam']
     concat = True
     if run_best:
         save_a_model = True
     for iteration in range(3):
-        for step_size_factor in [6]:
-            for batch_size in [16]:
-                for optimizer in optimizers:
-                    base_path, morfeus_drive = return_paths()
-                    base_dict = return_base_dict(step_size_factor=step_size_factor,
-                                                 save_a_model=save_a_model, optimizer=optimizer)
-                    if run_best:
-                        overall_dictionary = return_best_dictionary(base_dict)
-                    else:
-                        overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
-                    overall_dictionary = np.asarray(overall_dictionary)
-                    perm = np.arange(len(overall_dictionary))
-                    np.random.shuffle(perm)
-                    overall_dictionary = overall_dictionary[perm]
-                    if debug:
-                        i = 0
-                        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
-                    for run_data in overall_dictionary:
-                        run_data['concat'] = concat
+        for bn_before_activation in [True]:
+            for step_size_factor in [6]:
+                for batch_size in [16]:
+                    for optimizer in optimizers:
+                        base_path, morfeus_drive = return_paths()
+                        base_dict = return_base_dict(step_size_factor=step_size_factor,
+                                                     save_a_model=save_a_model, optimizer=optimizer)
+                        if run_best:
+                            overall_dictionary = return_best_dictionary(base_dict)
+                        else:
+                            overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
+                        overall_dictionary = np.asarray(overall_dictionary)
+                        perm = np.arange(len(overall_dictionary))
+                        np.random.shuffle(perm)
+                        overall_dictionary = overall_dictionary[perm]
                         if debug:
-                            layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
-                            model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
-                                            concat_not_add=True)
-                            Model_val = model.created_model
-                            Model_val.compile(optimizer,
-                                              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                                              metrics=[tf.keras.metrics.SparseCategoricalAccuracy(),
-                                                       SparseCategoricalMeanDSC(num_classes=2)])
-                            callbacks = []
-                            i += 1
-                            if os.path.exists(r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i)):
+                            i = 0
+                            _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
+                        for run_data in overall_dictionary:
+                            run_data['concat'] = concat
+                            if debug:
+                                layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                                model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
+                                                concat_not_add=True)
+                                Model_val = model.created_model
+                                Model_val.compile(optimizer,
+                                                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                                                  metrics=[tf.keras.metrics.SparseCategoricalAccuracy(),
+                                                           SparseCategoricalMeanDSC(num_classes=2)])
+                                callbacks = []
+                                i += 1
+                                if os.path.exists(r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i)):
+                                    continue
+                                k = TensorBoard(log_dir=r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i), profile_batch=0, histogram_freq=5, write_graph=True)
+                                k.set_model(Model_val)
+                                k.on_train_begin()
+                                tf.keras.backend.clear_session()
                                 continue
-                            k = TensorBoard(log_dir=r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i), profile_batch=0, histogram_freq=5, write_graph=True)
-                            k.set_model(Model_val)
-                            k.on_train_begin()
-                            tf.keras.backend.clear_session()
-                            continue
-                        if debug:
-                            return None
-                        tf.random.set_seed(iteration)
-                        run_data['batch_size'] = batch_size
-                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
-                        print(base_path)
-                        run_data['Iteration'] = iteration
-                        run_data['Trial_ID'] = 0
-                        data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
-                        trial_id = 0
-                        while trial_id in data_frame['Trial_ID'].values:
-                            trial_id += 1
-                        run_data['Trial_ID'] = trial_id
-                        current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
-                        if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
-                            print('Already done')
-                            continue
-                        print(current_run_df)
-                        data_frame = data_frame.append(current_run_df, ignore_index=True)
-                        data_frame.to_excel(excel_path, index=0)
-                        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
-                        step_size = len(train_generator)
-                        hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
+                            if debug:
+                                return None
+                            tf.random.set_seed(iteration)
+                            run_data['batch_size'] = batch_size
+                            excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
+                            print(base_path)
+                            run_data['Iteration'] = iteration
+                            run_data['Trial_ID'] = 0
+                            data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
+                            trial_id = 0
+                            while trial_id in data_frame['Trial_ID'].values:
+                                trial_id += 1
+                            run_data['Trial_ID'] = trial_id
+                            current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
+                            if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
+                                print('Already done')
+                                continue
+                            print(current_run_df)
+                            data_frame = data_frame.append(current_run_df, ignore_index=True)
+                            data_frame.to_excel(excel_path, index=0)
+                            _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
+                            step_size = len(train_generator)
+                            hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
-                        layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
-                        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
-                                                        is_keras_model=False)
-                        paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
-                        tensorboard_output = paths_class.tensorboard_path_out
-                        print(tensorboard_output)
-                        if os.listdir(tensorboard_output):
-                            print('already done')
-                            continue
-                        run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                                  step_size=step_size, optimizer=optimizer,
-                                  validation_generator=validation_generator,run_best=run_best,
-                                  paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
-                                  base_path=base_path, epochs=epochs,**run_data)
-                        return None # break out!
+                            layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                            paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                                                            is_keras_model=False)
+                            paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
+                            tensorboard_output = paths_class.tensorboard_path_out
+                            print(tensorboard_output)
+                            if os.listdir(tensorboard_output):
+                                print('already done')
+                                continue
+                            run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
+                                      step_size=step_size, optimizer=optimizer,
+                                      validation_generator=validation_generator,run_best=run_best,
+                                      paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
+                                      base_path=base_path, epochs=epochs,**run_data)
+                            return None # break out!
 
 
 if __name__ == '__main__':

@@ -10,13 +10,11 @@ import pandas as pd
 def main():
     out_path = '.'
     excel_out_path = os.path.join(out_path, 'hparams_table.xlsx')
-    if not os.path.exists(excel_out_path):
-        create_excel_from_event(input_path=r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Disease_Ablation_Segmentation_Work\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Tensorboard',
-                                excel_out_path=excel_out_path)
+    create_excel_from_event(input_path=r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Disease_Ablation_Segmentation_Work\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Tensorboard',
+                            excel_out_path=excel_out_path)
     hparameters_path = r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Disease_Ablation_Segmentation_Work\parameters_list_by_trial_id.xlsx'
     combined_xlsx = os.path.join('.','combined.xlsx')
-    if not os.path.exists(combined_xlsx):
-        combine_hparamxlsx_and_metricxlsx(hparameters_path, excel_out_path, combined_xlsx)
+    combine_hparamxlsx_and_metricxlsx(hparameters_path, excel_out_path, combined_xlsx)
     data = pd.read_excel(os.path.join('.','combined.xlsx'))
     data = data.dropna()
     xxx = 1
