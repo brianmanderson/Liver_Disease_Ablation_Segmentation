@@ -85,7 +85,10 @@ def compare_base_current(data_frame, current_run_df, features_list):
 
 
 def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
-                run_best=False, debug=False):
+                run_best=False, debug=False, add=''):
+    batch_size = 16
+    if add != '':
+        batch_size = 8
     optimizers = ['Adam']
     concat = True
     if run_best:
@@ -93,7 +96,7 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
     for iteration in range(3):
         for bn_before_activation in [True]:
             for step_size_factor in [6]:
-                for batch_size in [16]:
+                for batch_size in [batch_size]:
                     for optimizer in optimizers:
                         base_path, morfeus_drive = return_paths()
                         base_dict = return_base_dict(step_size_factor=step_size_factor,
@@ -150,7 +153,7 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                             print(current_run_df)
                             data_frame = data_frame.append(current_run_df, ignore_index=True)
                             data_frame.to_excel(excel_path, index=0)
-                            _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
+                            _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add)
                             step_size = len(train_generator)
                             hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
