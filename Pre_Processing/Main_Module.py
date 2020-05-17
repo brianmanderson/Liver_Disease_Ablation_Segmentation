@@ -39,14 +39,14 @@ if make_TF2_images:
     path = r'D:\Liver_Disease_Ablation'
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
-    image_processors = [Normalize_to_annotation(annotation_value_list=[1,2]),
+    image_processors = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True),
                         Split_Disease_Into_Cubes(cube_size=(16, 120, 120), disease_annotation=2,
                                                  min_voxel_volume=300, max_voxels=1350000),
                         Distribute_into_3D(max_z=16, max_rows=120, max_cols=120, min_z=16)]
     write_tf_record(os.path.join(path, 'Train'), record_name='Train', image_processors=image_processors,
                     is_3D=True, rewrite=False, shuffle=True, thread_count=10)
-    image_processors = [Normalize_to_annotation(annotation_value_list=[1,2]),
+    image_processors = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True),
                         Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3, power_val_c=2**3),
                         Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False, desired_val=2)]
     write_tf_record(os.path.join(path, 'Validation'), record_name='Validation', image_processors=image_processors,
-                    is_3D=True, rewrite=True, shuffle=True, thread_count=10)
+                    is_3D=True, rewrite=False, shuffle=True, thread_count=10)
