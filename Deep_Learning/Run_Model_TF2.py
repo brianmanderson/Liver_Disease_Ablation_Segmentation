@@ -110,6 +110,7 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                             i = 0
                             _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
                         for run_data in overall_dictionary:
+                            run_data['mirror_max'] = True
                             run_data['concat'] = concat
                             if debug:
                                 layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)

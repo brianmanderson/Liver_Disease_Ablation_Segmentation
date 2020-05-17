@@ -61,10 +61,9 @@ def return_hparams(run_data, features_list, excluded_keys=['iteration','save']):
 
 
 def return_best_dictionary(base_dict):
-    dictionary = [base_dict(atrous=False, layers=3, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
-                            min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
+    dictionary = [
                   base_dict(atrous=False, layers=3, num_conv_blocks=1, conv_lambda=2, filters=32, max_filters=128,
-                            min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
+                            min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4)
                   ]
     return dictionary
 
@@ -379,7 +378,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    for generator in []: #validation_generator, train_generator
+    for generator in [train_generator, validation_generator]: #
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)
