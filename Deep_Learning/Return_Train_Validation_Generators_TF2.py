@@ -282,8 +282,8 @@ def get_layers_dict_new(layers=1, filters=16, max_filters=np.inf, conv_lambda=0,
 
 
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
-    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, max_filters, atrous: \
-        OrderedDict({'atrous':atrous, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, max_filters: \
+        OrderedDict({'atrous':False, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
                      'conv_lambda':conv_lambda, 'filters':filters, 'max_filters':max_filters,
                      'Save_Model':save_a_model,'Optimizer':optimizer, 'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
