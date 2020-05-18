@@ -9,14 +9,14 @@ from Return_Train_Validation_Generators_TF2 import return_generators, return_bas
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
-def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activation=True):
+def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activation=True, add=''):
     base_dict = return_base_dict(optimizer=optimizer)
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0]:
         for optimizer in ['Adam']:
             for atrous in [False]:
-                for layer in [4, 3]:
+                for layer in [4, 3, 2]:
                     for max_conv_blocks in [4, 6, 8]:
                         for filters in [32]:
                             for max_filters in [128]:
@@ -24,10 +24,8 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                                     for conv_lambda in [2, 1]:
                                         if layer == 1 and conv_lambda > 0:
                                             continue
-                                        if conv_lambda == 0 and max_conv_blocks > 4:
-                                            continue
-                                        max_blocks = num_conv_blocks + num_conv_blocks * (layer-1) * conv_lambda
-                                        if max_blocks < max_conv_blocks and max_conv_blocks != 8:
+                                        if num_conv_blocks + conv_lambda * (layer - 1) <= (
+                                                max_conv_blocks - 2) and max_conv_blocks > 4:
                                             continue
                                         base_path, morfeus_drive = return_paths()
                                         run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
@@ -51,7 +49,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                                         os.makedirs(out_path)
                                         print(out_path)
                                         base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-                                            batch_size=batch_size)
+                                            batch_size=batch_size, add=add)
                                         model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
                                                         mask_output=True).created_model
                                         k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
