@@ -5,7 +5,7 @@ import tensorflow as tf
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from tensorflow.keras.callbacks import TensorBoard
-from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict, return_paths
+from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict_new, return_paths
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
@@ -31,7 +31,7 @@ def find_best_lr(optimizer='SGD', batch_size=16, path_desc='', bn_before_activat
                                         run_data = base_dict(min_lr=min_lr, max_lr=max_lr, filters=filters, max_filters=max_filters,
                                                              layers=layer, conv_lambda=conv_lambda, num_conv_blocks=num_conv_blocks,
                                                              atrous=atrous, max_conv_blocks=max_conv_blocks)
-                                        layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                                        layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
                                         things = ['max_conv_blocks_{}'.format(max_conv_blocks), 'layers_{}'.format(layer),'num_conv_blocks_{}'.format(num_conv_blocks),
                                                   'conv_lambda_{}'.format(conv_lambda),'filters_{}'.format(filters),
                                                   'max_filters_{}'.format(max_filters), 'Optimizer_{}'.format(optimizer)]
