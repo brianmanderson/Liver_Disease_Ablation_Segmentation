@@ -9,7 +9,7 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Clas
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
 from Return_Train_Validation_Generators_TF2 import return_generators, get_layers_dict, return_base_dict,\
-    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary
+    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary, get_layers_dict_new
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -111,12 +111,12 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                         overall_dictionary = overall_dictionary[perm]
                         if debug:
                             i = 0
-                            _, _, train_generator, validation_generator = return_generators(batch_size=batch_size)
                         for run_data in overall_dictionary:
                             run_data['mirror_max'] = True
+                            run_data['Model_Style'] = 'new'
                             run_data['concat'] = concat
                             if debug:
-                                layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                                layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
                                 model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
                                                 concat_not_add=True)
                                 Model_val = model.created_model
@@ -157,7 +157,7 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                             step_size = len(train_generator)
                             hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
-                            layers_dict = get_layers_dict(**run_data, bn_before_activation=bn_before_activation)
+                            layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
                             paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                                             is_keras_model=False)
                             paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))

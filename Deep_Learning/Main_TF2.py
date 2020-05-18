@@ -40,7 +40,7 @@ if run_200:
     from Run_Model_TF2 import train_model
     run_best = True
     add = '_32'
-    train_model(epochs=301, model_name=model_name, run_best=run_best, debug=False, add=add)
+    train_model(epochs=301, model_name=model_name, run_best=run_best, debug=True, add=add)
 
 make_opt_excel = False
 if make_opt_excel:

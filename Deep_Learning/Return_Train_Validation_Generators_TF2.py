@@ -330,6 +330,87 @@ def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num
     return layers_dict
 
 
+def get_layers_dict_new(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, atrous=True,**kwargs):
+    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
+                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=False)
+    factor = 2
+    block = lc.convolution_layer
+    dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
+    layers_dict = return_hollow_layers_dict(layers)
+    pool = (2, 2, 2)
+    final_steps = [lc.convolution_layer(filters, **dfkw),
+                   lc.convolution_layer(2, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
+    first = True
+    for layer in range(layers - 1):
+        layers_dict['Layer_' + str(layer)]['Encoding'] = []
+        if first:
+            layers_dict['Layer_' + str(layer)]['Encoding'] = [lc.batch_norm_layer(), block(filters)]
+        encoding = []
+        subtract = 1 if num_conv_blocks % factor != 0 else 0
+        for i in range((num_conv_blocks // factor - subtract) * factor):
+            encoding.append(block(filters, **dfkw))
+            if (i + 1) % factor == 0:
+                if not first:
+                    encoding[-1] = block(filters, activation=None, batch_norm=False)
+                    encoding = [lc.residual_layer(encoding, **dfkw), lc.batch_norm_layer()]
+                layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+                encoding = []
+                first = False
+        if num_conv_blocks % factor != 0:
+            encoding = []
+            for i in range(num_conv_blocks % factor + factor):
+                encoding.append(block(filters, **dfkw))
+            if not first:
+                encoding[-1] = block(filters, activation=None, batch_norm=False)
+                encoding = [lc.residual_layer(encoding, **dfkw), lc.batch_norm_layer()]
+            layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+        first = False
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
+                                                                     lc.convolution_layer(filters, **dfkw)]
+        if filters < max_filters:
+            filters = int(filters*2)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=(2,2,2), **dfkw)
+        layers_dict['Layer_' + str(layer)]['Decoding'] = []
+        decoding = []
+        for i in range((num_conv_blocks // factor - subtract) * factor):
+            decoding.append(block(filters, **dfkw))
+            if (i + 1) % factor == 0:
+                if not first:
+                    decoding[-1] = block(filters, activation=None, batch_norm=False)
+                    decoding = [lc.residual_layer(decoding, **dfkw), lc.batch_norm_layer()]
+                layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
+                decoding = []
+                first = False
+        if num_conv_blocks % factor != 0:
+            decoding = []
+            for i in range(num_conv_blocks % factor + factor):
+                decoding.append(block(filters, **dfkw))
+            decoding[-1] = block(filters, activation=None, batch_norm=False)
+            decoding = [lc.residual_layer(decoding, **dfkw), lc.batch_norm_layer()]
+            layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
+        num_conv_blocks += conv_lambda
+        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
+    base = []
+    subtract = 1 if num_conv_blocks % factor != 0 else 0
+    layers_dict['Base'] = []
+    for i in range((num_conv_blocks // factor - subtract) * factor):
+        base.append(block(filters, **dfkw))
+        if (i + 1) % factor == 0:
+            base[-1] = block(filters, activation=None, batch_norm=False)
+            base = [lc.residual_layer(base, **dfkw), lc.batch_norm_layer()]
+            layers_dict['Base'] += base
+            base = []
+    if num_conv_blocks % factor != 0:
+        base = []
+        for i in range(num_conv_blocks % factor + factor):
+            base.append(block(filters, **dfkw))
+        base[-1] = block(filters, activation=None, batch_norm=False)
+        base = [lc.residual_layer(base, **dfkw), lc.batch_norm_layer()]
+        layers_dict['Base'] += base
+    return layers_dict
+
+
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, max_filters, atrous: \
         OrderedDict({'atrous':atrous, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
