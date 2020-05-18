@@ -17,7 +17,7 @@ batch_size = 16
 add = '_32'
 path_desc='TF2_Learning_Rates_new'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
-find_lr = True
+find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
     find_best_lr(optimizer='Adam', batch_size=8, path_desc=path_desc, add=add)
@@ -39,8 +39,8 @@ decision based on
 run_200 = False
 if run_200:
     from Run_Model_TF2 import train_model
-    run_best = True
-    train_model(epochs=301, model_name=model_name, run_best=run_best, debug=True, add=add)
+    run_best = False
+    train_model(epochs=301, model_name=model_name, run_best=run_best, debug=False, add=add)
 
 make_opt_excel = False
 if make_opt_excel:

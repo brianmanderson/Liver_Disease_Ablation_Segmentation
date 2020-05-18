@@ -104,7 +104,7 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                         if run_best:
                             overall_dictionary = return_best_dictionary(base_dict)
                         else:
-                            overall_dictionary = return_dictionary(base_dict, optimizer=optimizer)
+                            overall_dictionary = return_dictionary(base_dict)
                         overall_dictionary = np.asarray(overall_dictionary)
                         perm = np.arange(len(overall_dictionary))
                         np.random.shuffle(perm)

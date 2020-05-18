@@ -68,138 +68,31 @@ def return_best_dictionary(base_dict):
     return dictionary
 
 
-def return_dictionary(base_dict, optimizer='SGD'):
-    if optimizer == 'SGD':
-        dictionary = [base_dict(min_lr=1e-4, max_lr=8e-2, layers=i, filters=j, max_filters=k) for i in [2, 3, 4] for j
-                      in [16, 32] for k in [32, 64, 128]]
-    else:
-        dictionary = [
-            base_dict(atrous=True, layers=1, num_conv_blocks=1, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=4e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=1, num_conv_blocks=2, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=8e-4, max_conv_blocks=4),
-            base_dict(atrous=True, layers=1, num_conv_blocks=3, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=1, num_conv_blocks=4, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=9e-3, max_conv_blocks=4),
+def return_dictionary(base_dict):
+    dictionary = [
+        base_dict(max_conv_blocks=4, layers=2, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.75e-3),
+        base_dict(max_conv_blocks=4, layers=3, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.75e-3),
+        base_dict(max_conv_blocks=4, layers=4, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.2e-3),
+        base_dict(max_conv_blocks=4, layers=4, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=3e-4),
 
-            base_dict(atrous=True, layers=2, num_conv_blocks=1, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=5e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=2, num_conv_blocks=1, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=2e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=2, num_conv_blocks=1, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=4e-3, max_conv_blocks=4),
+        base_dict(max_conv_blocks=6, layers=2, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.6e-3),
+        base_dict(max_conv_blocks=6, layers=3, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.6e-3),
+        base_dict(max_conv_blocks=6, layers=3, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.6e-3),
+        base_dict(max_conv_blocks=6, layers=4, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=1.2e-3),
+        base_dict(max_conv_blocks=6, layers=4, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=3e-4),
 
-            base_dict(atrous=True, layers=2, num_conv_blocks=2, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=6e-4, max_conv_blocks=4),
-            base_dict(atrous=True, layers=2, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=2e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=1e-6, max_lr=6e-3, max_conv_blocks=4),
-
-            base_dict(atrous=True, layers=3, num_conv_blocks=1, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=3, num_conv_blocks=1, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.2e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=3, num_conv_blocks=1, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-
-            base_dict(atrous=True, layers=3, num_conv_blocks=2, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.5e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=3, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-3, max_conv_blocks=4),
-            base_dict(atrous=True, layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.2e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=1, num_conv_blocks=1, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-2, max_conv_blocks=4),
-            base_dict(atrous=False, layers=1, num_conv_blocks=2, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=8e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=1, num_conv_blocks=3, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.3e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=1, num_conv_blocks=4, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=4e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=2, num_conv_blocks=1, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=1, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.75e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=1, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.75e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=2, num_conv_blocks=2, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.75e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.75e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=2, num_conv_blocks=3, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.5e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=2, num_conv_blocks=4, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=7e-4, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=4, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=2e-7, max_lr=1e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=3, num_conv_blocks=1, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=2e-4, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=1, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=1, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.3e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1.1e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=3, num_conv_blocks=3, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=3, num_conv_blocks=4, conv_lambda=0, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=5.7e-4, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=4, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=2e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=3, num_conv_blocks=4, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=4),
-            base_dict(atrous=False, layers=4, num_conv_blocks=4, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=3e-4, max_conv_blocks=4),
-
-            base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
-            base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
-            base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
-            base_dict(atrous=False, layers=4, num_conv_blocks=4, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=6),
-
-            base_dict(atrous=False, layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=8),
-
-            base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=1, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=8),
-            base_dict(atrous=False, layers=4, num_conv_blocks=2, conv_lambda=2, filters=32, max_filters=128,
-                      min_lr=6e-7, max_lr=1e-3, max_conv_blocks=8)
-                      ]
+        base_dict(max_conv_blocks=8, layers=3, num_conv_blocks=3, conv_lambda=2, filters=32, max_filters=128,
+                  min_lr=4e-7, max_lr=3e-4)
+                  ]
     return dictionary
 
 
