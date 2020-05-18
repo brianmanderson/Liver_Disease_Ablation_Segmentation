@@ -360,6 +360,9 @@ def get_layers_dict_new(layers=1, filters=16, max_filters=np.inf, conv_lambda=0,
         if num_conv_blocks % factor != 0:
             encoding = []
             for i in range(num_conv_blocks % factor + factor):
+                if first:
+                    first = False
+                    continue
                 encoding.append(block(filters, **dfkw))
             if not first:
                 encoding[-1] = block(filters, activation=None, batch_norm=False)
