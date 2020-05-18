@@ -20,7 +20,7 @@ model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training'
 find_lr = True
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
-    find_best_lr(optimizer='Adam', batch_size=8, path_desc=path_desc)
+    find_best_lr(optimizer='Adam', batch_size=8, path_desc=path_desc, add=add)
 '''
 Plot the LR, get the min and max from the images
 '''
