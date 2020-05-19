@@ -294,7 +294,7 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
 
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
-                      add='', is_test=False):
+                      add='', is_test=False, cache=True):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
@@ -327,13 +327,16 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
-        {'batch':1},
-        {'cache': os.path.join(base_path,ext)},
+        {'batch':1}]
+    if cache:
+        validation_processors += [
+        {'cache': os.path.join(base_path,ext)}]
+    validation_processors += [
         {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    for generator in [train_generator, validation_generator]: #
+    for generator in []: #train_generator, validation_generator
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)
