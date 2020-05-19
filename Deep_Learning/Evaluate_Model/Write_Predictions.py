@@ -1,8 +1,7 @@
 __author__ = 'Brian M Anderson'
 # Created on 3/2/2020
 from tensorflow.python.keras.models import *
-import tensorflow as tf
-from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D, np
+import numpy as np
 import os
 import SimpleITK as sitk
 from Return_Train_Validation_Generators_TF2 import return_generators, plot_scroll_Image
