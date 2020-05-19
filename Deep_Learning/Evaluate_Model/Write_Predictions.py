@@ -57,15 +57,15 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         else:
             pred = model_val.predict(x)
 
-        truth = sitk.GetImageFromArray(np.squeeze(y))
+        truth = sitk.GetImageFromArray(np.squeeze(y).astype('float32'))
         sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
 
-        prediction = sitk.GetImageFromArray(np.squeeze(pred[...,1]))
+        prediction = sitk.GetImageFromArray(np.squeeze(pred[...,1]).astype('float32'))
         prediction.SetOrigin(truth.GetOrigin())
         prediction.SetDirection(truth.GetDirection())
         sitk.WriteImage(prediction, os.path.join(pred_output_path, '{}_Prediction.nii.gz'.format(image_name)))
 
-        image = sitk.GetImageFromArray(np.squeeze(x[0]))
+        image = sitk.GetImageFromArray(np.squeeze(x[0]).astype('float32'))
         image.SetOrigin(truth.GetOrigin())
         image.SetDirection(truth.GetDirection())
         sitk.WriteImage(image, os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name)))
