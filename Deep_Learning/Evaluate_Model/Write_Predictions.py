@@ -21,18 +21,19 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         os.makedirs(pred_output_path)
     gen = eval_generator.data_set.as_numpy_iterator()
     for i in range(len(eval_generator)):
-        x, y = next(gen)
+        image_name = 'Image_{}'.format(i)
         if is_test:
+            x, y = next(gen)
             image_name = os.path.split(x[0][0].decode())[-1]
-        else:
-            image_name = 'Image_{}'.format(i)
-        x = x[1:]
-        y = y[0]
         print(image_name)
         if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
             continue
         elif model_val is None:
             model_val = load_model(model_path, compile=False)
+        if not is_test:
+            x, y = next(gen)
+        x = x[1:]
+        y = y[0]
         step = 200
         pull = 160
         gap = (step - pull) // 2
@@ -41,7 +42,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             pred = np.zeros(x[0][0].shape[:-1] + (2,))
             start = 0
             while start < x[0].shape[1]:
-                pred_cube = model_val.predict([x[0][:,start:start+step,...],x[1][:,start:start+step,...],x[2][:,start:start+step,...]])
+                pred_cube = model_val.predict([x[0][:,start:start+step,...],x[1][:,start:start+step,...],x[1][:,start:start+step,...]])
                 start_gap = gap
                 stop_gap = gap
                 if start == 0:
@@ -52,11 +53,11 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                     pred_cube = pred_cube[:, start_gap:-stop_gap, ...]
                 else:
                     pred_cube = pred_cube[:, start_gap:, ...]
-                pred[:,start+start_gap:start + start_gap + pred_cube.shape[1],...] = pred_cube
+                pred[start+start_gap:start + start_gap + pred_cube.shape[1],...] = pred_cube[0,...]
                 start += shift
         else:
             pred = model_val.predict(x)
-
+        x = x[0]
         truth = sitk.GetImageFromArray(np.squeeze(y).astype('float32'))
         sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
 
@@ -65,7 +66,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         prediction.SetDirection(truth.GetDirection())
         sitk.WriteImage(prediction, os.path.join(pred_output_path, '{}_Prediction.nii.gz'.format(image_name)))
 
-        image = sitk.GetImageFromArray(np.squeeze(x[0]).astype('float32'))
+        image = sitk.GetImageFromArray(np.squeeze(x).astype('float32'))
         image.SetOrigin(truth.GetOrigin())
         image.SetDirection(truth.GetDirection())
         sitk.WriteImage(image, os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name)))
