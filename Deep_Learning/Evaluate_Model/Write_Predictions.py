@@ -1,21 +1,18 @@
 __author__ = 'Brian M Anderson'
 # Created on 3/2/2020
 from tensorflow.python.keras.models import *
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 from Base_Deeplearning_Code.Keras_Utils.Keras_Utilities import dice_coef_3D, np
-import os, time
-from Return_Train_Validation_Generators import return_generators, sitk, plot_scroll_Image
+import os
+import SimpleITK as sitk
+from Return_Train_Validation_Generators_TF2 import return_generators, sitk, plot_scroll_Image
 
 
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_name='weights-improvement-best_FWHM.hdf5'):
-    path_extension = 'Single_Images3D' + path_ext
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
     num_patients = 1
-    base_path, morfeus_drive, _, eval_generator = return_generators(liver_norm=True,
-                                                                    path_extension=path_extension,
-                                                                    num_patients=num_patients,
-                                                                    return_test=is_test)
+    base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test)
     gpu = 0
     with tf.device('/gpu:' + str(gpu)):
         gpu_options = tf.GPUOptions(allow_growth=True) # maybe should just allocate whole gpu..

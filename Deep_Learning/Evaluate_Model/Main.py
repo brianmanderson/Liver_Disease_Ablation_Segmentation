@@ -11,15 +11,13 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
-
-model_name = 'weights-improvement-best_cube_training.hdf5'
-desc = 'Multi_Cube_Training'
-create_prediction = False
+desc = 'TF2_Multi_Cube'
+create_prediction = True
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-    create_prediction_files(is_test=False, path_ext='_None', desc=desc, model_name=model_name)
+    create_prediction_files(is_test=False, desc=desc)
 
-    create_prediction_files(is_test=True, path_ext='_None', desc=desc, model_name=model_name)
+    create_prediction_files(is_test=True, desc=desc)
 
 evaluate_prediction = False
 if evaluate_prediction:

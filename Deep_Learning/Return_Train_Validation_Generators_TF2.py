@@ -294,12 +294,16 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
 
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
-                      add=''):
+                      add='', is_test=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
     train_path = [os.path.join(base_path, 'Train', 'Train{}.tfrecord'.format(add))]
     validation_path = [os.path.join(base_path, 'Validation', 'Validation.tfrecord')]
+    ext = 'Validation'
+    if is_test:
+        validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
+        ext = 'Test'
 
     train_generator = Data_Generator_Class(record_names=train_path)
     validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=True)
@@ -324,7 +328,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
         {'batch':1},
-        {'cache': os.path.join(base_path,'Validation')},
+        {'cache': os.path.join(base_path,ext)},
         {'repeat'}
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
