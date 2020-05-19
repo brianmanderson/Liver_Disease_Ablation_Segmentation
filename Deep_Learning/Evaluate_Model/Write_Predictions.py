@@ -19,26 +19,23 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
     pred_output_path = os.path.join('D:\Liver_Disease_Ablation\Predictions{}'.format(path_ext),ext)
     if not os.path.exists(pred_output_path):
         os.makedirs(pred_output_path)
-    gen = iter(eval_generator.data_set)
+    gen = eval_generator.data_set.as_numpy_iterator()
     for i in range(len(eval_generator)):
         x, y = next(gen)
-        image_name = os.path.split(x[0].numpy()[0].decode())[-1]
+        image_name = os.path.split(x[0][0].decode())[-1]
+        x = x[1:]
+        y = y[0]
         print(image_name)
         if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
             continue
         elif model_val is None:
             model_val = load_model(model_path, compile=False)
-        x,y = eval_generator.__getitem__(i)
-        whole_patient_file_name = 'Overall_Data_{}'.format(image_path.split('\\')[-1].replace('_{}_image'.format(image_path.split('_')[-2]),''))
-        reader.SetFileName(os.path.join(load_path,whole_patient_file_name))
-        reader.ReadImageInformation()
-        spacing = reader.GetSpacing()
         step = 200
         pull = 160
         gap = (step - pull) // 2
         shift = pull
         if x[0].shape[1] > step:
-            pred = np.zeros(x[0].shape[:-1] + (2,))
+            pred = np.zeros(x[0][0].shape[:-1] + (2,))
             start = 0
             while start < x[0].shape[1]:
                 pred_cube = model_val.predict([x[0][:,start:start+step,...],x[1][:,start:start+step,...],x[2][:,start:start+step,...]])
