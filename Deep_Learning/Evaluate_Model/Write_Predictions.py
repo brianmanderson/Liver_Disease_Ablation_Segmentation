@@ -22,7 +22,10 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
     gen = eval_generator.data_set.as_numpy_iterator()
     for i in range(len(eval_generator)):
         x, y = next(gen)
-        image_name = os.path.split(x[0][0].decode())[-1]
+        if is_test:
+            image_name = os.path.split(x[0][0].decode())[-1]
+        else:
+            image_name = 'Image_{}'.format(i)
         x = x[1:]
         y = y[0]
         print(image_name)
@@ -54,22 +57,15 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         else:
             pred = model_val.predict(x)
 
-        truth = sitk.GetImageFromArray(np.squeeze(y[...,1]))
-        truth.SetSpacing(spacing)
+        truth = sitk.GetImageFromArray(np.squeeze(y))
         sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
 
-        liver = sitk.GetImageFromArray(np.squeeze(x[1][...,0]))
-        liver.SetSpacing(spacing)
-        sitk.WriteImage(liver, os.path.join(pred_output_path, '{}_Liver.nii.gz'.format(image_name)))
-
         prediction = sitk.GetImageFromArray(np.squeeze(pred[...,1]))
-        prediction.SetSpacing(spacing)
         prediction.SetOrigin(truth.GetOrigin())
         prediction.SetDirection(truth.GetDirection())
         sitk.WriteImage(prediction, os.path.join(pred_output_path, '{}_Prediction.nii.gz'.format(image_name)))
 
         image = sitk.GetImageFromArray(np.squeeze(x[0]))
-        image.SetSpacing(spacing)
         image.SetOrigin(truth.GetOrigin())
         image.SetDirection(truth.GetDirection())
         sitk.WriteImage(image, os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name)))
