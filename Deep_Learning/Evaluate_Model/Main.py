@@ -10,14 +10,14 @@ else:
 print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-
+model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_199\cp-0169.ckpt'
 desc = 'TF2_Multi_Cube'
 create_prediction = True
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-    create_prediction_files(is_test=False, desc=desc)
+    create_prediction_files(is_test=False, desc=desc, model_path=model_path)
 
-    create_prediction_files(is_test=True, desc=desc)
+    create_prediction_files(is_test=True, desc=desc, model_path=model_path)
 
 evaluate_prediction = False
 if evaluate_prediction:
