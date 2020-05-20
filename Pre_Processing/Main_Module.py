@@ -55,5 +55,11 @@ if make_TF2_images:
     image_processors = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True),
                         Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3, power_val_c=2**3),
                         Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
+    write_tf_record(os.path.join(path, 'Validation'), record_name='Validation_whole', image_processors=image_processors,
+                    is_3D=True, rewrite=False, shuffle=True, thread_count=10)
+
+    image_processors = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True),
+                        Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3, power_val_c=2**3),
+                        Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
     write_tf_record(os.path.join(path, 'Test'), record_name='Test', image_processors=image_processors,
                     is_3D=True, rewrite=False, shuffle=True, thread_count=10)
