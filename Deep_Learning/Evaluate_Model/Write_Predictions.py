@@ -10,7 +10,12 @@ from Return_Train_Validation_Generators_TF2 import return_generators, plot_scrol
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5'):
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
-    base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test, wanted_keys={'inputs':['image_path','image','mask'],'outputs':['annotation']},cache=False)
+    base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test,
+                                                                    wanted_keys={'inputs':
+                                                                                     ['image_path','image','mask'],
+                                                                                 'outputs':['annotation']},
+                                                                    cache=True, validation_name='Validation_whole',
+                                                                    cache_add='Prediction')
     model_val = None
     ext = 'Validation'
     if is_test:
@@ -21,10 +26,8 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         os.makedirs(pred_output_path)
     gen = eval_generator.data_set.as_numpy_iterator()
     for i in range(len(eval_generator)):
-        image_name = 'Image_{}'.format(i)
-        if is_test:
-            x, y = next(gen)
-            image_name = os.path.split(x[0][0].decode())[-1]
+        x, y = next(gen)
+        image_name = os.path.split(x[0][0].decode())[-1]
         print(image_name)
         if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
             continue

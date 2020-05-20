@@ -294,12 +294,12 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
 
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
-                      add='', is_test=False, cache=True):
+                      add='', is_test=False, cache=True, validation_name='Validation',cache_add=''):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
     train_path = [os.path.join(base_path, 'Train', 'Train{}.tfrecord'.format(add))]
-    validation_path = [os.path.join(base_path, 'Validation', 'Validation.tfrecord')]
+    validation_path = [os.path.join(base_path, 'Validation', '{}.tfrecord'.format(validation_name))]
     ext = 'Validation'
     if is_test:
         validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
@@ -330,7 +330,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'batch':1}]
     if cache:
         validation_processors += [
-        {'cache': os.path.join(base_path,ext)}]
+        {'cache': os.path.join(base_path,'{}{}'.format(ext,cache_add))}]
     validation_processors += [
         {'repeat'}
     ]

@@ -81,8 +81,6 @@ class run_metrics(object):
     def process(self, A):
         out_dict_base, threshold_range, seed_range, file = A
         pat_name = os.path.split(file)[-1]
-        if os.path.exists(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name))):
-            return None
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
         truth_array = sitk.GetArrayFromImage(truth)
@@ -133,7 +131,7 @@ def worker_def(A):
 def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        desc='', thread_count=int(cpu_count()*.9-1)):
+                        desc='', thread_count=int(cpu_count()*.9-1), re_write=False):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -149,7 +147,7 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
     image_list = image_list
     for file in image_list:
         pat_name = os.path.split(file)[-1]
-        if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))):
+        if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))) and not re_write:
             continue
         item = stuff + [file]
         q.put(item)
@@ -160,6 +158,7 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
     out_dict = {}
     for name, _ in OverlapMeasures.__members__.items():
         out_dict[name] = np.zeros((len(image_list), len(threshold_range), len(seed_range)))
+    out_dict['volume'] = np.zeros(len(image_list))
     for i, file in enumerate(image_list):
         pat_name = os.path.split(file)[-1]
         if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))):
