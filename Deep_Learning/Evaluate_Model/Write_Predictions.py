@@ -34,10 +34,9 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             x, y = next(gen)
         x = x[1:]
         y = y[0]
-        step = 100
-        pull = 60
-        gap = (step - pull) // 2
-        shift = pull
+        step = 160
+        shift = 120
+        gap = 20
         if x[0].shape[1] > step:
             pred = np.zeros(x[0][0].shape[:-1] + (2,))
             start = 0
