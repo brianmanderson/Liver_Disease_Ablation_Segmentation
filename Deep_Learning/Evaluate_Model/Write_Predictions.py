@@ -34,8 +34,8 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             x, y = next(gen)
         x = x[1:]
         y = y[0]
-        step = 200
-        pull = 160
+        step = 100
+        pull = 60
         gap = (step - pull) // 2
         shift = pull
         if x[0].shape[1] > step:
@@ -47,7 +47,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                 stop_gap = gap
                 if start == 0:
                     start_gap = 0
-                elif start + shift >= x[0].shape[1]:
+                elif start + step >= x[0].shape[1]:
                     stop_gap = 0
                 if stop_gap != 0:
                     pred_cube = pred_cube[:, start_gap:-stop_gap, ...]

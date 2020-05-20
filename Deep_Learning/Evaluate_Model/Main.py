@@ -15,7 +15,7 @@ model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube
 
 create_model = False
 if create_model:
-    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_199\cp-0169.ckpt'
+    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_199\cp-0260.ckpt'
     from Return_Train_Validation_Generators_TF2 import return_base_dict, get_layers_dict_new
     from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
     base_dict = return_base_dict()
@@ -29,7 +29,7 @@ if create_model:
 create_prediction = True
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-    create_prediction_files(is_test=False, desc=desc, model_path=model_path)
+    # create_prediction_files(is_test=False, desc=desc, model_path=model_path)
 
     create_prediction_files(is_test=True, desc=desc, model_path=model_path)
 
@@ -40,7 +40,7 @@ if evaluate_prediction:
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Expand'),
                         threshold_range = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
 
-evaluate_test = True
+evaluate_test = False
 if evaluate_test:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data import create_metric_chart, os
     create_metric_chart(desc=desc,threshold_range = [.75],
