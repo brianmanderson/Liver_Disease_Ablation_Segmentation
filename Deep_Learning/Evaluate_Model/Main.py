@@ -35,10 +35,11 @@ if create_prediction:
 
 evaluate_prediction = False
 if evaluate_prediction:
-    from Deep_Learning.Evaluate_Model.Evaluate_On_Data import create_metric_chart, os
-    path = r'D:\Liver_Disease_Ablation\Predictions_None\Validation{}'.format(desc)
+    from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os
+    path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Expand'),
-                        threshold_range = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
+                        threshold_range = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],
+                        thread_count=1)
 
 evaluate_test = False
 if evaluate_test:

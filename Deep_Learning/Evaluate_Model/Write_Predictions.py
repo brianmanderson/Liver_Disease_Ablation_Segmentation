@@ -41,7 +41,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             pred = np.zeros(x[0][0].shape[:-1] + (2,))
             start = 0
             while start < x[0].shape[1]:
-                pred_cube = model_val.predict([x[0][:,start:start+step,...],x[1][:,start:start+step,...],x[1][:,start:start+step,...]])
+                pred_cube = model_val.predict([x[0][:,start:start+step,...],x[1][:,start:start+step,...]])
                 start_gap = gap
                 stop_gap = gap
                 if start == 0:
