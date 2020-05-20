@@ -7,9 +7,29 @@ import numpy as np
 from enum import Enum
 from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 import pandas as pd
+import pickle
 from threading import Thread
 from multiprocessing import cpu_count
 from queue import *
+
+
+def load_obj(path):
+    if path.find('.pkl') == -1:
+        path += '.pkl'
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+    else:
+        out = {}
+        return out
+
+
+def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
+    if path.find('.pkl') == -1:
+        path += '.pkl'
+    with open(path, 'wb') as f:
+        pickle.dump(obj, f, pickle.DEFAULT_PROTOCOL)
+    return None
 
 
 class Fill_Binary_Holes(object):
@@ -27,7 +47,7 @@ class Fill_Binary_Holes(object):
 
 class Threshold_and_Expand(object):
     def __init__(self, seed_threshold_value=0.8, lower_threshold_value=0.2):
-        self.threshold_value = seed_threshold_value
+        self.seed_threshold = seed_threshold_value
         self.Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         self.RelabelComponent = sitk.RelabelComponentImageFilter()
         self.Connected_Threshold = sitk.ConnectedThresholdImageFilter()
@@ -36,7 +56,7 @@ class Threshold_and_Expand(object):
         self.stats = sitk.LabelShapeStatisticsImageFilter()
 
     def process(self, prediction):
-        thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=self.threshold_value)
+        thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=self.seed_threshold)
         connected_image = self.Connected_Component_Filter.Execute(thresholded_image)
         self.stats.Execute(connected_image)
         seeds = [self.stats.GetCentroid(l) for l in self.stats.GetLabels()]
@@ -55,10 +75,14 @@ class SurfaceDistanceMeasures(Enum):
 
 
 class run_metrics(object):
+    def __init__(self, save_path):
+        self.save_path = save_path
 
     def process(self, A):
         out_dict_base, threshold_range, seed_range, file = A
-        pat_name = file.split('\\')[-1].split('_')[0]
+        pat_name = os.path.split(file)[-1]
+        if os.path.exists(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name))):
+            return None
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
         truth_array = sitk.GetArrayFromImage(truth)
@@ -68,34 +92,32 @@ class run_metrics(object):
 
         statistics_image_filter = sitk.StatisticsImageFilter()
 
-        out_dict = {}
+        out_dict = {'volume':volume}
         for _, measured_name in enumerate(OverlapMeasures):
             out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range)))
         reference_surface = sitk.LabelContour(truth)
-        overlap_results = np.zeros((len(threshold_range), len(seed_range), len(OverlapMeasures.__members__.items())))
         statistics_image_filter.Execute(reference_surface)
         fill_binary = Fill_Binary_Holes()
         for i, threshold_value in enumerate(threshold_range):
+            print('Threshold value {}'.format(threshold_value))
             for j, seed_value in enumerate(seed_range):
-                threshold_and_expand = Threshold_and_Expand(seed_threshold_value=.95, lower_threshold_value=metric_value)
-                # Binary_Threshold.SetLowerThreshold(metric_value)
+                print('Seed value {}'.format(seed_value))
+                threshold_and_expand = Threshold_and_Expand(seed_threshold_value=seed_value, lower_threshold_value=threshold_value)
                 threshold_pred = threshold_and_expand.process(prediction)
                 threshold_pred = fill_binary.process(threshold_pred)
-                # sitk.WriteImage(threshold_pred, file.replace('_Image', '_PredictionOutput'))
-                # threshold_pred = Binary_Threshold.Execute(prediction)
                 overlap_measures_filter.Execute(truth, threshold_pred)
-                overlap_results[i, j, OverlapMeasures.jaccard.value] = overlap_measures_filter.GetJaccardCoefficient()
-                overlap_results[i, j, OverlapMeasures.dice.value] = overlap_measures_filter.GetDiceCoefficient()
-                overlap_results[i, j, OverlapMeasures.volume_similarity.value] = overlap_measures_filter.GetVolumeSimilarity()
-                overlap_results[i, j, OverlapMeasures.false_negative.value] = overlap_measures_filter.GetFalseNegativeError()
-                overlap_results[i, j, OverlapMeasures.false_positive.value] = overlap_measures_filter.GetFalsePositiveError()
-        out_dict_base[pat_name] = out_dict
+                out_dict[OverlapMeasures.jaccard.name][i, j] = overlap_measures_filter.GetJaccardCoefficient()
+                out_dict[OverlapMeasures.dice.name][i, j] = overlap_measures_filter.GetDiceCoefficient()
+                out_dict[OverlapMeasures.volume_similarity.name][i, j] = overlap_measures_filter.GetVolumeSimilarity()
+                out_dict[OverlapMeasures.false_negative.name][i, j] = overlap_measures_filter.GetFalseNegativeError()
+                out_dict[OverlapMeasures.false_positive.name][i, j] = overlap_measures_filter.GetFalsePositiveError()
+        save_obj(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name)),out_dict)
         return out_dict_base
 
 
 def worker_def(A):
-    q = A[0]
-    base_class = run_metrics()
+    q, save_path = A
+    base_class = run_metrics(save_path)
     while True:
         item = q.get()
         if item is None:
@@ -110,18 +132,15 @@ def worker_def(A):
 
 def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        expand_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
+                        seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         desc='', thread_count=int(cpu_count()*.9-1)):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
-    out_dict = {}
-    for name, _ in OverlapMeasures.__members__.items():
-        out_dict[name] = {'Patient_ID':[''], 'Volume': ['']}
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    new_out_dict = {}
-    stuff = [new_out_dict, threshold_range, expand_range]
+    new_out_dict = load_obj(os.path.join('.','out_dict_{}.pkl'.format(desc)))
+    stuff = [new_out_dict, threshold_range, seed_range]
     q = Queue(maxsize=thread_count)
-    A = [q,]
+    A = [q,out_path]
     threads = []
     for worker in range(thread_count):
         t = Thread(target=worker_def, args=(A,))
@@ -129,12 +148,26 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
         threads.append(t)
     image_list = image_list
     for file in image_list:
+        pat_name = os.path.split(file)[-1]
+        if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))):
+            continue
         item = stuff + [file]
         q.put(item)
     for i in range(thread_count):
         q.put(None)
     for t in threads:
         t.join()
+    out_dict = {}
+    for name, _ in OverlapMeasures.__members__.items():
+        out_dict[name] = np.zeros((len(image_list), len(threshold_range), len(seed_range)))
+    for i, file in enumerate(image_list):
+        pat_name = os.path.split(file)[-1]
+        if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))):
+            patient_dict = load_obj(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name)))
+            for key in patient_dict:
+                out_dict[key][i] = patient_dict[key]
+    dice = out_dict['dice']
+    average_dice = np.mean(dice,axis=0) # take the average across all patients
     xxx = 1
     return None
 

@@ -26,20 +26,20 @@ if create_model:
     model.load_weights(weight_path)
     model.save(model_path)
 
-create_prediction = True
+create_prediction = False
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-    # create_prediction_files(is_test=False, desc=desc, model_path=model_path)
+    create_prediction_files(is_test=False, desc=desc, model_path=model_path)
 
     create_prediction_files(is_test=True, desc=desc, model_path=model_path)
 
-evaluate_prediction = False
+evaluate_prediction = True
 if evaluate_prediction:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os
     path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
-    create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Expand'),
-                        threshold_range = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],
-                        thread_count=1)
+    create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Seed_Pickles'),
+                        seed_range=[0.6, 0.7, 0.8, 0.9, 0.999],
+                        threshold_range=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 0.95])
 
 evaluate_test = False
 if evaluate_test:
