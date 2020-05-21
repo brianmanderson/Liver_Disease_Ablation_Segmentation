@@ -5,7 +5,7 @@ import os
 import SimpleITK as sitk
 import numpy as np
 from enum import Enum
-from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
+from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image, plt
 import pandas as pd
 import pickle
 from threading import Thread
@@ -49,7 +49,6 @@ class Threshold_and_Expand(object):
     def __init__(self, seed_threshold_value=0.8, lower_threshold_value=0.2):
         self.seed_threshold = seed_threshold_value
         self.Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
-        self.RelabelComponent = sitk.RelabelComponentImageFilter()
         self.Connected_Threshold = sitk.ConnectedThresholdImageFilter()
         self.Connected_Threshold.SetLower(lower_threshold_value)
         self.Connected_Threshold.SetUpper(2)
@@ -96,12 +95,22 @@ class run_metrics(object):
         reference_surface = sitk.LabelContour(truth)
         statistics_image_filter.Execute(reference_surface)
         fill_binary = Fill_Binary_Holes()
-        for i, threshold_value in enumerate(threshold_range):
-            print('Threshold value {}'.format(threshold_value))
-            for j, seed_value in enumerate(seed_range):
-                print('Seed value {}'.format(seed_value))
-                threshold_and_expand = Threshold_and_Expand(seed_threshold_value=seed_value, lower_threshold_value=threshold_value)
-                threshold_pred = threshold_and_expand.process(prediction)
+        Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
+        Connected_Threshold = sitk.ConnectedThresholdImageFilter()
+        Connected_Threshold.SetUpper(2)
+        stats = sitk.LabelShapeStatisticsImageFilter()
+        for j, seed_value in enumerate(seed_range):
+            thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
+            connected_image = Connected_Component_Filter.Execute(thresholded_image)
+            stats.Execute(connected_image)
+            seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
+            seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
+            Connected_Threshold.SetSeedList(seeds)
+            print('Seed value {}'.format(seed_value))
+            for i, threshold_value in enumerate(threshold_range):
+                print('Threshold value {}'.format(threshold_value))
+                Connected_Threshold.SetLower(threshold_value)
+                threshold_pred = Connected_Threshold.Execute(prediction)
                 threshold_pred = fill_binary.process(threshold_pred)
                 overlap_measures_filter.Execute(truth, threshold_pred)
                 out_dict[OverlapMeasures.jaccard.name][i, j] = overlap_measures_filter.GetJaccardCoefficient()
@@ -166,7 +175,8 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
             for key in patient_dict:
                 out_dict[key][i] = patient_dict[key]
     dice = out_dict['dice']
-    average_dice = np.mean(dice,axis=0) # take the average across all patients
+    volume = out_dict['volume']
+    average_dice = np.mean(dice[volume > 10], axis=0) # take the average across all patients
     xxx = 1
     return None
 
