@@ -111,7 +111,7 @@ class run_metrics(object):
                 print('Threshold value {}'.format(threshold_value))
                 Connected_Threshold.SetLower(threshold_value)
                 threshold_pred = Connected_Threshold.Execute(prediction)
-                threshold_pred = fill_binary.process(threshold_pred)
+                # threshold_pred = fill_binary.process(threshold_pred)
                 overlap_measures_filter.Execute(truth, threshold_pred)
                 out_dict[OverlapMeasures.jaccard.name][i, j] = overlap_measures_filter.GetJaccardCoefficient()
                 out_dict[OverlapMeasures.dice.name][i, j] = overlap_measures_filter.GetDiceCoefficient()
@@ -140,7 +140,7 @@ def worker_def(A):
 def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        desc='', thread_count=int(cpu_count()*.9-1), re_write=False):
+                        desc='', thread_count=int(cpu_count()*.95-1), re_write=False):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)

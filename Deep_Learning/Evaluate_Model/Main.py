@@ -38,7 +38,7 @@ if evaluate_prediction:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os, np
     path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Seed_Pickles'),
-                        seed_range=np.arange(0.2,1.00,0.01), thread_count=1,
+                        seed_range=np.arange(0.2,1.00,0.01),
                         threshold_range=np.arange(0.05,0.95,0.01), re_write=True)
 
 evaluate_test = False
