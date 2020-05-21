@@ -89,16 +89,23 @@ class run_metrics(object):
 
         statistics_image_filter = sitk.StatisticsImageFilter()
 
+        hausdorff_distance_filter = sitk.HausdorffDistanceImageFilter()
+
         out_dict = {'volume':volume}
         for _, measured_name in enumerate(OverlapMeasures):
             out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range)))
+        for _, measured_name in enumerate(SurfaceDistanceMeasures):
+            out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range)))
         reference_surface = sitk.LabelContour(truth)
+        reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
+                                                                       useImageSpacing=True))
         statistics_image_filter.Execute(reference_surface)
         fill_binary = Fill_Binary_Holes()
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
         Connected_Threshold.SetUpper(2)
         stats = sitk.LabelShapeStatisticsImageFilter()
+        num_reference_surface_pixels = int(statistics_image_filter.GetSum())
         for j, seed_value in enumerate(seed_range):
             thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
             connected_image = Connected_Component_Filter.Execute(thresholded_image)
@@ -108,16 +115,59 @@ class run_metrics(object):
             Connected_Threshold.SetSeedList(seeds)
             print('Seed value {}'.format(seed_value))
             for i, threshold_value in enumerate(threshold_range):
-                print('Threshold value {}'.format(threshold_value))
+                # print('Threshold value {}'.format(threshold_value))
                 Connected_Threshold.SetLower(threshold_value)
                 threshold_pred = Connected_Threshold.Execute(prediction)
-                # threshold_pred = fill_binary.process(threshold_pred)
+                threshold_pred = fill_binary.process(threshold_pred)
                 overlap_measures_filter.Execute(truth, threshold_pred)
                 out_dict[OverlapMeasures.jaccard.name][i, j] = overlap_measures_filter.GetJaccardCoefficient()
                 out_dict[OverlapMeasures.dice.name][i, j] = overlap_measures_filter.GetDiceCoefficient()
                 out_dict[OverlapMeasures.volume_similarity.name][i, j] = overlap_measures_filter.GetVolumeSimilarity()
                 out_dict[OverlapMeasures.false_negative.name][i, j] = overlap_measures_filter.GetFalseNegativeError()
                 out_dict[OverlapMeasures.false_positive.name][i, j] = overlap_measures_filter.GetFalsePositiveError()
+
+                hausdorff_distance_filter.Execute(truth, threshold_pred)
+
+                # Symmetric surface distance measures
+                segmented_distance_map = sitk.Abs(
+                    sitk.SignedMaurerDistanceMap(threshold_pred, squaredDistance=False, useImageSpacing=True))
+                segmented_surface = sitk.LabelContour(threshold_pred)
+
+                # Multiply the binary surface segmentations with the distance maps. The resulting distance
+                # maps contain non-zero values only on the surface (they can also contain zero on the surface)
+                seg2ref_distance_map = reference_distance_map * sitk.Cast(segmented_surface, sitk.sitkFloat32)
+                ref2seg_distance_map = segmented_distance_map * sitk.Cast(reference_surface, sitk.sitkFloat32)
+
+                # Get the number of pixels in the reference surface by counting all pixels that are 1.
+                statistics_image_filter.Execute(segmented_surface)
+                num_segmented_surface_pixels = int(statistics_image_filter.GetSum())
+
+                # Get all non-zero distances and then add zero distances if required.
+                seg2ref_distance_map_arr = sitk.GetArrayViewFromImage(seg2ref_distance_map)
+                seg2ref_distances = list(seg2ref_distance_map_arr[seg2ref_distance_map_arr != 0])
+                seg2ref_distances = seg2ref_distances + \
+                                    list(np.zeros(num_segmented_surface_pixels - len(seg2ref_distances)))
+                ref2seg_distance_map_arr = sitk.GetArrayViewFromImage(ref2seg_distance_map)
+                ref2seg_distances = list(ref2seg_distance_map_arr[ref2seg_distance_map_arr != 0])
+                ref2seg_distances = ref2seg_distances + \
+                                    list(np.zeros(num_reference_surface_pixels - len(ref2seg_distances)))
+
+                all_surface_distances = seg2ref_distances + ref2seg_distances
+
+                # The maximum of the symmetric surface distances is the Hausdorff distance between the surfaces. In
+                # general, it is not equal to the Hausdorff distance between all voxel/pixel points of the two
+                # segmentations, though in our case it is. More on this below.
+                out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
+                    i, j] = hausdorff_distance_filter.GetHausdorffDistance()
+                out_dict[SurfaceDistanceMeasures.mean_surface_distance.name][i, j] = np.mean(
+                    all_surface_distances)
+
+                out_dict[SurfaceDistanceMeasures.median_surface_distance.name][i, j] = np.median(
+                    all_surface_distances)
+                out_dict[SurfaceDistanceMeasures.std_surface_distance.name][i, j] = np.std(
+                    all_surface_distances)
+                out_dict[SurfaceDistanceMeasures.max_surface_distance.name][i, j] = np.max(
+                    all_surface_distances)
         save_obj(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name)),out_dict)
         return out_dict_base
 
@@ -140,7 +190,7 @@ def worker_def(A):
 def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        desc='', thread_count=int(cpu_count()*.95-1), re_write=False):
+                        desc='', thread_count=int(cpu_count()*.95-1), re_write=False, on_test=False):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -167,6 +217,8 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
     out_dict = {}
     for name, _ in OverlapMeasures.__members__.items():
         out_dict[name] = np.zeros((len(image_list), len(threshold_range), len(seed_range)))
+    for name, _ in SurfaceDistanceMeasures.__members__.items():
+        out_dict[name] = np.zeros((len(image_list), len(threshold_range), len(seed_range)))
     out_dict['volume'] = np.zeros(len(image_list))
     for i, file in enumerate(image_list):
         pat_name = os.path.split(file)[-1]
@@ -174,10 +226,25 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
             patient_dict = load_obj(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name)))
             for key in patient_dict:
                 out_dict[key][i] = patient_dict[key]
-    dice = out_dict['dice']
+
+    threshold_names = ['Threshold_{}'.format(i) for i in threshold_range]
+    seed_names = ['Seed_{}'.format(i) for i in seed_range]
     volume = out_dict['volume']
-    average_dice = np.mean(dice[volume > 10], axis=0) # take the average across all patients
-    xxx = 1
+    dice = out_dict['dice']
+    for key in out_dict.keys():
+        if key == 'volume':
+            continue
+        data = np.mean(out_dict[key][volume > 10], axis=0)
+        if key in ['false_negative','false_positive']:
+            title = 'Min'
+            threshold, seed = np.where(np.round(data,2) == np.min(np.round(data,2)))
+        else:
+            threshold, seed = np.where(np.round(data,2) == np.max(np.round(data,2)))
+            title = 'Max'
+        print(
+            '{} {} is at threshold of {} and seed of {}'.format(title, key, np.round(threshold_range[threshold[0]],2), np.round(seed_range[seed[0]],2)))
+        df = pd.DataFrame(data=data, index=threshold_names, columns=seed_names)
+        df.to_excel(os.path.join(out_path,'{}.xlsx'.format(key)))
     return None
 
 

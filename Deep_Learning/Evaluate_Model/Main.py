@@ -33,17 +33,18 @@ if create_prediction:
 
     create_prediction_files(is_test=True, desc=desc, model_path=model_path)
 
-evaluate_prediction = True
+evaluate_prediction = False
 if evaluate_prediction:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os, np
     path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Seed_Pickles'),
                         seed_range=np.arange(0.2,1.00,0.01),
-                        threshold_range=np.arange(0.05,0.95,0.01), re_write=True)
+                        threshold_range=np.arange(0.05,0.95,0.01), re_write=False)
 
-evaluate_test = False
+evaluate_test = True
 if evaluate_test:
-    from Deep_Learning.Evaluate_Model.Evaluate_On_Data import create_metric_chart, os
-    create_metric_chart(desc=desc,threshold_range = [.75],
-                        path = r'D:\Liver_Disease_Ablation\Predictions_None\Test{}'.format(desc),
-                        out_path=os.path.join('.','Test_Output'))
+    from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os
+    path = r'D:\Liver_Disease_Ablation\Predictions\TestTF2_Multi_Cube'
+    create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Test_Output'),
+                        seed_range=[.92],
+                        threshold_range=[.4], re_write=False)
