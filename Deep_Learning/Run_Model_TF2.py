@@ -115,6 +115,7 @@ def train_model(epochs=None, save_a_model=False, model_name = '3D_Fully_Atrous',
                             run_data['mirror_max'] = True
                             run_data['Model_Style'] = 'new'
                             run_data['concat'] = concat
+                            run_data['flipped'] = True
                             if debug:
                                 layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
                                 model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,

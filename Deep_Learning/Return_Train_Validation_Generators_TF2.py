@@ -64,8 +64,8 @@ def return_best_dictionary(base_dict):
     dictionary = [
         base_dict(max_conv_blocks=4, layers=2, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
                   min_lr=4e-7, max_lr=1.75e-3),
-        base_dict(max_conv_blocks=4, layers=3, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
-                  min_lr=4e-7, max_lr=1.75e-3),
+        # base_dict(max_conv_blocks=4, layers=3, num_conv_blocks=3, conv_lambda=1, filters=32, max_filters=128,
+        #           min_lr=4e-7, max_lr=1.75e-3),
                   ]
     return dictionary
 
@@ -304,7 +304,6 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if is_test:
         validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
         ext = 'Test'
-        validation_path = [r'D:\Liver_Disease_Ablation\test_export\Test.tfrecord']
 
     train_generator = Data_Generator_Class(record_names=train_path)
     validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=True)
@@ -318,8 +317,9 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
-        Return_Outputs(wanted_keys),
         {'cache': os.path.join(base_path,'Train{}'.format(add))},
+        Flip_Images(keys=['image','mask','annotation'], flip_lr=True, flip_up_down=True, flip_3D_together=True, flip_z=True),
+        Return_Outputs(wanted_keys),
         {'shuffle': len(train_generator)//3},
         {'batch': batch_size},
         {'repeat'}
@@ -338,12 +338,11 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors)
-    for generator in []: #train_generator, validation_generator
+    for generator in [train_generator, validation_generator]: #
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)
             print(x[0].shape)
-            xxx = 1
     #     print(data[1][0].shape)
     # data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
