@@ -304,6 +304,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if is_test:
         validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
         ext = 'Test'
+        validation_path = [r'D:\Liver_Disease_Ablation\test_export\Test.tfrecord']
 
     train_generator = Data_Generator_Class(record_names=train_path)
     validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=True)
@@ -330,7 +331,8 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'batch':1}]
     if cache:
         validation_processors += [
-        {'cache': os.path.join(base_path,'{}{}'.format(ext,cache_add))}]
+        {'cache': os.path.join(base_path,'{}{}'.format(ext,cache_add))}
+        ]
     validation_processors += [
         {'repeat'}
     ]

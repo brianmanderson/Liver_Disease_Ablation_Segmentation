@@ -26,7 +26,7 @@ if create_model:
     model.load_weights(weight_path)
     model.save(model_path)
 
-create_prediction = False
+create_prediction = True
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
     create_prediction_files(is_test=False, desc=desc, model_path=model_path)
@@ -35,7 +35,7 @@ if create_prediction:
 
 evaluate_prediction = False
 if evaluate_prediction:
-    from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os, np
+    from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
     path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Seed_Pickles'),
                         seed_range=[.25,.3,.35,.4,.45,.5,.55,.6,.65,.7,.75,.8,.85,.9,.95,.975,.99],
@@ -43,7 +43,7 @@ if evaluate_prediction:
 
 evaluate_test = False
 if evaluate_test:
-    from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os
+    from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
     path = r'D:\Liver_Disease_Ablation\Predictions\TestTF2_Multi_Cube'
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Test_Output'),
                         seed_range=[.99], threshold_range=[.35], re_write=False,
@@ -51,4 +51,12 @@ if evaluate_test:
 
 write_box_plots = True
 if write_box_plots:
-    from .Make_Box_Plots import
+    from Deep_Learning.Evaluate_Model.Make_Box_Plots import create_plot
+    import pandas as pd
+    import numpy as np
+    out_path = os.path.join('.', 'Test_Output','Final_Prediction.xlsx')
+    df = pd.read_excel(out_path, engine='xlrd')
+    volumes = df['volume'].values
+    values = df['median_surface_distance'].values
+    create_plot('Median Surface Distance for greater than 20 cc volumes',values=values[volumes>20],metric='Median Surface Distance', out_path=os.path.join('.','Images'))
+    xxx = 1

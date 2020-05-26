@@ -7,14 +7,14 @@ import SimpleITK as sitk
 from Return_Train_Validation_Generators_TF2 import return_generators, plot_scroll_Image
 
 
-def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5'):
+def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',cache=True):
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
     base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test,
                                                                     wanted_keys={'inputs':
                                                                                      ['image_path','image','mask'],
                                                                                  'outputs':['annotation']},
-                                                                    cache=True, validation_name='Validation_whole',
+                                                                    cache=cache, validation_name='Validation_whole',
                                                                     cache_add='Prediction')
     model_val = None
     ext = 'Validation'

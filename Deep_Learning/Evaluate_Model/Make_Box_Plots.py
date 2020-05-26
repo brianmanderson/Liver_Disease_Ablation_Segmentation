@@ -30,7 +30,9 @@ def create_plot(title, values, metric, out_path=None):
     plt.xticks(num_labels,x_ticks)
     plt.yticks(y_ticks)
     if out_path is not None:
-        plt.savefig(os.path.join('.','Images', '{}_{}.jpg'.format(title, 'Dice')), quality=95)
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
+        plt.savefig(os.path.join(out_path, '{}_{}.jpg'.format(title, metric)), quality=95)
     else:
         plt.show()
     return None
