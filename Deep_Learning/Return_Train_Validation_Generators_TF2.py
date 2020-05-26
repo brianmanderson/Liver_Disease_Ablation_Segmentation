@@ -327,6 +327,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ]
     validation_processors += [
         Return_Add_Mult_Disease(),
+        Threshold_Images(lower_bound=-10, upper_bound=10),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
         {'batch':1}]
