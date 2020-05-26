@@ -77,8 +77,7 @@ class run_metrics(object):
     def __init__(self, save_path):
         self.save_path = save_path
 
-    def process(self, A):
-        out_dict_base, threshold_range, seed_range, file = A
+    def process(self, out_dict_base, threshold_range, seed_range, file, write_final_prediction=False):
         pat_name = os.path.split(file)[-1]
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
@@ -119,14 +118,16 @@ class run_metrics(object):
                 Connected_Threshold.SetLower(threshold_value)
                 threshold_pred = Connected_Threshold.Execute(prediction)
                 threshold_pred = fill_binary.process(threshold_pred)
+                if write_final_prediction:
+                    threshold_pred.SetOrigin(truth.GetOrigin())
+                    threshold_pred.SetDirection(truth.GetDirection())
+                    sitk.WriteImage(threshold_pred, file.replace('_Image','_FinalPrediction'))
                 overlap_measures_filter.Execute(truth, threshold_pred)
                 out_dict[OverlapMeasures.jaccard.name][i, j] = overlap_measures_filter.GetJaccardCoefficient()
                 out_dict[OverlapMeasures.dice.name][i, j] = overlap_measures_filter.GetDiceCoefficient()
                 out_dict[OverlapMeasures.volume_similarity.name][i, j] = overlap_measures_filter.GetVolumeSimilarity()
                 out_dict[OverlapMeasures.false_negative.name][i, j] = overlap_measures_filter.GetFalseNegativeError()
                 out_dict[OverlapMeasures.false_positive.name][i, j] = overlap_measures_filter.GetFalsePositiveError()
-
-                hausdorff_distance_filter.Execute(truth, threshold_pred)
 
                 # Symmetric surface distance measures
                 segmented_distance_map = sitk.Abs(
@@ -157,8 +158,14 @@ class run_metrics(object):
                 # The maximum of the symmetric surface distances is the Hausdorff distance between the surfaces. In
                 # general, it is not equal to the Hausdorff distance between all voxel/pixel points of the two
                 # segmentations, though in our case it is. More on this below.
-                out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
-                    i, j] = hausdorff_distance_filter.GetHausdorffDistance()
+
+                try:
+                    hausdorff_distance_filter.Execute(truth, threshold_pred)
+                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
+                        i, j] = hausdorff_distance_filter.GetHausdorffDistance()
+                except:
+                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
+                        i, j] = 9999
                 out_dict[SurfaceDistanceMeasures.mean_surface_distance.name][i, j] = np.mean(
                     all_surface_distances)
 
@@ -181,21 +188,63 @@ def worker_def(A):
             break
         else:
             try:
-                base_class.process(item)
+                base_class.process(**item)
             except:
                 print('failed?')
             q.task_done()
 
 
+def combine_patient_pickles(out_path):
+    image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict.pkl') != -1]
+    out_dict = {'volume':[],'patient_name':[]}
+    for file in image_list:
+        pat_name = os.path.split(file)[-1].split('.nii.gz')[0]
+        out_dict['patient_name'].append(pat_name)
+        patient_dict = load_obj(file)
+        for key in patient_dict:
+            if key not in out_dict:
+                out_dict[key] = []
+            out_dict[key].append(patient_dict[key])
+    for key in out_dict.keys():
+        out_dict[key] = np.asarray(out_dict[key])
+    return out_dict
+
+
+def find_best_threshold_seed(threshold_range, seed_range, out_path):
+    out_dict = combine_patient_pickles(out_path)
+    threshold_names = ['Threshold_{}'.format(i) for i in threshold_range]
+    seed_names = ['Seed_{}'.format(i) for i in seed_range]
+    volume = out_dict['volume']
+    patient_names = out_dict['patient_name'][volume>10]
+    for key in out_dict.keys():
+        if key == 'volume':
+            continue
+        data = np.median(out_dict[key][volume > 10], axis=0)
+        if key in ['jaccard','dice', 'volume_similarity']:
+            threshold, seed = np.where(np.round(data,4) == np.max(np.round(data,4)))
+            title = 'Max'
+        else:
+            title = 'Min'
+            threshold, seed = np.where(np.round(data,4) == np.min(np.round(data,4)))
+        print(
+            '{} {} is {} at threshold of {} and seed of {}'.format(title, key, np.round(data[threshold[0],seed[0]],3),
+                                                                   np.round(threshold_range[threshold[0]],2),
+                                                                   np.round(seed_range[seed[0]],2)))
+        df = pd.DataFrame(data=data, index=threshold_names, columns=seed_names)
+        df.to_excel(os.path.join(out_path,'{}.xlsx'.format(key)))
+    return None
+
+
 def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        desc='', thread_count=int(cpu_count()*.95-1), re_write=False, on_test=False):
+                        desc='', thread_count=int(cpu_count()*.95-1), re_write=False, write_final_prediction=False):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     new_out_dict = load_obj(os.path.join('.','out_dict_{}.pkl'.format(desc)))
-    stuff = [new_out_dict, threshold_range, seed_range]
+    item = {'out_dict_base':new_out_dict,'threshold_range':threshold_range,'seed_range':seed_range,'file':'',
+            'write_final_prediction':write_final_prediction}
     q = Queue(maxsize=thread_count)
     A = [q,out_path]
     threads = []
@@ -203,49 +252,26 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
         t = Thread(target=worker_def, args=(A,))
         t.start()
         threads.append(t)
-    image_list = image_list
     for file in image_list:
         pat_name = os.path.split(file)[-1]
         if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))) and not re_write:
             continue
-        item = stuff + [file]
+        item['file'] = file
         q.put(item)
     for i in range(thread_count):
         q.put(None)
     for t in threads:
         t.join()
-    out_dict = {}
-    for name, _ in OverlapMeasures.__members__.items():
-        out_dict[name] = np.zeros((len(image_list), len(threshold_range), len(seed_range)))
-    for name, _ in SurfaceDistanceMeasures.__members__.items():
-        out_dict[name] = np.zeros((len(image_list), len(threshold_range), len(seed_range)))
-    out_dict['volume'] = np.zeros(len(image_list))
-    for i, file in enumerate(image_list):
-        pat_name = os.path.split(file)[-1]
-        if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))):
-            patient_dict = load_obj(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name)))
-            for key in patient_dict:
-                out_dict[key][i] = patient_dict[key]
 
-    threshold_names = ['Threshold_{}'.format(i) for i in threshold_range]
-    seed_names = ['Seed_{}'.format(i) for i in seed_range]
-    volume = out_dict['volume']
-    dice = out_dict['dice']
+    if not write_final_prediction:
+        find_best_threshold_seed(threshold_range=threshold_range, seed_range=seed_range, out_path=out_path)
+        return None
+    out_dict = combine_patient_pickles(out_path)
     for key in out_dict.keys():
-        if key == 'volume':
-            continue
-        data = np.mean(out_dict[key][volume > 10], axis=0)
-        if key in ['false_negative','false_positive']:
-            title = 'Min'
-            threshold, seed = np.where(np.round(data,2) == np.min(np.round(data,2)))
-        else:
-            threshold, seed = np.where(np.round(data,2) == np.max(np.round(data,2)))
-            title = 'Max'
-        print(
-            '{} {} is at threshold of {} and seed of {}'.format(title, key, np.round(threshold_range[threshold[0]],2), np.round(seed_range[seed[0]],2)))
-        df = pd.DataFrame(data=data, index=threshold_names, columns=seed_names)
-        df.to_excel(os.path.join(out_path,'{}.xlsx'.format(key)))
-    return None
+        out_dict[key] = list(np.squeeze(out_dict[key]))
+    df = pd.DataFrame(data=out_dict)
+    df.to_excel(os.path.join(out_path, 'Final_Prediction.xlsx'), index=0)
+
 
 
 if __name__ == '__main__':

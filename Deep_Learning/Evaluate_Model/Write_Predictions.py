@@ -33,8 +33,6 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             continue
         elif model_val is None:
             model_val = load_model(model_path, compile=False)
-        if not is_test:
-            x, y = next(gen)
         x = x[1:]
         y = y[0]
         step = 160//2
