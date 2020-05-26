@@ -317,6 +317,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
+        Threshold_Images(lower_bound=-10, upper_bound=10),
         {'cache': os.path.join(base_path,'Train{}'.format(add))},
         Flip_Images(keys=['image','mask','annotation'], flip_lr=True, flip_up_down=True, flip_3D_together=True, flip_z=True),
         Return_Outputs(wanted_keys),
