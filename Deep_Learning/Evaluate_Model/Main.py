@@ -41,10 +41,14 @@ if evaluate_prediction:
                         seed_range=[.25,.3,.35,.4,.45,.5,.55,.6,.65,.7,.75,.8,.85,.9,.95,.975,.99],
                         threshold_range=np.arange(0.1,0.96,0.01), re_write=False, thread_count=12)
 
-evaluate_test = True
+evaluate_test = False
 if evaluate_test:
     from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, os
     path = r'D:\Liver_Disease_Ablation\Predictions\TestTF2_Multi_Cube'
     create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Test_Output'),
                         seed_range=[.99], threshold_range=[.35], re_write=False,
                         write_final_prediction=True, thread_count=10)
+
+write_box_plots = True
+if write_box_plots:
+    from .Make_Box_Plots import
