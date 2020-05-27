@@ -315,7 +315,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     validation_processors += base_processors
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
-        Return_Add_Mult_Disease(),
+        Return_Add_Mult_Disease(change_background=True),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         # Threshold_Images(lower_bound=-10, upper_bound=10),
         {'cache': os.path.join(base_path,'Train{}'.format(add))},
@@ -326,14 +326,14 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}
     ]
     validation_processors += [
-        Return_Add_Mult_Disease(),
+        Return_Add_Mult_Disease(change_background=True),
         # Threshold_Images(lower_bound=-10, upper_bound=10),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
         {'batch':1}]
     if cache:
         validation_processors += [
-        {'cache': os.path.join(base_path,'{}{}'.format(ext,cache_add))}
+        {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
         ]
     validation_processors += [
         {'repeat'}
