@@ -294,7 +294,8 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
 
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
-                      add='', is_test=False, cache=True, validation_name='Validation',cache_add=''):
+                      add='', is_test=False, cache=True, validation_name='Validation',cache_add='', flip=False,
+                      change_background=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
@@ -315,18 +316,21 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     validation_processors += base_processors
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
-        Return_Add_Mult_Disease(change_background=True),
+        Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         # Threshold_Images(lower_bound=-10, upper_bound=10),
-        {'cache': os.path.join(base_path,'Train{}'.format(add))},
-        Flip_Images(keys=['image','mask','annotation'], flip_lr=True, flip_up_down=True, flip_3D_together=True, flip_z=True),
+        {'cache': os.path.join(base_path,'Train{}'.format(cache_add))}]
+    if flip:
+        train_processors += [
+        Flip_Images(keys=['image','mask','annotation'], flip_lr=True, flip_up_down=True, flip_3D_together=True, flip_z=True)]
+    train_processors += [
         Return_Outputs(wanted_keys),
         {'shuffle': len(train_generator)//3},
         {'batch': batch_size},
         {'repeat'}
     ]
     validation_processors += [
-        Return_Add_Mult_Disease(change_background=True),
+        Return_Add_Mult_Disease(change_background=change_background),
         # Threshold_Images(lower_bound=-10, upper_bound=10),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
