@@ -316,12 +316,11 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     validation_processors += base_processors
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
-        Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
-        {'cache': os.path.join(base_path,'Train{}{}'.format(add,cache_add))}
+        {'cache': os.path.join(base_path,'Train{}{}'.format(add,cache_add))},
+        Return_Add_Mult_Disease(change_background=change_background),
     ]
     validation_processors += [
-        Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'})]
     if cache:
         validation_processors += [
@@ -336,7 +335,8 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         ]
     if flip:
         train_processors += [
-        Flip_Images(keys=['image','mask','annotation'], flip_lr=True, flip_up_down=True, flip_3D_together=True, flip_z=True)
+        Flip_Images(keys=['image','mask','annotation'],
+                    flip_lr=True, flip_up_down=True, flip_3D_together=True,flip_z=True)
         ]
     train_processors += [
         Return_Outputs(wanted_keys),
@@ -345,8 +345,10 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}
     ]
     validation_processors += [
+        Return_Add_Mult_Disease(change_background=change_background),
         Return_Outputs(wanted_keys),
-        {'batch':1},{'repeat'}]
+        {'batch': 1},
+        {'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=True)
     validation_generator.compile_data_set(image_processors=validation_processors)
     for generator in [train_generator, validation_generator]: #
