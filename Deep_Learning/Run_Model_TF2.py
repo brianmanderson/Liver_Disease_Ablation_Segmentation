@@ -85,24 +85,26 @@ def compare_base_current(data_frame, current_run_df, features_list):
 
 
 def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
-                run_best=False, debug=False, add='', flip=False, change_background=False):
+                run_best=False, debug=False, add=''):
     batch_size = 16
     cache_add = ''
-    if flip:
-        cache_add += '_flip'
-    if change_background:
-        cache_add += '_chg_background'
     if add != '':
         batch_size = 8
     optimizers = ['Adam']
     concat = True
     if run_best:
         save_a_model = True
+    bn_before_activation = True
     for iteration in range(3):
-        for bn_before_activation in [True]:
+        for flip in [True, False]:
             for step_size_factor in [6]:
-                for batch_size in [batch_size]:
+                for change_background in [True]:
                     for optimizer in optimizers:
+                        cache_add = ''
+                        if flip:
+                            cache_add += '_flip'
+                        if change_background:
+                            cache_add += '_change_bgrd'
                         base_path, morfeus_drive = return_paths()
                         base_dict = return_base_dict(step_size_factor=step_size_factor,
                                                      save_a_model=save_a_model, optimizer=optimizer)
