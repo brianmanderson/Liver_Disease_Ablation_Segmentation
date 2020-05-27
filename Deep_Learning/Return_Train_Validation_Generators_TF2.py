@@ -320,6 +320,13 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         {'cache': os.path.join(base_path,'Train{}'.format(cache_add))}
     ]
+    validation_processors += [
+        Return_Add_Mult_Disease(change_background=change_background),
+        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'})]
+    if cache:
+        validation_processors += [
+        {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
+        ]
     if threshold:
         train_processors += [
             Threshold_Images(lower_bound=-10, upper_bound=10)
@@ -338,17 +345,8 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}
     ]
     validation_processors += [
-        Return_Add_Mult_Disease(change_background=change_background),
-        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         Return_Outputs(wanted_keys),
-        {'batch':1}]
-    if cache:
-        validation_processors += [
-        {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
-        ]
-    validation_processors += [
-        {'repeat'}
-    ]
+        {'batch':1},{'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=True)
     validation_generator.compile_data_set(image_processors=validation_processors)
     for generator in [train_generator, validation_generator]: #

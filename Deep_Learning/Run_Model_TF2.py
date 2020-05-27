@@ -87,7 +87,6 @@ def compare_base_current(data_frame, current_run_df, features_list):
 def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                 run_best=False, debug=False, add=''):
     batch_size = 16
-    cache_add = ''
     if add != '':
         batch_size = 8
     optimizers = ['Adam']
@@ -95,9 +94,10 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     if run_best:
         save_a_model = True
     bn_before_activation = True
+    step_size_factor = 6
     for iteration in range(3):
         for flip in [True, False]:
-            for step_size_factor in [6]:
+            for threshold in [True, False]:
                 for change_background in [True]:
                     for optimizer in optimizers:
                         cache_add = ''
@@ -124,6 +124,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             run_data['concat'] = concat
                             run_data['flipped'] = flip
                             run_data['change_background'] = change_background
+                            run_data['threshold'] = threshold
                             if debug:
                                 layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
                                 model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
@@ -163,7 +164,8 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             data_frame = data_frame.append(current_run_df, ignore_index=True)
                             data_frame.to_excel(excel_path, index=0)
                             _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
-                                                                                            flip=flip, change_background=change_background)
+                                                                                            flip=flip, change_background=change_background,
+                                                                                            threshold=threshold)
                             step_size = len(train_generator)
                             hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
