@@ -316,11 +316,12 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     validation_processors += base_processors
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
+        Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         {'cache': os.path.join(base_path,'Train{}{}'.format(add,cache_add))},
-        Return_Add_Mult_Disease(change_background=change_background),
     ]
     validation_processors += [
+        Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'})]
     if cache:
         validation_processors += [
@@ -345,12 +346,11 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}
     ]
     validation_processors += [
-        Return_Add_Mult_Disease(change_background=change_background),
         Return_Outputs(wanted_keys),
         {'batch': 1},
         {'repeat'}]
-    train_generator.compile_data_set(image_processors=train_processors, debug=True)
-    validation_generator.compile_data_set(image_processors=validation_processors)
+    train_generator.compile_data_set(image_processors=train_processors, debug=False)
+    validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
     for generator in [train_generator, validation_generator]: #
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
@@ -362,5 +362,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', flip=True)
+    # return_generators(add='_32', flip=True, threshold=True, change_background=True, cache_add='_change_bckrd')
     pass
