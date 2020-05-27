@@ -101,8 +101,6 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                 for change_background in [True, False]:
                     for optimizer in optimizers:
                         cache_add = ''
-                        if flip:
-                            cache_add += '_flip'
                         if change_background:
                             cache_add += '_change_bgrd'
                         base_path, morfeus_drive = return_paths()
