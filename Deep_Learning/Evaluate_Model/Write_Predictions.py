@@ -15,7 +15,8 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                                                                                      ['image_path','image','mask'],
                                                                                  'outputs':['annotation']},
                                                                     cache=cache, validation_name='Validation_whole',
-                                                                    cache_add='Prediction')
+                                                                    cache_add='Prediction', flip=False, threshold=True,
+                                                                    change_background=True)
     model_val = None
     ext = 'Validation'
     if is_test:

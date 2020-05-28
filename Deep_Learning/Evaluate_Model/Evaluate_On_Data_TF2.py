@@ -99,7 +99,8 @@ class run_metrics(object):
         reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
                                                                        useImageSpacing=True))
         statistics_image_filter.Execute(reference_surface)
-        fill_binary = Fill_Binary_Holes()
+        if write_final_prediction:
+            fill_binary = Fill_Binary_Holes()
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
         Connected_Threshold.SetUpper(2)
