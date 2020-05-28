@@ -77,7 +77,7 @@ class run_metrics(object):
     def __init__(self, save_path):
         self.save_path = save_path
 
-    def process(self, out_dict_base, threshold_range, seed_range, file, write_final_prediction=False):
+    def process(self, threshold_range, seed_range, file, write_final_prediction=False):
         pat_name = os.path.split(file)[-1]
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
@@ -99,8 +99,7 @@ class run_metrics(object):
         reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
                                                                        useImageSpacing=True))
         statistics_image_filter.Execute(reference_surface)
-        if write_final_prediction:
-            fill_binary = Fill_Binary_Holes()
+        fill_binary = Fill_Binary_Holes()
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
         Connected_Threshold.SetUpper(2)
@@ -118,8 +117,8 @@ class run_metrics(object):
                 # print('Threshold value {}'.format(threshold_value))
                 Connected_Threshold.SetLower(threshold_value)
                 threshold_pred = Connected_Threshold.Execute(prediction)
-                threshold_pred = fill_binary.process(threshold_pred)
                 if write_final_prediction:
+                    threshold_pred = fill_binary.process(threshold_pred)
                     threshold_pred.SetOrigin(truth.GetOrigin())
                     threshold_pred.SetDirection(truth.GetDirection())
                     sitk.WriteImage(threshold_pred, file.replace('_Image','_FinalPrediction'))
@@ -177,7 +176,7 @@ class run_metrics(object):
                 out_dict[SurfaceDistanceMeasures.max_surface_distance.name][i, j] = np.max(
                     all_surface_distances)
         save_obj(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name)),out_dict)
-        return out_dict_base
+        return None
 
 
 def worker_def(A):
@@ -243,8 +242,7 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    new_out_dict = load_obj(os.path.join('.','out_dict_{}.pkl'.format(desc)))
-    item = {'out_dict_base':new_out_dict,'threshold_range':threshold_range,'seed_range':seed_range,'file':'',
+    item = {'threshold_range':threshold_range,'seed_range':seed_range,'file':'',
             'write_final_prediction':write_final_prediction}
     q = Queue(maxsize=thread_count)
     A = [q,out_path]

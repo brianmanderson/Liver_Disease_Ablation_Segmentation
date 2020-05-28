@@ -50,7 +50,7 @@ def main():
         path = r'D:\Liver_Disease_Ablation\Predictions\TestTF2_Multi_Cube'
         create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Test_Output'),
                             seed_range=[.99], threshold_range=[.35], re_write=False,
-                            write_final_prediction=True, thread_count=10)
+                            write_final_prediction=True, thread_count=6)
 
     write_box_plots = False
     if write_box_plots:
