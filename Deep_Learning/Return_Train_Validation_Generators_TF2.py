@@ -295,7 +295,7 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
                       add='', is_test=False, cache=True, validation_name='Validation',cache_add='', flip=False,
-                      change_background=False, threshold=False):
+                      change_background=False, threshold=False, threshold_val=10):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
@@ -318,13 +318,6 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(change_background=change_background),
     ]
-    if threshold:
-        train_processors += [
-            Threshold_Images(lower_bound=-3, upper_bound=3)
-        ]
-        validation_processors += [
-            Threshold_Images(lower_bound=-3, upper_bound=3)
-        ]
     train_processors += [
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
         {'cache': os.path.join(base_path, 'Train{}{}'.format(add, cache_add))}
@@ -335,6 +328,13 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if cache:
         validation_processors += [
         {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
+        ]
+    if threshold:
+        train_processors += [
+            Threshold_Images(lower_bound=-threshold_val, upper_bound=threshold_val)
+        ]
+        validation_processors += [
+            Threshold_Images(lower_bound=-threshold_val, upper_bound=threshold_val)
         ]
     if flip:
         train_processors += [

@@ -95,9 +95,10 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
         save_a_model = True
     bn_before_activation = True
     step_size_factor = 6
+    threshold = True
     for iteration in range(3):
         for flip in [False]:
-            for threshold in [True]:
+            for threshold_val in [3,5,10]:
                 for change_background in [True]:
                     for optimizer in optimizers:
                         cache_add = ''
@@ -124,6 +125,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             run_data['flipped'] = flip
                             run_data['change_background'] = change_background
                             run_data['threshold'] = threshold
+                            run_data['threshold_val'] = threshold_val
                             if debug:
                                 layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
                                 model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
@@ -164,7 +166,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             data_frame.to_excel(excel_path, index=0)
                             _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
                                                                                             flip=flip, change_background=change_background,
-                                                                                            threshold=threshold)
+                                                                                            threshold=threshold, threshold_val=threshold_val)
                             step_size = len(train_generator)
                             hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
