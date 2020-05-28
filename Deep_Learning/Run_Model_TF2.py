@@ -96,9 +96,9 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     bn_before_activation = True
     step_size_factor = 6
     for iteration in range(3):
-        for flip in [True, False]:
-            for threshold in [True, False]:
-                for change_background in [True, False]:
+        for flip in [False]:
+            for threshold in [True]:
+                for change_background in [True]:
                     for optimizer in optimizers:
                         cache_add = ''
                         if change_background:
@@ -117,7 +117,8 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         if debug:
                             i = 0
                         for run_data in overall_dictionary:
-                            run_data['mirror_max'] = True
+                            run_data['percentile_normed'] = True
+                            run_data['mirror_max'] = False
                             run_data['Model_Style'] = 'new'
                             run_data['concat'] = concat
                             run_data['flipped'] = flip

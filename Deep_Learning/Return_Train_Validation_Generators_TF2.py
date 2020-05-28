@@ -364,5 +364,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    return_generators(add='_32', flip=False, threshold=True, change_background=True, cache_add='_change_bckrd')
+    # return_generators(add='_32', flip=False, threshold=True, change_background=True, cache_add='_change_bckrd')
     pass
