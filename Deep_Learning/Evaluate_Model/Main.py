@@ -40,17 +40,17 @@ def main():
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
-        create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Threshold_Seed_Pickles'),
-                            seed_range=[.8,.85,.9,.925,.95,.96,.97,.98,.99],
-                            threshold_range=np.arange(0.1,0.96,0.01), re_write=False, thread_count=12)
+        create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles'),
+                            seed_range=np.arange(0.5,1.0,0.05),
+                            threshold_range=np.arange(0.1,1.0,0.05), re_write=False, thread_count=12)
 
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
         path = r'D:\Liver_Disease_Ablation\Predictions\TestTF2_Multi_Cube'
-        create_metric_chart(path=path,desc=desc,out_path=os.path.join('.','Test_Output'),
-                            seed_range=[.99], threshold_range=[.35], re_write=False,
-                            write_final_prediction=True, thread_count=6)
+        create_metric_chart(path=path,out_path=os.path.join('.','Test_Output'),
+                            seed_range=[.85], threshold_range=[.15], re_write=True,
+                            write_final_prediction=True, thread_count=12)
 
     write_box_plots = False
     if write_box_plots:
@@ -61,7 +61,9 @@ def main():
         df = pd.read_excel(out_path, engine='xlrd')
         volumes = df['volume'].values
         values = df['median_surface_distance'].values
-        create_plot('Median Surface Distance for greater than 20 cc volumes',values=values[volumes>20],metric='Median Surface Distance', out_path=os.path.join('.','Images'))
+        values = values[volumes>20]
+        values = values[values<1000]
+        create_plot('Median Surface Distance for greater than 20 cc volumes',values=values,metric='Median Surface Distance', out_path=os.path.join('.','Images'))
         xxx = 1
 
 

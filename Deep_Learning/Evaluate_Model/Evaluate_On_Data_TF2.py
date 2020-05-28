@@ -78,7 +78,7 @@ class run_metrics(object):
         self.save_path = save_path
 
     def process(self, threshold_range, seed_range, file, write_final_prediction=False):
-        pat_name = os.path.split(file)[-1]
+        pat_name = os.path.split(file)[-1].split('.')[0]
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
         truth_array = sitk.GetArrayFromImage(truth)
@@ -94,7 +94,7 @@ class run_metrics(object):
         for _, measured_name in enumerate(OverlapMeasures):
             out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range)))
         for _, measured_name in enumerate(SurfaceDistanceMeasures):
-            out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range)))
+            out_dict[measured_name.name] = np.ones((len(threshold_range), len(seed_range)))*999
         reference_surface = sitk.LabelContour(truth)
         reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
                                                                        useImageSpacing=True))
@@ -176,7 +176,6 @@ class run_metrics(object):
                 out_dict[SurfaceDistanceMeasures.max_surface_distance.name][i, j] = np.max(
                     all_surface_distances)
         save_obj(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name)),out_dict)
-        return None
 
 
 def worker_def(A):
@@ -198,7 +197,7 @@ def combine_patient_pickles(out_path):
     image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict.pkl') != -1]
     out_dict = {'volume':[],'patient_name':[]}
     for file in image_list:
-        pat_name = os.path.split(file)[-1].split('.nii.gz')[0]
+        pat_name = os.path.split(file)[-1].split('_out_dict')[0]
         out_dict['patient_name'].append(pat_name)
         patient_dict = load_obj(file)
         for key in patient_dict:
@@ -215,21 +214,24 @@ def find_best_threshold_seed(threshold_range, seed_range, out_path):
     threshold_names = ['Threshold_{}'.format(i) for i in threshold_range]
     seed_names = ['Seed_{}'.format(i) for i in seed_range]
     volume = out_dict['volume']
-    patient_names = out_dict['patient_name'][volume>10]
+    mask = volume>20
+    patient_names = out_dict['patient_name'][mask]
     for key in out_dict.keys():
-        if key == 'volume':
+        if key == 'volume' or key == 'patient_name':
             continue
-        data = np.median(out_dict[key][volume > 10], axis=0)
+        data = np.median(out_dict[key][mask], axis=0)
         if key in ['jaccard','dice', 'volume_similarity']:
             threshold, seed = np.where(np.round(data,4) == np.max(np.round(data,4)))
             title = 'Max'
         else:
             title = 'Min'
             threshold, seed = np.where(np.round(data,4) == np.min(np.round(data,4)))
+        threshold, seed = np.unique(threshold), np.unique(seed)
+        threshold, seed = threshold[len(threshold)//2], seed[len(seed)//2]
         print(
-            '{} {} is {} at threshold of {} and seed of {}'.format(title, key, np.round(data[threshold[0],seed[0]],3),
-                                                                   np.round(threshold_range[threshold[0]],2),
-                                                                   np.round(seed_range[seed[0]],2)))
+            '{} {} is {} at threshold of {} and seed of {}'.format(title, key, np.round(data[threshold,seed],3),
+                                                                   np.round(threshold_range[threshold],2),
+                                                                   np.round(seed_range[seed],2)))
         df = pd.DataFrame(data=data, index=threshold_names, columns=seed_names)
         df.to_excel(os.path.join(out_path,'{}.xlsx'.format(key)))
     return None
@@ -238,7 +240,7 @@ def find_best_threshold_seed(threshold_range, seed_range, out_path):
 def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        desc='', thread_count=int(cpu_count()*.95-1), re_write=False, write_final_prediction=False):
+                        thread_count=int(cpu_count()*.95-1), re_write=False, write_final_prediction=False):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -252,7 +254,7 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
         t.start()
         threads.append(t)
     for file in image_list:
-        pat_name = os.path.split(file)[-1]
+        pat_name = os.path.split(file)[-1].split('.')[0]
         if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))) and not re_write:
             continue
         item['file'] = file

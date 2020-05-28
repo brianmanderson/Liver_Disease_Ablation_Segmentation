@@ -22,13 +22,12 @@ def create_plot(title, values, metric, out_path=None):
     y_ticks = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
     plt.figure(0)
     plt.suptitle(title)
-    plt.yticks(y_ticks)
     ax = plt.subplot(1,1,1)
     plt.boxplot(values)
     plt.xlabel('LiTs Test Set')
     plt.ylabel(metric)
     plt.xticks(num_labels,x_ticks)
-    plt.yticks(y_ticks)
+    # plt.yticks(y_ticks)
     if out_path is not None:
         if not os.path.exists(out_path):
             os.makedirs(out_path)

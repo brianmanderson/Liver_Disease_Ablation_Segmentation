@@ -317,8 +317,17 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     train_processors += [
         Ensure_Image_Proportions(image_rows=120, image_cols=120),
         Return_Add_Mult_Disease(change_background=change_background),
+    ]
+    if threshold:
+        train_processors += [
+            Threshold_Images(lower_bound=-3, upper_bound=3)
+        ]
+        validation_processors += [
+            Threshold_Images(lower_bound=-3, upper_bound=3)
+        ]
+    train_processors += [
         Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
-        {'cache': os.path.join(base_path,'Train{}{}'.format(add,cache_add))},
+        {'cache': os.path.join(base_path, 'Train{}{}'.format(add, cache_add))}
     ]
     validation_processors += [
         Return_Add_Mult_Disease(change_background=change_background),
@@ -326,13 +335,6 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if cache:
         validation_processors += [
         {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
-        ]
-    if threshold:
-        train_processors += [
-            Threshold_Images(lower_bound=-10, upper_bound=10)
-        ]
-        validation_processors += [
-            Threshold_Images(lower_bound=-10, upper_bound=10)
         ]
     if flip:
         train_processors += [
@@ -351,7 +353,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
-    for generator in [train_generator, validation_generator]: #
+    for generator in [validation_generator, train_generator]: #
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)
@@ -362,5 +364,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', flip=True, threshold=True, change_background=True, cache_add='_change_bckrd')
+    return_generators(add='_32', flip=False, threshold=True, change_background=True, cache_add='_change_bckrd')
     pass
