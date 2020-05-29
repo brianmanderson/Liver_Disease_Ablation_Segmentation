@@ -40,8 +40,7 @@ if make_TF2_images:
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
     cube_size = (32, 120, 120)
-    base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True,
-                                               lower_percentile=25, upper_percentile=75)]
+    base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True)]
     image_processors_train = []
     image_processors_train += base_normalizer
     image_processors_train += [Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=2,
@@ -69,6 +68,11 @@ if make_TF2_images:
     write_tf_record(os.path.join(path, 'Validation'), record_name='Validation_whole', thread_count=10,
                     image_processors=image_processors_validation,
                     is_3D=True, rewrite=True, shuffle=True)
+
+    # processors = [Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3, power_val_c=2**3),
+    #               Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False, desired_val=2)]
+    # write_tf_record(os.path.join(path, 'Train'), record_name='Train_whole', image_processors=processors,
+    #                 is_3D=True, rewrite=True, shuffle=True, thread_count=10)
 
     image_processors_test = []
     image_processors_test += base_normalizer

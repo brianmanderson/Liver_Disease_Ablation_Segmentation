@@ -319,12 +319,12 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Return_Add_Mult_Disease(change_background=change_background),
     ]
     train_processors += [
-        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'}),
+        Cast_Data({'annotation': 'float16', 'mask': 'int32'}),
         {'cache': os.path.join(base_path, 'Train{}{}'.format(add, cache_add))}
     ]
     validation_processors += [
         Return_Add_Mult_Disease(change_background=change_background),
-        Cast_Data({'image': 'float16', 'annotation': 'float16', 'mask': 'int32'})]
+        Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
     if cache:
         validation_processors += [
         {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
@@ -364,5 +364,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', flip=False, threshold=True, change_background=True, cache_add='_change_bckrd')
+    # return_generators(add='_32', threshold=True, change_background=True, cache_add='_change_bckrd', threshold_val=5)
     pass
