@@ -98,7 +98,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     threshold = True
     for iteration in range(3):
         for flip in [False]:
-            for threshold_val in [3,5,10]:
+            for threshold_val in [15, 20]:
                 for change_background in [True]:
                     for optimizer in optimizers:
                         cache_add = ''
