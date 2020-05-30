@@ -21,6 +21,11 @@ find_lr = False
 if find_lr:
     from Optimization.Find_Best_LR_TF2 import find_best_lr
     find_best_lr(optimizer='Adam', batch_size=8, path_desc=path_desc, add=add)
+
+find_dense_lr_dense = True
+if find_dense_lr_dense:
+    from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
+    find_best_lr(batch_size=8, path_desc='TF_LR_Dense', add=add)
 '''
 Plot the LR, get the min and max from the images
 '''
@@ -36,7 +41,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = True
+run_200 = False
 if run_200:
     from Run_Model_TF2 import train_model
     run_best = True

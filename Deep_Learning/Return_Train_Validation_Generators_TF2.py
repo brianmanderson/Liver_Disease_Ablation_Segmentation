@@ -283,6 +283,78 @@ def get_layers_dict_new(layers=1, filters=16, max_filters=np.inf, conv_lambda=0,
     return layers_dict
 
 
+def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, num_classes=2,**kwargs):
+    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
+                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=False)
+
+    block = lc.convolution_layer
+    start = [block(filters,out_name='start', batch_norm=False, activation=None)]
+
+    layers_dict = return_hollow_layers_dict(layers)
+    pool = (2, 2, 2)
+    final_steps = [lc.convolution_layer(filters, batch_norm=True, activation='elu'),
+                   lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
+    previous_name = 'start'
+    for layer in range(layers - 1):
+        if layer == 0:
+            layers_dict['Layer_' + str(layer)]['Encoding'] = start
+        else:
+            layers_dict['Layer_' + str(layer)]['Encoding'] = []
+        encoding = []
+        names = [previous_name]
+        for i in range(num_conv_blocks):
+            name = 'Layer_{}_Conv_Encoding_{}'.format(layer, i)
+            names.append(name)
+            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                         block(filters, kernel=(1,1,1), batch_norm=True, activation='elu'),
+                         block(filters, batch_norm=False, activation=None, out_name=name)]
+            encoding += [lc.concat_layer(names)]
+            names = names[:]
+            filters += growth_rate
+        layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+        previous_name = 'Layer_{}_Down'.format(layer)
+        up_name = 'Layer_{}_Up'.format(layer)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
+                                                                     lc.convolution_layer(filters, activation=None,
+                                                                                          batch_norm=False,
+                                                                                          out_name=up_name)]
+        if filters < max_filters:
+            filters = int(filters*2)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=(2,2,2),
+                                                                                         activation=None,
+                                                                                         batch_norm=False,
+                                                                                         out_name=previous_name)
+        layers_dict['Layer_' + str(layer)]['Decoding'] = []
+        encoding = []
+        names = [up_name]
+        for i in range(num_conv_blocks):
+            name = 'Layer_{}_Conv_Decoding_{}'.format(layer, i)
+            names.append(name)
+            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                         block(filters, kernel=(1,1,1), batch_norm=True, activation='elu'),
+                         block(filters, batch_norm=False, activation=None, out_name=name)]
+            encoding += [lc.concat_layer(names)]
+            names = names[:]
+            filters += growth_rate
+        layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
+        num_conv_blocks += conv_lambda
+        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
+    encoding = []
+    names = [previous_name]
+    for i in range(num_conv_blocks):
+        name = 'Base_{}'.format(i)
+        names.append(name)
+        encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                     block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                     block(filters, batch_norm=False, activation=None, out_name=name)]
+        encoding += [lc.concat_layer(names)]
+        names = names[:]
+        filters += growth_rate
+    layers_dict['Base'] = encoding
+    return layers_dict
+
+
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, max_filters: \
         OrderedDict({'atrous':False, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
@@ -295,13 +367,15 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
                       add='', is_test=False, cache=True, validation_name='Validation',cache_add='', flip=False,
-                      change_background=False, threshold=False, threshold_val=10):
+                      change_background=False, threshold=False, threshold_val=10, evaluation=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
     train_path = [os.path.join(base_path, 'Train', 'Train{}.tfrecord'.format(add))]
     validation_path = [os.path.join(base_path, 'Validation', '{}.tfrecord'.format(validation_name))]
     ext = 'Validation'
+    if evaluation:
+        ext += '_whole'
     if is_test:
         validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
         ext = 'Test'
@@ -319,7 +393,9 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Return_Add_Mult_Disease(change_background=change_background),
     ]
     train_processors += [
-        Cast_Data({'annotation': 'float16', 'mask': 'int32'}),
+        Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
+    if not evaluation:
+        train_processors += [
         {'cache': os.path.join(base_path, 'Train{}{}'.format(add, cache_add))}
     ]
     validation_processors += [
@@ -353,7 +429,10 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
-    for generator in [validation_generator, train_generator]: #
+    generators = [validation_generator]
+    if not evaluation:
+        generators += [train_generator]
+    for generator in generators: #
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)

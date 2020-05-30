@@ -10,13 +10,14 @@ from Return_Train_Validation_Generators_TF2 import return_generators, plot_scrol
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',cache=True):
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
-    base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test,
+    base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test, cache_add='Prediction',
+                                                                    flip=False, change_background=True, batch_size=8,
+                                                                    threshold=True, threshold_val=10,cache=cache, add='_32',
                                                                     wanted_keys={'inputs':
-                                                                                     ['image_path','image','mask'],
-                                                                                 'outputs':['annotation']},
-                                                                    cache=cache, validation_name='Validation_whole',
-                                                                    cache_add='Prediction', flip=False, threshold=True,
-                                                                    change_background=True)
+                                                                                     ['image_path', 'image', 'mask'],
+                                                                                 'outputs': ['annotation']},
+                                                                    evaluation=True, validation_name='Validation_whole',
+                                                                    )
     model_val = None
     ext = 'Validation'
     if is_test:

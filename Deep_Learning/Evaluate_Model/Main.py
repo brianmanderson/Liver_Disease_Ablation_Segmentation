@@ -15,8 +15,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 def main():
     desc = 'TF2_Multi_Cube'
-    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_206\model'
-    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_206\cp-0151.ckpt'
+    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_229\model'
+    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_229\cp-0151.ckpt'
     if not os.path.exists(model_path):
         from Return_Train_Validation_Generators_TF2 import return_base_dict, get_layers_dict_new
         from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
@@ -29,7 +29,7 @@ def main():
         model.save(model_path)
         return None
 
-    create_prediction = False
+    create_prediction = True
     if create_prediction:
         from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
         create_prediction_files(is_test=False, desc=desc, model_path=model_path)
