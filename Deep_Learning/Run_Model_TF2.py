@@ -8,8 +8,8 @@ from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plo
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
-from Return_Train_Validation_Generators_TF2 import return_generators, get_layers_dict, return_base_dict,\
-    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary, get_layers_dict_new
+from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, get_layers_dict, return_base_dict,\
+    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary, get_layers_dict_new, get_layers_dict_dense, return_dictionary_dense
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -98,19 +98,21 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     threshold = True
     for iteration in range(3):
         for flip in [False]:
-            for threshold_val in [15, 20]:
+            for threshold_val in [10]:
                 for change_background in [True]:
                     for optimizer in optimizers:
                         cache_add = ''
                         if change_background:
                             cache_add += '_change_bckgrd'
                         base_path, morfeus_drive = return_paths()
-                        base_dict = return_base_dict(step_size_factor=step_size_factor,
-                                                     save_a_model=save_a_model, optimizer=optimizer)
+                        # base_dict = return_base_dict(step_size_factor=step_size_factor,
+                        #                              save_a_model=save_a_model, optimizer=optimizer)
+                        base_dict = return_base_dict_dense(step_size_factor=step_size_factor, save_a_model=save_a_model)
                         if run_best:
                             overall_dictionary = return_best_dictionary(base_dict)
                         else:
-                            overall_dictionary = return_dictionary(base_dict)
+                            # overall_dictionary = return_dictionary(base_dict)
+                            overall_dictionary = return_dictionary_dense(base_dict)
                         overall_dictionary = np.asarray(overall_dictionary)
                         perm = np.arange(len(overall_dictionary))
                         np.random.shuffle(perm)
@@ -148,7 +150,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                                 return None
                             tf.random.set_seed(iteration)
                             run_data['batch_size'] = batch_size
-                            excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id.xlsx')
+                            excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_Dense.xlsx')
                             print(base_path)
                             run_data['Iteration'] = iteration
                             run_data['Trial_ID'] = 0
@@ -170,7 +172,8 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             step_size = len(train_generator)
                             hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
-                            layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
+                            # layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
+                            layers_dict = get_layers_dict_dense(**run_data)
                             paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                                             is_keras_model=False)
                             paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))

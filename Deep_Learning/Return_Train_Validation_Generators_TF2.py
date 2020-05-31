@@ -98,6 +98,30 @@ def return_dictionary(base_dict):
     return dictionary
 
 
+def return_dictionary_dense(base_dict):
+    dictionary = [
+        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+                  min_lr=6e-7, max_lr=1e-3),
+        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
+                  min_lr=6e-7, max_lr=2e-3),
+        base_dict(layers=2, max_conv_blocks=4, filters=12, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+                  min_lr=7e-7, max_lr=4e-3),
+        base_dict(layers=2, max_conv_blocks=4, filters=12, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
+                  min_lr=7e-7, max_lr=3e-4),
+
+        base_dict(layers=3, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+                  min_lr=7e-7, max_lr=1e-3),
+        base_dict(layers=3, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
+                  min_lr=7e-7, max_lr=8e-4),
+
+        base_dict(layers=3, max_conv_blocks=4, filters=12, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+                  min_lr=7e-7, max_lr=1e-3),
+        base_dict(layers=3, max_conv_blocks=4, filters=12, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
+                  min_lr=7e-7, max_lr=3e-4),
+                  ]
+    return dictionary
+
+
 def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_blocks=2, conv_lambda=0, bn_before_activation=True, **kwargs):
     lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
                                 pooling_type='Max', pool_size=(2,2,2), bn_before_activation=bn_before_activation)
@@ -370,6 +394,16 @@ def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     return base_dict
 
 
+def return_base_dict_dense(step_size_factor=10, save_a_model=False):
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, growth_rate: \
+        OrderedDict({'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
+                     'conv_lambda':conv_lambda, 'filters':filters, 'growth_rate':growth_rate,
+                     'Save_Model':save_a_model,'min_lr':min_lr,
+                     'max_lr':max_lr, 'step_size_factor': step_size_factor
+                     })
+    return base_dict
+
+
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
                       add='', is_test=False, cache=True, validation_name='Validation',cache_add='', flip=False,
                       change_background=False, threshold=False, threshold_val=10, evaluation=False):
@@ -437,11 +471,11 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     generators = [validation_generator]
     if not evaluation:
         generators += [train_generator]
-    for generator in generators: #
-        data_set = iter(generator.data_set)
-        for _ in range(len(generator)):
-            x, y = next(data_set)
-            print(x[0].shape)
+    # for generator in generators: #
+    #     data_set = iter(generator.data_set)
+    #     for _ in range(len(generator)):
+    #         x, y = next(data_set)
+    #         print(x[0].shape)
     #     print(data[1][0].shape)
     # data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
