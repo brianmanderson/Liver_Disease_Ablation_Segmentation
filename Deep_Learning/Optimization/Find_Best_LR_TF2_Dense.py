@@ -16,7 +16,7 @@ def find_best_lr(batch_size=16, path_desc='', add=''):
         for growth_rate in [4]:
             for layer in [2, 3]:
                 for max_conv_blocks in [4]:
-                    for filters in [16]:
+                    for filters in [8, 12]:
                         for num_conv_blocks in [2]:
                             for conv_lambda in [0, 1]:
                                 base_path, morfeus_drive = return_paths()

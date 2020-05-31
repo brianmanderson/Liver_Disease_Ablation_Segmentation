@@ -292,10 +292,8 @@ def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.in
 
     layers_dict = return_hollow_layers_dict(layers)
     pool = (2, 2, 2)
-    final_steps = [lc.convolution_layer(filters, batch_norm=True, activation='elu'),
-                   lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
-    layers_dict['Final_Steps'] = final_steps
     previous_name = 'start'
+    final_filters = None
     for layer in range(layers - 1):
         if layer == 0:
             layers_dict['Layer_' + str(layer)]['Encoding'] = start
@@ -337,6 +335,8 @@ def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.in
             encoding += [lc.concat_layer(names)]
             names = names[:]
             filters += growth_rate
+        if layer == 0:
+            final_filters = filters
         layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
         num_conv_blocks += conv_lambda
         num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
@@ -351,6 +351,11 @@ def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.in
         encoding += [lc.concat_layer(names)]
         names = names[:]
         filters += growth_rate
+    if final_filters is None:
+        final_filters = filters
+    final_steps = [lc.convolution_layer(final_filters, batch_norm=True, kernel=(1,1,1),activation='elu'),
+                   lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
     layers_dict['Base'] = encoding
     return layers_dict
 
