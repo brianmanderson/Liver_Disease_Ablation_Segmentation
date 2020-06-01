@@ -85,7 +85,7 @@ def compare_base_current(data_frame, current_run_df, features_list):
 
 
 def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
-                run_best=False, debug=False, add=''):
+                run_best=False, debug=False, add='', dense=False):
     batch_size = 16
     if add != '':
         batch_size = 8
@@ -109,7 +109,10 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         #                              save_a_model=save_a_model, optimizer=optimizer)
                         base_dict = return_base_dict_dense(step_size_factor=step_size_factor, save_a_model=save_a_model)
                         if run_best:
-                            overall_dictionary = return_best_dictionary(base_dict)
+                            if dense:
+                                overall_dictionary = return_dictionary_dense(base_dict,run_best=run_best)
+                            else:
+                                overall_dictionary = return_best_dictionary(base_dict)
                         else:
                             # overall_dictionary = return_dictionary(base_dict)
                             overall_dictionary = return_dictionary_dense(base_dict)

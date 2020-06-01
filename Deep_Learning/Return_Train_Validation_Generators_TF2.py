@@ -98,7 +98,7 @@ def return_dictionary(base_dict):
     return dictionary
 
 
-def return_dictionary_dense(base_dict):
+def return_dictionary_dense(base_dict, run_best=False):
     dictionary = [
         base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
                   min_lr=6e-7, max_lr=1e-3),
@@ -119,10 +119,11 @@ def return_dictionary_dense(base_dict):
         base_dict(layers=3, max_conv_blocks=4, filters=12, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
                   min_lr=7e-7, max_lr=3e-4),
                   ]
-    dictionary = [
-        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
-                  min_lr=6e-7, max_lr=1e-2)
-                  ]
+    if run_best:
+        dictionary = [
+            base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+                      min_lr=6e-7, max_lr=4e-2)
+                      ]
     return dictionary
 
 
