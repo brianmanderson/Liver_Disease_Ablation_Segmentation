@@ -17,7 +17,14 @@ def main():
     desc = 'TF2_Multi_Cube'
     model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_229\model'
     weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_229\cp-0151.ckpt'
-    if not os.path.exists(model_path):
+    dense = True
+    path_ext = ''
+    if dense:
+        desc = 'TF2_Multi_Cube_Dense'
+        path_ext = 'dense'
+        model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_4\model_4_Dense'
+        weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_4\cp-best.ckpt'
+    if not os.path.exists(model_path) and not dense:
         from Return_Train_Validation_Generators_TF2 import return_base_dict, get_layers_dict_new
         from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
         base_dict = return_base_dict()
@@ -27,30 +34,37 @@ def main():
         model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=True).created_model
         model.load_weights(weight_path)
         model.save(model_path)
-        return None
+    elif dense and not os.path.exists(model_path):
+        from Return_Train_Validation_Generators_TF2 import return_base_dict, get_layers_dict_dense
+        from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
+        layers_dict = get_layers_dict_dense(layers=2, num_conv_blocks=2, max_conv_blocks=4, conv_lambda=0, filters=8,
+                                            growth_rate=4)
+        model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=True).created_model
+        model.load_weights(weight_path)
+        model.save(model_path)
 
-    create_prediction = True
+    create_prediction = False
     if create_prediction:
         from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-        create_prediction_files(is_test=False, desc=desc, model_path=model_path)
+        create_prediction_files(is_test=False, desc=desc, model_path=model_path, path_ext=path_ext)
 
-        create_prediction_files(is_test=True, desc=desc, model_path=model_path)
+        create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext)
 
-    evaluate_prediction = True
+    evaluate_prediction = False
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
-        path = r'D:\Liver_Disease_Ablation\Predictions\ValidationTF2_Multi_Cube'
+        path = r'D:\Liver_Disease_Ablation\Predictions{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles'),
                             seed_range=np.arange(0.5,1.0,0.05),
                             threshold_range=np.arange(0.1,1.0,0.05), re_write=False, thread_count=12)
 
-    evaluate_test = False
+    evaluate_test = True
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
-        path = r'D:\Liver_Disease_Ablation\Predictions\TestTF2_Multi_Cube'
+        path = r'D:\Liver_Disease_Ablation\Predictions{}\Test{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output'),
-                            seed_range=[.85], threshold_range=[.15], re_write=True,
-                            write_final_prediction=True, thread_count=12)
+                            seed_range=[.9], threshold_range=[.15], re_write=True,
+                            write_final_prediction=True)
 
     write_box_plots = False
     if write_box_plots:

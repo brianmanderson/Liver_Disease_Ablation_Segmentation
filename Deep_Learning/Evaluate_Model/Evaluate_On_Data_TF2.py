@@ -244,8 +244,6 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    item = {'threshold_range':threshold_range,'seed_range':seed_range,'file':'',
-            'write_final_prediction':write_final_prediction}
     q = Queue(maxsize=thread_count)
     A = [q,out_path]
     threads = []
@@ -257,7 +255,8 @@ def create_metric_chart(path = r'D:\Liver_Disease_Ablation\Predictions\Validatio
         pat_name = os.path.split(file)[-1].split('.')[0]
         if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))) and not re_write:
             continue
-        item['file'] = file
+        item = {'threshold_range': threshold_range, 'seed_range': seed_range,
+                'write_final_prediction': write_final_prediction, 'file':file}
         q.put(item)
     for i in range(thread_count):
         q.put(None)
