@@ -99,7 +99,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     for iteration in range(3):
         for flip in [False]:
             for threshold_val in [10]:
-                for change_background in [True]:
+                for change_background in [True, False]:
                     for optimizer in optimizers:
                         cache_add = ''
                         if change_background:
