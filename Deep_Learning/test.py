@@ -1,9 +1,15 @@
-plot_lr = False
-path_desc='TF2_Learning_Rates'
+import SimpleITK as sitk
+import numpy as np
+from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image, plt
 import os
-if plot_lr:
-    from Optimization.Plot_Best_LR import make_plots
-    from Return_Train_Validation_Generators_TF2 import return_generators
-    _, morfeus_drive, _, _ = return_generators()
-    path = os.path.join(morfeus_drive,path_desc)
-    make_plots(path)
+
+
+path = r'D:\Liver_Disease_Ablation\Predictionsdense\ValidationTF2_Multi_Cube_Dense'
+bad_image = os.path.join(path, 'Overall_Data_LiTs_{}.nii.gz_Image.nii.gz'.format(1))
+good_image = os.path.join(path, 'Overall_Data_LiTs_{}.nii.gz_Image.nii.gz'.format(123))
+
+bad = sitk.GetArrayFromImage(sitk.ReadImage(bad_image))
+good = sitk.GetArrayFromImage(sitk.ReadImage(good_image))
+data_bad = bad[bad!=0]
+data_good = good[good!=0]
+xxx = 1

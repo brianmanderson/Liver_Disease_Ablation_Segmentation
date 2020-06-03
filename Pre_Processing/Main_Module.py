@@ -40,7 +40,7 @@ if make_TF2_images:
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
     cube_size = (32, 120, 120)
-    base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True)]
+    base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True), Resampler(desired_output_spacing=(None,None,1.0))]
     image_processors_train = []
     image_processors_train += base_normalizer
     image_processors_train += [Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=2,

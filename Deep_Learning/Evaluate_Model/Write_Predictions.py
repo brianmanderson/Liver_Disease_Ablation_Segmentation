@@ -4,10 +4,12 @@ from tensorflow.python.keras.models import *
 import numpy as np
 import os
 import SimpleITK as sitk
+from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Resample_Class.Resample_Class import Resample_Class_Object
 from Return_Train_Validation_Generators_TF2 import return_generators, plot_scroll_Image
 
 
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',cache=True):
+    resampler = Resample_Class_Object()
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
     base_path, morfeus_drive, _, eval_generator = return_generators(is_test=is_test, cache_add='Prediction',
@@ -37,6 +39,25 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             model_val = load_model(model_path, compile=False)
         x = x[1:]
         y = y[0]
+        resize = True
+        if resize:
+            image, mask = x[0], x[1]
+            image_shape, mask_shape = image.shape, mask.shape
+            image, mask = np.squeeze(image), np.squeeze(mask)
+            image_handle, mask_handle = sitk.GetImageFromArray(image), sitk.GetImageFromArray(mask)
+            input_spacing = image_handle.GetSpacing()
+            actual_input_spacing = (0.975, 0.975, 2.5)
+            image_handle.SetSpacing(actual_input_spacing)
+            mask_handle.SetSpacing(actual_input_spacing)
+            resampled_image_handle = resampler.resample_image(image_handle,
+                                                              output_spacing=(input_spacing[0],input_spacing[1],1.))
+            resampled_mask_handle = resampler.resample_image(mask_handle, is_annotation=True,
+                                                             output_spacing=(input_spacing[0],input_spacing[1],1.))
+            image = sitk.GetArrayFromImage(resampled_image_handle)[None,...,None]
+            mask = sitk.GetArrayFromImage(resampled_mask_handle)[None,...,None]
+            image[mask==0] = 0
+            x = [image, mask]
+
         step = 160//2
         shift = 120//2
         gap = 20//2
