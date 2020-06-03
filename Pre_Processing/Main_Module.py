@@ -37,8 +37,9 @@ if make_single_images:
 
 if make_TF2_images:
     path = r'D:\Liver_Disease_Ablation'
-    from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
+    from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record, cpu_count
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
+    thread_count = int(cpu_count() * .75)
     cube_size = (32, 120, 120)
     base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True), To_Categorical(3)]
     image_processors_train = [Resampler(desired_output_spacing=(None,None,1.0), binary_annotation=False)]
@@ -49,7 +50,7 @@ if make_TF2_images:
                                                   min_z=cube_size[0])]
 
     write_tf_record(os.path.join(path, 'Train'), record_name='Train_32', image_processors=image_processors_train,
-                    is_3D=True, rewrite=True, shuffle=True, thread_count=10)
+                    is_3D=True, rewrite=True, shuffle=True, thread_count=thread_count)
 
     image_processors_validation = [Resampler(desired_output_spacing=(None,None,1.0), binary_annotation=False)]
     image_processors_validation += base_normalizer
@@ -57,7 +58,7 @@ if make_TF2_images:
                                                power_val_c=2**3),
                                     Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False,
                                                        desired_val=2)]
-    write_tf_record(os.path.join(path, 'Validation'), record_name='Validation', thread_count=10,
+    write_tf_record(os.path.join(path, 'Validation'), record_name='Validation', thread_count=thread_count,
                     image_processors=image_processors_validation, is_3D=True, rewrite=True, shuffle=True)
 
     image_processors_validation = []
@@ -65,7 +66,7 @@ if make_TF2_images:
     image_processors_validation += [Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3,
                                                power_val_c=2**3),
                                     Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    write_tf_record(os.path.join(path, 'Validation'), record_name='Validation_whole', thread_count=10,
+    write_tf_record(os.path.join(path, 'Validation'), record_name='Validation_whole', thread_count=thread_count,
                     image_processors=image_processors_validation,
                     is_3D=True, rewrite=True, shuffle=True)
 
@@ -80,4 +81,4 @@ if make_TF2_images:
                                          power_val_c=2**3),
                               Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
     write_tf_record(os.path.join(path, 'Test'), record_name='Test', image_processors=image_processors_test,
-                    is_3D=True, rewrite=True, shuffle=True, thread_count=10)
+                    is_3D=True, rewrite=True, shuffle=True, thread_count=thread_count)
