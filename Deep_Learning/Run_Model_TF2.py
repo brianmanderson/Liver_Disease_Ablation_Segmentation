@@ -164,8 +164,8 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             print('Already done')
                             continue
                         print(current_run_df)
-                        # data_frame = data_frame.append(current_run_df, ignore_index=True)
-                        # data_frame.to_excel(excel_path, index=0)
+                        data_frame = data_frame.append(current_run_df, ignore_index=True)
+                        data_frame.to_excel(excel_path, index=0)
                         _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
                                                                                         flip=flip, change_background=True,
                                                                                         threshold=threshold, threshold_val=threshold_val)
