@@ -9,7 +9,7 @@ from Return_Train_Validation_Generators_TF2 import return_generators, return_bas
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 
 
-def find_best_lr(batch_size=16, path_desc='', add=''):
+def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0]:
@@ -37,7 +37,7 @@ def find_best_lr(batch_size=16, path_desc='', add=''):
                                 os.makedirs(out_path)
                                 print(out_path)
                                 base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-                                    batch_size=batch_size, add=add, threshold_val=10, change_background=True)
+                                    batch_size=batch_size, add=add, threshold_val=10, change_background=True, cache_add=cache_add)
                                 model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
                                                 mask_output=True).created_model
                                 k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)

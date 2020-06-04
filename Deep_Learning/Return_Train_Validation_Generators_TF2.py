@@ -7,6 +7,7 @@ from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_
 from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 import pandas as pd
+import time
 from tensorboard.plugins.hparams import api as hp
 
 
@@ -409,14 +410,14 @@ def return_base_dict_dense(step_size_factor=10, save_a_model=False):
     return base_dict
 
 
-def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},
-                      add='', is_test=False, cache=True, validation_name='Validation',cache_add='', flip=False,
+def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},path_lead='Records_1mm',
+                      add='', is_test=False, cache=True, validation_name='',cache_add='', flip=False,
                       change_background=False, threshold=False, threshold_val=10, evaluation=False):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
-    train_path = [os.path.join(base_path, 'Train', 'Train{}.tfrecord'.format(add))]
-    validation_path = [os.path.join(base_path, 'Validation', '{}.tfrecord'.format(validation_name))]
+    train_path = [os.path.join(base_path, path_lead, 'Train{}_Records'.format(add))]
+    validation_path = [os.path.join(base_path, path_lead,'Validation{}_Records'.format(validation_name))]
     ext = 'Validation'
     if evaluation:
         ext += '_whole'
@@ -424,11 +425,11 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
         ext = 'Test'
 
-    train_generator = Data_Generator_Class(record_names=train_path)
-    validation_generator = Data_Generator_Class(record_names=validation_path, in_parallel=True)
+    train_generator = Data_Generator_Class(records_path=train_path)
+    validation_generator = Data_Generator_Class(records_path=validation_path, in_parallel=True)
     train_processors, validation_processors = [], []
     base_processors = [
-        Expand_Dimensions(axis=-1, on_images=True, on_annotations=True),
+        Expand_Dimensions(axis=-1, on_images=True, on_annotations=False),
                         ]
     train_processors += base_processors
     validation_processors += base_processors
@@ -440,14 +441,14 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
     if not evaluation:
         train_processors += [
-        {'cache': os.path.join(base_path, 'Train{}{}'.format(add, cache_add))}
+        {'cache': os.path.join(base_path,'cache', 'Train{}{}'.format(add, cache_add))}
     ]
     validation_processors += [
         Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
     if cache:
         validation_processors += [
-        {'cache': os.path.join(base_path,'{}{}{}'.format(ext,add,cache_add))}
+        {'cache': os.path.join(base_path,'cache','{}{}{}'.format(ext,add,cache_add))}
         ]
     if threshold:
         train_processors += [
@@ -463,7 +464,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         ]
     train_processors += [
         Return_Outputs(wanted_keys),
-        {'shuffle': len(train_generator)//3},
+        {'shuffle': len(train_generator)},
         {'batch': batch_size},
         {'repeat'}
     ]
@@ -473,19 +474,18 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
-    generators = [validation_generator]
-    if not evaluation:
-        generators += [train_generator]
-    # for generator in generators: #
-    #     data_set = iter(generator.data_set)
-    #     for _ in range(len(generator)):
-    #         x, y = next(data_set)
-    #         print(x[0].shape)
+    start = time.time()
+    for generator in [train_generator, validation_generator]: #
+        data_set = iter(generator.data_set)
+        for _ in range(len(generator)):
+            x, y = next(data_set)
+            print(x[0].shape)
+    print(time.time()-start)
     #     print(data[1][0].shape)
     # data = next(data_set)
     return base_path, morfeus_drive, train_generator, validation_generator
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', threshold=True, change_background=True, cache_add='_change_bckrd', threshold_val=5)
+    # return_generators(add='_32', threshold=True, change_background=True, cache_add='_1mm_change_bckrd', threshold_val=10)
     pass
