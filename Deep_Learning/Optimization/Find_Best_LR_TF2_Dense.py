@@ -14,11 +14,11 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
     max_lr = 1
     for iteration in [0]:
         for growth_rate in [4]:
-            for layer in [2]:
+            for layer in [2, 3]:
                 for max_conv_blocks in [4]:
-                    for filters in [8]:
+                    for filters in [8, 12]:
                         for num_conv_blocks in [2]:
-                            for conv_lambda in [0]:
+                            for conv_lambda in [0, 1]:
                                 base_path, morfeus_drive = return_paths()
                                 run_data = {'layers':layer,'max_conv_blocks':max_conv_blocks,'filters':filters,
                                             'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
