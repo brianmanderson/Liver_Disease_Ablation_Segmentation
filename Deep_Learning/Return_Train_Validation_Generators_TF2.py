@@ -123,7 +123,7 @@ def return_dictionary_dense(base_dict, run_best=False):
     if run_best:
         dictionary = [
             base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
-                      min_lr=6e-7, max_lr=1e-2)
+                      min_lr=6e-7, max_lr=8e-3)
                       ]
     return dictionary
 
@@ -448,7 +448,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
     if cache:
         validation_processors += [
-        {'cache': os.path.join(base_path,'cache','{}{}{}'.format(ext,add,cache_add))}
+        # {'cache': os.path.join(base_path,'cache','{}{}{}'.format(ext,add,cache_add))}
         ]
     if threshold:
         train_processors += [
@@ -475,7 +475,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
     start = time.time()
-    for generator in [train_generator, validation_generator]: #
+    for generator in [validation_generator, train_generator]: #
         data_set = iter(generator.data_set)
         for _ in range(len(generator)):
             x, y = next(data_set)
@@ -487,5 +487,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', threshold=True, change_background=True, cache_add='_1mm_change_bckrd', threshold_val=10)
+    # return_generators(add='_32', threshold=True, change_background=False, cache_add='_1mm_change_bckrd', threshold_val=10)
     pass
