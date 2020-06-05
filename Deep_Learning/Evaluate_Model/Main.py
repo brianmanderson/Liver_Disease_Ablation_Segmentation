@@ -14,16 +14,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 
 def main():
-    desc = 'TF2_Multi_Cube'
-    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_229\model'
-    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_229\cp-0151.ckpt'
+    desc = 'TF2_Multi_Cube_1mm'
+    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\model'
+    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\cp-0201.ckpt'
     dense = True
     path_ext = ''
-    if dense:
-        desc = 'TF2_Multi_Cube_Dense'
-        path_ext = 'dense'
-        model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_30\model_30_Dense'
-        weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_30\cp-0351.ckpt'
     if not os.path.exists(model_path) and not dense:
         from Return_Train_Validation_Generators_TF2 import return_base_dict, get_layers_dict_new
         from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
@@ -43,12 +38,13 @@ def main():
         model.load_weights(weight_path)
         model.save(model_path)
 
-    create_prediction = True
+    create_prediction = False
     if create_prediction:
         from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-        create_prediction_files(is_test=False, desc=desc, model_path=model_path, path_ext=path_ext)
-
-        # create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext)
+        validation_path = [r'D:\Liver_Disease_Ablation\Records\Validation_whole_Records']
+        create_prediction_files(is_test=False, desc=desc, model_path=model_path, path_ext=path_ext, validation_path=validation_path)
+        validation_path = [r'D:\Liver_Disease_Ablation\Records\Test_Records']
+        create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext, validation_path=validation_path)
 
     evaluate_prediction = True
     if evaluate_prediction:
@@ -56,7 +52,7 @@ def main():
         path = r'D:\Liver_Disease_Ablation\Predictions{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles'),
                             seed_range=np.arange(0.5,1.0,0.05),
-                            threshold_range=np.arange(0.1,1.0,0.05), re_write=False, thread_count=12)
+                            threshold_range=np.arange(0.1,1.0,0.05), re_write=False, thread_count=1)
 
     evaluate_test = False
     if evaluate_test:

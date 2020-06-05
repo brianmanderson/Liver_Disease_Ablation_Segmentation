@@ -8,7 +8,8 @@ from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Resample_Cla
 from Return_Train_Validation_Generators_TF2 import return_generators, plot_scroll_Image
 
 
-def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',cache=True):
+def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',
+                            cache=True, validation_path=None):
     resampler = Resample_Class_Object()
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
@@ -19,7 +20,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                                                                                      ['image_path', 'image', 'mask'],
                                                                                  'outputs': ['annotation']},
                                                                     evaluation=True, validation_name='Validation_whole',
-                                                                    )
+                                                                    validation_path=validation_path)
     model_val = None
     ext = 'Validation'
     if is_test:
@@ -31,8 +32,9 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
     gen = eval_generator.data_set.as_numpy_iterator()
     for i in range(len(eval_generator)):
         x, y = next(gen)
-        image_name = os.path.split(x[0][0].decode())[-1]
-        print(image_name)
+        image_path = x[0][0].decode()
+        image_name = os.path.split(image_path)[-1]
+        print(image_path)
         if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
             continue
         elif model_val is None:
@@ -40,22 +42,35 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         x = x[1:]
         y = y[0]
         resize = True
+        reader.SetFileName(image_path)
+        reader.Execute()
+        image_handle = reader
+        padded = False
         if resize:
+            spacing = reader.GetSpacing()
             image, mask = x[0], x[1]
             image_shape, mask_shape = image.shape, mask.shape
-            image, mask = np.squeeze(image), np.squeeze(mask)
-            image_handle, mask_handle = sitk.GetImageFromArray(image), sitk.GetImageFromArray(mask)
-            input_spacing = image_handle.GetSpacing()
-            actual_input_spacing = (0.975, 0.975, 2.5)
-            image_handle.SetSpacing(actual_input_spacing)
-            mask_handle.SetSpacing(actual_input_spacing)
+            image_handle = sitk.GetImageFromArray(np.squeeze(x[0]).astype('float32'))
+            mask_handle = sitk.GetImageFromArray(np.squeeze(x[1]).astype('float32'))
+            for handle in [image_handle, mask_handle]:
+                handle.SetSpacing(spacing)
+                handle.SetOrigin(reader.GetOrigin())
+                handle.SetDirection(reader.GetDirection())
+            # input_spacing = image_handle.GetSpacing()
             resampled_image_handle = resampler.resample_image(image_handle,
-                                                              output_spacing=(input_spacing[0],input_spacing[1],1.))
-            resampled_mask_handle = resampler.resample_image(mask_handle, is_annotation=True,
-                                                             output_spacing=(input_spacing[0],input_spacing[1],1.))
+                                                              output_spacing=(spacing[0], spacing[1], 1.))
+            resampled_mask_handle = resampler.resample_image(mask_handle,
+                                                             output_spacing=(spacing[0], spacing[1], 1.))
+            image_handle = resampled_image_handle
             image = sitk.GetArrayFromImage(resampled_image_handle)[None,...,None]
             mask = sitk.GetArrayFromImage(resampled_mask_handle)[None,...,None]
-            image[mask==0] = 0
+            mask[mask > 0.5] = 1
+            mask = mask.astype('int')
+            image[mask == 0] = 0
+            if image.shape[1] % 2 != 0:
+                padded = True
+                image = np.pad(image,[[0,0],[1,0],[0,0],[0,0],[0,0]])
+                mask = np.pad(mask,[[0,0],[1,0],[0,0],[0,0],[0,0]])
             x = [image, mask]
 
         step = 160//2
@@ -80,18 +95,28 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                 start += shift
         else:
             pred = model_val.predict(x)
-        x = x[0]
+        x = np.squeeze(x[0])
+        pred = np.squeeze(pred[...,1])
+        if padded:
+            x = x[1:]
+            pred = pred[1:]
         truth = sitk.GetImageFromArray(np.squeeze(y).astype('float32'))
+        truth.SetDirection(image_handle.GetDirection())
+        truth.SetOrigin(image_handle.GetOrigin())
+        truth.SetDirection(image_handle.GetDirection())
+        truth.SetSpacing(reader.GetSpacing())
         sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
 
-        prediction = sitk.GetImageFromArray(np.squeeze(pred[...,1]).astype('float32'))
-        prediction.SetOrigin(truth.GetOrigin())
-        prediction.SetDirection(truth.GetDirection())
+        prediction = sitk.GetImageFromArray(np.squeeze(pred).astype('float32'))
+        prediction.SetOrigin(image_handle.GetOrigin())
+        prediction.SetDirection(image_handle.GetDirection())
+        prediction.SetSpacing(image_handle.GetSpacing())
         sitk.WriteImage(prediction, os.path.join(pred_output_path, '{}_Prediction.nii.gz'.format(image_name)))
 
         image = sitk.GetImageFromArray(np.squeeze(x).astype('float32'))
-        image.SetOrigin(truth.GetOrigin())
-        image.SetDirection(truth.GetDirection())
+        image.SetOrigin(image_handle.GetOrigin())
+        image.SetDirection(image_handle.GetDirection())
+        image.SetSpacing(image_handle.GetSpacing())
         sitk.WriteImage(image, os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name)))
     K.clear_session()
     return None

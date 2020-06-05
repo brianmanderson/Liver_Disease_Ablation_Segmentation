@@ -6,6 +6,7 @@ import SimpleITK as sitk
 import numpy as np
 from enum import Enum
 from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image, plt
+from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Resample_Class.Resample_Class import Resample_Class_Object
 import pandas as pd
 import pickle
 from threading import Thread
@@ -78,12 +79,16 @@ class run_metrics(object):
         self.save_path = save_path
 
     def process(self, threshold_range, seed_range, file, write_final_prediction=False):
+        resampler = Resample_Class_Object()
+        reader = sitk.ImageFileReader()
+        reader.LoadPrivateTagsOn()
         pat_name = os.path.split(file)[-1].split('.')[0]
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
         truth_array = sitk.GetArrayFromImage(truth)
         volume = truth_array[truth_array == 1].shape[0] * np.prod(truth.GetSpacing()) / 1000
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
+        prediction = resampler.resample_image(prediction, ref_handle=truth)
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
 
         statistics_image_filter = sitk.StatisticsImageFilter()
