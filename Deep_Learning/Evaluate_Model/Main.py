@@ -46,23 +46,23 @@ def main():
         validation_path = [r'D:\Liver_Disease_Ablation\Records\Test_Records']
         create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext, validation_path=validation_path)
 
-    evaluate_prediction = True
+    evaluate_prediction = False
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = r'D:\Liver_Disease_Ablation\Predictions{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles'),
-                            seed_range=np.arange(0.5,1.0,0.05),
-                            threshold_range=np.arange(0.1,1.0,0.05), re_write=False, thread_count=1)
+                            seed_range=np.arange(0.8,1.0,0.01),
+                            threshold_range=np.arange(0.1,.6,0.05), re_write=False, thread_count=10)
 
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
         path = r'D:\Liver_Disease_Ablation\Predictions{}\Test{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output'),
-                            seed_range=[.9], threshold_range=[.15], re_write=True,
+                            seed_range=[.93], threshold_range=[.2], re_write=False,
                             write_final_prediction=True)
 
-    write_box_plots = False
+    write_box_plots = True
     if write_box_plots:
         from Deep_Learning.Evaluate_Model.Make_Box_Plots import create_plot
         import pandas as pd
@@ -70,10 +70,11 @@ def main():
         out_path = os.path.join('.', 'Test_Output','Final_Prediction.xlsx')
         df = pd.read_excel(out_path, engine='xlrd')
         volumes = df['volume'].values
-        values = df['median_surface_distance'].values
+        values = df['dice'].values
         values = values[volumes>20]
         values = values[values<1000]
-        create_plot('Median Surface Distance for greater than 20 cc volumes',values=values,metric='Median Surface Distance', out_path=os.path.join('.','Images'))
+        create_plot('Dice for greater than 20 cc volumes',values=values,metric='Dice', out_path=os.path.join('.','Images'),
+                    y_ticks=[0,.1,.2,.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
         xxx = 1
 
 

@@ -85,10 +85,14 @@ class run_metrics(object):
         pat_name = os.path.split(file)[-1].split('.')[0]
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
+        mask = sitk.ReadImage(file.replace('_Image','_Mask'), sitk.sitkUInt8)
+        mask_filter = sitk.MaskImageFilter()
+        mask_filter.SetMaskingValue(0)
         truth_array = sitk.GetArrayFromImage(truth)
         volume = truth_array[truth_array == 1].shape[0] * np.prod(truth.GetSpacing()) / 1000
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
-
+        prediction = resampler.resample_image(prediction, ref_handle=truth)
+        prediction = mask_filter.Execute(prediction, mask)
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
 
         statistics_image_filter = sitk.StatisticsImageFilter()
@@ -122,8 +126,6 @@ class run_metrics(object):
                 # print('Threshold value {}'.format(threshold_value))
                 Connected_Threshold.SetLower(threshold_value)
                 threshold_pred = Connected_Threshold.Execute(prediction)
-                threshold_pred = resampler.resample_image(threshold_pred, ref_handle=truth)
-                threshold_pred = threshold_pred > 0
                 if write_final_prediction:
                     threshold_pred = fill_binary.process(threshold_pred)
                     threshold_pred.SetOrigin(truth.GetOrigin())

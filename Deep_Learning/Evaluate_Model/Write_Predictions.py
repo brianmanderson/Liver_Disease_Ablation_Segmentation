@@ -19,7 +19,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                                                                     wanted_keys={'inputs':
                                                                                      ['image_path', 'image', 'mask'],
                                                                                  'outputs': ['annotation']},
-                                                                    evaluation=True, validation_name='Validation_whole',
+                                                                    evaluation=False, validation_name='Validation_whole',
                                                                     validation_path=validation_path)
     model_val = None
     ext = 'Validation'

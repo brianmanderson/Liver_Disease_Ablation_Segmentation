@@ -412,18 +412,18 @@ def return_base_dict_dense(step_size_factor=10, save_a_model=False):
 
 def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'outputs':['annotation']},path_lead='Records_1mm',
                       add='', is_test=False, cache=True, validation_name='',cache_add='', flip=False,
-                      change_background=False, threshold=False, threshold_val=10, evaluation=False):
+                      change_background=False, threshold=False, threshold_val=10, evaluation=False, train_path=None,
+                      validation_path=None):
     base_path, morfeus_drive = return_paths()
     if not os.path.exists(base_path):
         print('{} does not exist'.format(base_path))
-    train_path = [os.path.join(base_path, path_lead, 'Train{}_Records'.format(add))]
-    validation_path = [os.path.join(base_path, path_lead,'Validation{}_Records'.format(validation_name))]
+    if train_path is None:
+        train_path = [os.path.join(base_path, path_lead, 'Train{}_Records'.format(add))]
+    if validation_path is None:
+        validation_path = [os.path.join(base_path, path_lead,'Validation{}_Records'.format(validation_name))]
     ext = 'Validation'
     if evaluation:
         ext += '_whole'
-    if is_test:
-        validation_path = [os.path.join(base_path, 'Test', 'Test.tfrecord')]
-        ext = 'Test'
 
     train_generator = Data_Generator_Class(records_path=train_path)
     validation_generator = Data_Generator_Class(records_path=validation_path, in_parallel=True)
@@ -473,13 +473,16 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'batch': 1},
         {'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
-    validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
+    validation_generator.compile_data_set(image_processors=validation_processors, debug=True)
     start = time.time()
-    for generator in [validation_generator, train_generator]: #
-        data_set = iter(generator.data_set)
-        for _ in range(len(generator)):
-            x, y = next(data_set)
-            print(x[0].shape)
+    generators = [validation_generator]
+    if not evaluation:
+        generators += [train_generator]
+        for generator in generators: #
+            data_set = iter(generator.data_set)
+            for _ in range(len(generator)):
+                x, y = next(data_set)
+                print(x[0].shape)
     print(time.time()-start)
     #     print(data[1][0].shape)
     # data = next(data_set)
@@ -487,5 +490,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', threshold=True, change_background=False, cache_add='_1mm_change_bckrd', threshold_val=10)
+    return_generators(add='_32', threshold=True, change_background=True, cache_add='_1mm_change_bckrd', threshold_val=10)
     pass

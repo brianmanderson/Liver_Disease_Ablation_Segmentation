@@ -16,10 +16,9 @@ def load_obj(path):
         return out
 
 
-def create_plot(title, values, metric, out_path=None):
+def create_plot(title, values, metric, out_path=None, y_ticks=None):
     x_ticks = ['']
     num_labels = [i for i in range(len(x_ticks))]
-    y_ticks = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
     plt.figure(0)
     plt.suptitle(title)
     ax = plt.subplot(1,1,1)
@@ -27,7 +26,8 @@ def create_plot(title, values, metric, out_path=None):
     plt.xlabel('LiTs Test Set')
     plt.ylabel(metric)
     plt.xticks(num_labels,x_ticks)
-    # plt.yticks(y_ticks)
+    if y_ticks is not None:
+        plt.yticks(y_ticks)
     if out_path is not None:
         if not os.path.exists(out_path):
             os.makedirs(out_path)
