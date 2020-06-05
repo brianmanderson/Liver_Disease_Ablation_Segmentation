@@ -9,7 +9,7 @@ from Return_Train_Validation_Generators_TF2 import return_generators, plot_scrol
 
 
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',
-                            cache=True, validation_path=None):
+                            cache=True, validation_path=None, rewrite=False):
     resampler = Resample_Class_Object()
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
@@ -35,11 +35,12 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         image_path = x[0][0].decode()
         image_name = os.path.split(image_path)[-1]
         print(image_path)
-        if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))):
+        if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))) and not rewrite:
             continue
         elif model_val is None:
             model_val = load_model(model_path, compile=False)
         x = x[1:]
+        image, mask_base = x[0], x[1]
         y = y[0]
         resize = True
         reader.SetFileName(image_path)
@@ -48,8 +49,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         padded = False
         if resize:
             spacing = reader.GetSpacing()
-            image, mask = x[0], x[1]
-            image_shape, mask_shape = image.shape, mask.shape
+            image_shape, mask_shape = image.shape, mask_base.shape
             image_handle = sitk.GetImageFromArray(np.squeeze(x[0]).astype('float32'))
             mask_handle = sitk.GetImageFromArray(np.squeeze(x[1]).astype('float32'))
             for handle in [image_handle, mask_handle]:
@@ -106,6 +106,13 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         truth.SetDirection(image_handle.GetDirection())
         truth.SetSpacing(reader.GetSpacing())
         sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
+
+        mask = sitk.GetImageFromArray(np.squeeze(mask_base).astype('float32'))
+        mask.SetDirection(image_handle.GetDirection())
+        mask.SetOrigin(image_handle.GetOrigin())
+        mask.SetDirection(image_handle.GetDirection())
+        mask.SetSpacing(reader.GetSpacing())
+        sitk.WriteImage(mask, os.path.join(pred_output_path, '{}_Mask.nii.gz'.format(image_name)))
 
         prediction = sitk.GetImageFromArray(np.squeeze(pred).astype('float32'))
         prediction.SetOrigin(image_handle.GetOrigin())
