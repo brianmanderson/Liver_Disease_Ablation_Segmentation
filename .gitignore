@@ -9,6 +9,7 @@
 /Deep_Learning/Evaluate_Model/__pycache__/
 __pycache__/
 *.py[cod]
+**/*MRN*
 /Deep_Learning/password.txt
 /Deep_Learning/~$Sphericity.xlsx
 /Paper/~$ief Methods - Liver Disease.docx

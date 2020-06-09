@@ -15,7 +15,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 def main():
     desc = 'TF2_Multi_Cube_1mm'
-    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\model'
+    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\model_34'
     weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\cp-0201.ckpt'
     dense = True
     path_ext = ''
