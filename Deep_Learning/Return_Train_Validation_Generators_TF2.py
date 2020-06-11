@@ -390,6 +390,85 @@ def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.in
     return layers_dict
 
 
+def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, num_classes=2,**kwargs):
+    pool = (2, 2, 2)
+    num_conv_blocks_base = num_conv_blocks
+    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
+                                pooling_type='Max', pool_size=pool, bn_before_activation=False)
+
+    block = lc.convolution_layer
+    start = [block(filters,out_name='start', batch_norm=False, activation=None)]
+
+    layers_dict = return_hollow_layers_dict(layers)
+    previous_name = 'start'
+    encoding_layers = []
+    for layer in range(layers - 1):
+        encoding_layers.append(layer)
+        if layer == 0:
+            layers_dict['Layer_' + str(layer)]['Encoding'] = start
+        else:
+            layers_dict['Layer_' + str(layer)]['Encoding'] = []
+        encoding = []
+        names = [previous_name]
+        for i in range(num_conv_blocks):
+            name = 'Layer_{}_Conv_Encoding_{}'.format(layer, i)
+            names.append(name)
+            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                         block(filters, kernel=(1,1,1), batch_norm=True, activation='elu'),
+                         block(filters, batch_norm=False, activation=None, out_name=name)]
+            encoding += [lc.concat_layer(names)]
+            names = names[:]
+            filters += growth_rate
+        layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
+        previous_name = 'Layer_{}_Down'.format(layer)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=pool,
+                                                                                         activation=None,
+                                                                                         batch_norm=False,
+                                                                                         out_name=previous_name)
+        num_conv_blocks += conv_lambda
+        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
+    # We want the filter number to still grow by growth_factor, so add in the decoding side later...
+    encoding = []
+    names = [previous_name]
+    for i in range(num_conv_blocks):
+        name = 'Base_{}'.format(i)
+        names.append(name)
+        encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                     block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                     block(filters, batch_norm=False, activation=None, out_name=name)]
+        encoding += [lc.concat_layer(names)]
+        names = names[:]
+        filters += growth_rate
+    layers_dict['Base'] = encoding
+    num_conv_blocks = num_conv_blocks_base
+    for layer in encoding_layers[::-1]:
+        up_name = 'Layer_{}_Up'.format(layer)
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
+                                                                     lc.convolution_layer(filters, activation=None,
+                                                                                          batch_norm=False,
+                                                                                          out_name=up_name)]
+        layers_dict['Layer_' + str(layer)]['Decoding'] = []
+        encoding = []
+        names = [up_name]
+        for i in range(num_conv_blocks):
+            name = 'Layer_{}_Conv_Decoding_{}'.format(layer, i)
+            names.append(name)
+            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                         block(filters, kernel=(1,1,1), batch_norm=True, activation='elu'),
+                         block(filters, batch_norm=False, activation=None, out_name=name)]
+            encoding += [lc.concat_layer(names)]
+            names = names[:]
+            filters += growth_rate
+        layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
+        num_conv_blocks += conv_lambda
+        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
+    final_steps = [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                   block(filters, kernel=(1,1,1), batch_norm=True, activation='elu'),
+                   lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
+    layers_dict['Final_Steps'] = final_steps
+    return layers_dict
+
+
 def return_base_dict(step_size_factor=10, save_a_model=False,optimizer='Adam'):
     base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda, filters, max_filters: \
         OrderedDict({'atrous':False, 'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':max_conv_blocks,
