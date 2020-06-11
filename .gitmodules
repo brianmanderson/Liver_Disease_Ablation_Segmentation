@@ -13,3 +13,6 @@
 [submodule "Pre_Processing/Nifti_To_Dicom"]
 	path = Pre_Processing/Nifti_To_Dicom
 	url = https://github.com/brianmanderson/Nifti_To_Dicom.git
+[submodule "Raystation_Code/Raystation_Create_Segmentation_For_Site"]
+	path = Raystation_Code/Raystation_Create_Segmentation_For_Site
+	url = https://github.com/brianmanderson/Raystation_Create_Segmentation_For_Site.git
