@@ -181,6 +181,11 @@ def main():
         prediction_class.ChangePatient(MRN)
         for case in prediction_class.patient.Cases:
             prediction_class.case = case
+            prediction_class.get_rois_in_case()
+            if 'Liver_Disease_Ablation_BMA_Program_0' in prediction_class.rois_in_case:
+                prediction_class.case.PatientModel.RegionsOfInterest['Liver_Disease_Ablation_BMA_Program_0'].DeleteRoi()
+                prediction_class.patient.Save()
+                continue
             # case.SetCurrent()
             for exam in [primary, secondary]:
                 status_file = os.path.join(text_file,'{}_{}.txt'.format(case.CaseName,exam.Name))
