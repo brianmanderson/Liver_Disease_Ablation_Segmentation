@@ -126,10 +126,8 @@ def return_dictionary_dense(base_dict, run_best=False):
                       min_lr=6e-7, max_lr=8e-3)
                       ]
     dictionary = [
-        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
-                  min_lr=2e-6, max_lr=3e-3),
-        base_dict(layers=3, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
-                  min_lr=6e-7, max_lr=2e-3)
+        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+                  min_lr=2e-6, max_lr=3e-3)
                   ]
     return dictionary
 
