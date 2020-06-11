@@ -402,6 +402,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     layers_dict = return_hollow_layers_dict(layers)
     previous_name = 'start'
     encoding_layers = []
+    encoding_filters = []
     for layer in range(layers - 1):
         encoding_layers.append(layer)
         if layer == 0:
@@ -419,6 +420,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             encoding += [lc.concat_layer(names)]
             names = names[:]
             filters += growth_rate
+        encoding_filters.append(filters)
         layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
         previous_name = 'Layer_{}_Down'.format(layer)
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=pool,
@@ -442,6 +444,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     layers_dict['Base'] = encoding
     num_conv_blocks = num_conv_blocks_base
     for layer in encoding_layers[::-1]:
+        filters = encoding_filters[layer]
         up_name = 'Layer_{}_Up'.format(layer)
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
                                                                      lc.convolution_layer(filters, activation=None,
