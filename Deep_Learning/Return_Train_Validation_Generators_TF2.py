@@ -504,8 +504,8 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if evaluation:
         ext += '_whole'
 
-    train_generator = Data_Generator_Class(records_path=train_path)
-    validation_generator = Data_Generator_Class(records_path=validation_path, in_parallel=True)
+    train_generator = Data_Generator_Class(record_paths=train_path)
+    validation_generator = Data_Generator_Class(record_paths=validation_path, in_parallel=True)
     train_processors, validation_processors = [], []
     base_processors = [
         Expand_Dimensions(axis=-1, on_images=True, on_annotations=False),
