@@ -15,7 +15,7 @@ cube_size = (16, 16, 120, 120)
 batch_size = 8
 add = '_32'
 path_desc='TF_LR_Dense_1mm'
-model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm_new'
+model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm'
 cache_add = '_1mm'
 find_lr = False
 if find_lr:
@@ -44,7 +44,7 @@ decision based on
 run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
-    run_best = False
+    run_best = True
     train_model(epochs=201, model_name=model_name, run_best=run_best, debug=False, add=add, dense=True, cache_add=cache_add)
 
 make_opt_excel = False
