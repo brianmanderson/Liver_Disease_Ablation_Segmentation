@@ -187,7 +187,7 @@ def main():
             #     prediction_class.patient.Save()
             # case.SetCurrent()
             for exam in [primary, secondary]:
-                status_file = os.path.join(text_file,'{}_{}.txt'.format(case.CaseName,exam.Name))
+                status_file = os.path.join(text_file,'{}_{}.txt'.format(case.CaseName,exam))
                 if os.path.exists(status_file):
                     continue
                 try:
