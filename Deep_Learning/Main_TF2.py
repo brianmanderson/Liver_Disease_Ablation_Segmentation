@@ -25,7 +25,7 @@ if find_lr:
 find_dense_lr_dense = False
 if find_dense_lr_dense:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
-    find_best_lr(batch_size=batch_size, path_desc=path_desc+'_test2', add=add, cache_add=cache_add)
+    find_best_lr(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add)
 '''
 Plot the LR, get the min and max from the images
 '''
@@ -45,7 +45,7 @@ run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
     run_best = True
-    train_model(epochs=201, model_name=model_name, run_best=run_best, debug=True, add=add, dense=True, cache_add=cache_add)
+    train_model(epochs=201, model_name=model_name, run_best=run_best, debug=False, add=add, dense=True, cache_add=cache_add)
 
 make_opt_excel = False
 if make_opt_excel:
