@@ -25,7 +25,7 @@ if find_lr:
 find_dense_lr_dense = True
 if find_dense_lr_dense:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
-    find_best_lr(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add)
+    find_best_lr(batch_size=batch_size, path_desc=path_desc+'_test', add=add, cache_add=cache_add)
 '''
 Plot the LR, get the min and max from the images
 '''
