@@ -9,7 +9,7 @@ from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Clas
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, return_base_dict,\
     return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary,\
-    get_layers_dict_dense, return_dictionary_dense, get_layers_dict_dense_new, return_model
+    get_layers_dict_dense, return_dictionary_dense, return_model
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -128,7 +128,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         run_data['threshold'] = threshold
                         run_data['threshold_val'] = threshold_val
                         if debug:
-                            layers_dict = get_layers_dict_dense_new(**run_data, bn_before_activation=bn_before_activation)
+                            layers_dict = get_layers_dict_dense(**run_data, bn_before_activation=bn_before_activation)
                             Model_val = return_model(layers_dict)
                             Model_val.compile(optimizer,
                                               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -169,8 +169,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         step_size = len(train_generator)
                         hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
-                        # layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
-                        layers_dict = get_layers_dict_dense_new(**run_data)
+                        layers_dict = get_layers_dict_dense(**run_data)
                         paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                                         is_keras_model=False)
                         paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
