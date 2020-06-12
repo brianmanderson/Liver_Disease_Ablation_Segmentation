@@ -6,10 +6,10 @@ from Base_Deeplearning_Code.Callbacks.TF2_Callbacks import Add_Images_and_LR, Sp
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
-from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
-from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, get_layers_dict, return_base_dict,\
-    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary, get_layers_dict_new, get_layers_dict_dense, return_dictionary_dense, get_layers_dict_dense_new
+from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, return_base_dict,\
+    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary,\
+    get_layers_dict_dense, return_dictionary_dense, get_layers_dict_dense_new, return_model
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -64,8 +64,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     callbacks += [checkpoint]
     if not run_best:
         callbacks += [EarlyStopping(patience=15, verbose=1)]
-    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True, concat_not_add=concat)
-    Model_val = model.created_model
+    Model_val = return_model(layers_dict)
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
@@ -117,7 +116,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                     np.random.shuffle(perm)
                     overall_dictionary = overall_dictionary[perm]
                     if debug:
-                        i = 0
+                        i = 3
                     for run_data in overall_dictionary:
                         run_data['percentile_normed'] = True
                         run_data['sampling'] = 1
@@ -129,10 +128,8 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         run_data['threshold'] = threshold
                         run_data['threshold_val'] = threshold_val
                         if debug:
-                            layers_dict = get_layers_dict_new(**run_data, bn_before_activation=bn_before_activation)
-                            model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1), mask_output=True,
-                                            concat_not_add=True)
-                            Model_val = model.created_model
+                            layers_dict = get_layers_dict_dense_new(**run_data, bn_before_activation=bn_before_activation)
+                            Model_val = return_model(layers_dict)
                             Model_val.compile(optimizer,
                                               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                                               metrics=[tf.keras.metrics.SparseCategoricalAccuracy(),

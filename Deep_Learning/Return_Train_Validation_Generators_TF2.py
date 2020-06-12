@@ -125,10 +125,6 @@ def return_dictionary_dense(base_dict, run_best=False):
             base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
                       min_lr=6e-7, max_lr=8e-3)
                       ]
-    dictionary = [
-        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
-                  min_lr=2e-6, max_lr=3e-3)
-                  ]
     return dictionary
 
 
@@ -150,170 +146,6 @@ def get_atrous_layers_dict(layers=1, filters=16, max_filters=np.inf, num_conv_bl
     final_steps = [lc.convolution_layer(32, **dfkw),
                    lc.convolution_layer(2, batch_norm=False, activation='softmax')]
     layers_dict['Final_Steps'] = final_steps
-    return layers_dict
-
-
-def get_layers_dict(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, atrous=True,**kwargs):
-    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
-                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=True)
-    if atrous:
-        factor = 1
-        key = 'atrous'
-        block = lc.atrous_layer
-    else:
-        key = 'convolution'
-        factor = 2
-        block = lc.convolution_layer
-    dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
-    layers_dict = return_hollow_layers_dict(layers)
-    pool = (2, 2, 2)
-    final_steps = [lc.convolution_layer(filters, **dfkw),
-                   lc.convolution_layer(2, batch_norm=False, activation='softmax')]
-    layers_dict['Final_Steps'] = final_steps
-    first = True
-    for layer in range(layers - 1):
-        layers_dict['Layer_' + str(layer)]['Encoding'] = []
-        encoding = []
-        subtract = 1 if num_conv_blocks % factor != 0 else 0
-        for i in range((num_conv_blocks // factor - subtract) * factor):
-            encoding.append(block(filters, **dfkw))
-            if (i + 1) % factor == 0:
-                if not first:
-                    if atrous:
-                        encoding[-1][key]['activation'][-1] = None
-                    else:
-                        encoding[-1][key]['activation'] = None
-                    encoding = [lc.residual_layer(encoding, **dfkw)]
-                layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
-                encoding = []
-                first = False
-        if num_conv_blocks % factor != 0:
-            encoding = []
-            for i in range(num_conv_blocks % factor + factor):
-                encoding.append(block(filters, **dfkw))
-            if not first:
-                if atrous:
-                    encoding[-1][key]['activation'][-1] = None
-                else:
-                    encoding[-1][key]['activation'] = None
-                encoding = [lc.residual_layer(encoding, **dfkw)]
-            layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
-        first = False
-        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
-                                                                     lc.convolution_layer(filters, **dfkw)]
-        if filters < max_filters:
-            filters = int(filters*2)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=(2,2,2), **dfkw)
-        layers_dict['Layer_' + str(layer)]['Decoding'] = []
-        decoding = []
-        for i in range((num_conv_blocks // factor - subtract) * factor):
-            decoding.append(block(filters, **dfkw))
-            if (i + 1) % factor == 0:
-                if not first:
-                    if atrous:
-                        decoding[-1][key]['activation'][-1] = None
-                    else:
-                        decoding[-1][key]['activation'] = None
-                    decoding = [lc.residual_layer(decoding, **dfkw)]
-                layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
-                decoding = []
-                first = False
-        if num_conv_blocks % factor != 0:
-            decoding = []
-            for i in range(num_conv_blocks % factor + factor):
-                decoding.append(block(filters, **dfkw))
-            if atrous:
-                decoding[-1][key]['activation'][-1] = None
-            else:
-                decoding[-1][key]['activation'] = None
-            decoding = [lc.residual_layer(decoding, **dfkw)]
-            layers_dict['Layer_' + str(layer)]['Decoding'] += decoding
-        num_conv_blocks += conv_lambda
-        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
-    base = []
-    subtract = 1 if num_conv_blocks % factor != 0 else 0
-    layers_dict['Base'] = []
-    for i in range((num_conv_blocks // factor - subtract) * factor):
-        base.append(block(filters, **dfkw))
-        if (i + 1) % factor == 0:
-            if not first:
-                if atrous:
-                    base[-1][key]['activation'][-1] = None
-                else:
-                    base[-1][key]['activation'] = None
-                base = [lc.residual_layer(base, **dfkw)]
-            layers_dict['Base'] += base
-            base = []
-            first = False
-    if num_conv_blocks % factor != 0:
-        base = []
-        for i in range(num_conv_blocks % factor + factor):
-            base.append(block(filters, **dfkw))
-        if not first:
-            if atrous:
-                base[-1][key]['activation'][-1] = None
-            else:
-                base[-1][key]['activation'] = None
-            base = [lc.residual_layer(base, **dfkw)]
-        layers_dict['Base'] += base
-    return layers_dict
-
-
-def get_layers_dict_new(layers=1, filters=16, max_filters=np.inf, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, num_classes=2,**kwargs):
-    lc = Return_Layer_Functions(kernel=(3,3,3),strides=(1,1,1),padding='same',batch_norm=True,
-                                pooling_type='Max', pool_size=(2,2,2), bn_before_activation=False)
-    block = lc.convolution_layer
-    dfkw = {'padding':'same','batch_norm':True, 'activation':'elu'}
-    layers_dict = return_hollow_layers_dict(layers)
-    pool = (2, 2, 2)
-    final_steps = [lc.convolution_layer(filters, **dfkw),
-                   lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
-    layers_dict['Final_Steps'] = final_steps
-    first = True
-    for layer in range(layers - 1):
-        layers_dict['Layer_' + str(layer)]['Encoding'] = []
-        encoding = []
-        for i in range(num_conv_blocks):
-            encoding.append(block(filters, **dfkw))
-        if first:
-            layers_dict['Layer_' + str(layer)]['Encoding'] = [lc.batch_norm_layer(), encoding[0]]
-            del encoding[0]
-        if encoding:
-            split = np.array_split(encoding,len(encoding)//2)
-            for array in split:
-                array[-1] = block(filters, activation=None, batch_norm=False)
-                array = [lc.residual_layer(array, **dfkw), lc.batch_norm_layer()]
-                layers_dict['Layer_' + str(layer)]['Encoding'] += array
-        first = False
-        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
-                                                                     lc.convolution_layer(filters, **dfkw)]
-        if filters < max_filters:
-            filters = int(filters*2)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=(2,2,2), **dfkw)
-        layers_dict['Layer_' + str(layer)]['Decoding'] = []
-        decoding = []
-        for i in range(num_conv_blocks):
-            decoding.append(block(filters, **dfkw))
-        if decoding:
-            split = np.array_split(decoding,len(decoding)//2)
-            for array in split:
-                array[-1] = block(filters, activation=None, batch_norm=False)
-                array = [lc.residual_layer(array, **dfkw), lc.batch_norm_layer()]
-                layers_dict['Layer_' + str(layer)]['Decoding'] += array
-        num_conv_blocks += conv_lambda
-        num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
-    base = []
-    for i in range(num_conv_blocks):
-        base.append(block(filters, **dfkw))
-    if first:
-        layers_dict['Base'] = [lc.batch_norm_layer(), base[0]]
-        del base[0]
-    if base:
-        split = np.array_split(base, len(base) // 2)
-        for array in split:
-            array[-1] = block(filters, activation=None, batch_norm=False)
-            array = [lc.residual_layer(array, **dfkw), lc.batch_norm_layer()]
-            layers_dict['Base'] += array
     return layers_dict
 
 
@@ -394,6 +226,12 @@ def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.in
     return layers_dict
 
 
+def return_model(layers_dict):
+    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
+                    mask_output=True, explictly_defined=True).created_model
+    return model
+
+
 def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4, num_classes=2,**kwargs):
     pool = (2, 2, 2)
     num_conv_blocks_base = num_conv_blocks
@@ -405,10 +243,10 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
 
     layers_dict = return_hollow_layers_dict(layers)
     previous_name = 'start'
-    encoding_layers = []
-    encoding_filters = []
+    encoding_names = []
+    layers_encoding = []
     for layer in range(layers - 1):
-        encoding_layers.append(layer)
+        layers_encoding.append(layer)
         if layer == 0:
             layers_dict['Layer_' + str(layer)]['Encoding'] = start
         else:
@@ -424,13 +262,15 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             encoding += [lc.concat_layer(names)]
             names = names[:]
             filters += growth_rate
-        encoding_filters.append(filters)
+        encoding_names.append(names)
         layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
         previous_name = 'Layer_{}_Down'.format(layer)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = lc.convolution_layer(filters, strides=pool,
-                                                                                         activation=None,
-                                                                                         batch_norm=False,
-                                                                                         out_name=previous_name)
+        filters *= 2
+        layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = [
+            lc.activation_layer('elu'), lc.batch_norm_layer(),
+            block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+            lc.convolution_layer(filters, strides=pool, activation=None, batch_norm=False, out_name=previous_name)
+        ]
         num_conv_blocks += conv_lambda
         num_conv_blocks = min([num_conv_blocks, max_conv_blocks])
     # We want the filter number to still grow by growth_factor, so add in the decoding side later...
@@ -447,16 +287,19 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         filters += growth_rate
     layers_dict['Base'] = encoding
     num_conv_blocks = num_conv_blocks_base
-    for layer in encoding_layers[::-1]:
-        filters = encoding_filters[layer]
+    for layer in layers_encoding[::-1]:
+        filters = filters // 2
         up_name = 'Layer_{}_Up'.format(layer)
-        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [lc.upsampling_layer(pool_size=pool),
-                                                                     lc.convolution_layer(filters, activation=None,
-                                                                                          batch_norm=False,
-                                                                                          out_name=up_name)]
+        layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [
+            lc.activation_layer('elu'), lc.batch_norm_layer(),
+            block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+            lc.upsampling_layer(pool_size=pool),
+            lc.convolution_layer(filters, activation=None, batch_norm=False, out_name=up_name)
+        ]
         layers_dict['Layer_' + str(layer)]['Decoding'] = []
         encoding = []
         names = [up_name]
+        names += encoding_names[layer]
         for i in range(num_conv_blocks):
             name = 'Layer_{}_Conv_Decoding_{}'.format(layer, i)
             names.append(name)

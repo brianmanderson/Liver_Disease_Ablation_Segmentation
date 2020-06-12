@@ -5,8 +5,8 @@ import tensorflow as tf
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from tensorflow.keras.callbacks import TensorBoard
-from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict_dense, return_paths, get_layers_dict_dense_new
-from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet
+from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict_dense,\
+    return_paths, get_layers_dict_dense_new, return_model
 
 
 def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
@@ -14,7 +14,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
     max_lr = 1
     for iteration in [0]:
         for growth_rate in [4]:
-            for layer in [2, 3]:
+            for layer in [2]:
                 for max_conv_blocks in [4]:
                     for filters in [8]:
                         for num_conv_blocks in [2]:
@@ -39,8 +39,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
                                 print(out_path)
                                 base_path, morfeus_drive, train_generator, validation_generator = return_generators(
                                     batch_size=batch_size, add=add, threshold_val=10, change_background=True, cache_add=cache_add)
-                                model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
-                                                mask_output=True).created_model
+                                model = return_model(layers_dict)
                                 k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
                                 k.set_model(model)
                                 k.on_train_begin()
