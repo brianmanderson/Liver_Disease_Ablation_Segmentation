@@ -27,7 +27,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
                                 layers_dict = get_layers_dict_dense_new(**run_data)
                                 things = ['layers{}'.format(layer), 'max_conv_blocks_{}'.format(max_conv_blocks),
                                           'filters_{}'.format(filters), 'num_conv_blocks_{}'.format(num_conv_blocks),
-                                          'conv_lambda_{}'.format(conv_lambda), 'growth_rate_{}'.format(growth_rate),
+                                          'conv_lambda_{}'.format(conv_lambda), 'growth_rate_{}'.format(growth_rate), 'last_skip',
                                           '{}_Iteration'.format(iteration)]
                                 out_path = os.path.join(morfeus_drive,path_desc,'Dense')
                                 for thing in things:

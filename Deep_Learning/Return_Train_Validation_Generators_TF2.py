@@ -304,7 +304,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         layers_dict['Layer_' + str(layer)]['Decoding'] = []
         encoding = []
         names = [up_name]
-        names += encoding_names[layer]
+        names += [encoding_names[layer][-1]] # Try just adding last concat
         for i in range(num_conv_blocks):
             name = 'Layer_{}_Conv_Decoding_{}'.format(layer, i)
             names.append(name)
