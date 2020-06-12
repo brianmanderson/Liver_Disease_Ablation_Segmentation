@@ -294,7 +294,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     layers_dict['Base'] = encoding
     num_conv_blocks = num_conv_blocks_base
     for layer in layers_encoding[::-1]:
-        # filters = filters // 2
+        filters = filters // 2
         up_name = 'Layer_{}_Up'.format(layer)
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [
             lc.activation_layer('elu'), lc.batch_norm_layer(),
