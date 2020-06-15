@@ -16,3 +16,6 @@
 [submodule "Raystation_Code/Raystation_Create_Segmentation_For_Site"]
 	path = Raystation_Code/Raystation_Create_Segmentation_For_Site
 	url = https://github.com/brianmanderson/Raystation_Create_Segmentation_For_Site.git
+[submodule "Local_Recurrence_Work"]
+	path = Local_Recurrence_Work
+	url = https://github.com/brianmanderson/Local_Recurrence_Work.git

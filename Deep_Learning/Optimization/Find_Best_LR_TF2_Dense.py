@@ -6,7 +6,7 @@ from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plo
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from tensorflow.keras.callbacks import TensorBoard
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict_dense,\
-    return_paths, return_model
+    return_paths, return_model, get_layers_dict_dense_new
 
 
 def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
@@ -23,7 +23,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
                                 run_data = {'layers':layer,'max_conv_blocks':max_conv_blocks,'filters':filters,
                                             'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
                                             'growth_rate':growth_rate}
-                                layers_dict = get_layers_dict_dense(**run_data)
+                                layers_dict = get_layers_dict_dense_new(**run_data)
                                 things = ['layers{}'.format(layer), 'max_conv_blocks_{}'.format(max_conv_blocks),
                                           'filters_{}'.format(filters), 'num_conv_blocks_{}'.format(num_conv_blocks),
                                           'conv_lambda_{}'.format(conv_lambda), 'growth_rate_{}'.format(growth_rate), 'last_skip',
