@@ -186,8 +186,9 @@ def main():
             #     prediction_class.case.PatientModel.RegionsOfInterest['Liver_Disease_Ablation_BMA_Program_0'].DeleteRoi()
             #     prediction_class.patient.Save()
             # case.SetCurrent()
+            # continue
             for exam in [primary, secondary]:
-                status_file = os.path.join(text_file,'{}_{}.txt'.format(case.CaseName,exam))
+                status_file = os.path.join(text_file,'{}_{}_{}.txt'.format(MRN, case.CaseName,exam))
                 if os.path.exists(status_file):
                     continue
                 try:

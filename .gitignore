@@ -10,6 +10,7 @@
 __pycache__/
 *.py[cod]
 **/*MRN*
+**MRN**
 /Deep_Learning/password.txt
 /Deep_Learning/~$Sphericity.xlsx
 /Paper/~$ief Methods - Liver Disease.docx
