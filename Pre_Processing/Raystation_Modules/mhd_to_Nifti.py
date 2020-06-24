@@ -8,7 +8,7 @@ from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Ima
 
 
 def get_patient_data_dict():
-    base_path = r'D:\Liver_Disease_Ablation'
+    base_path = r'H:\Liver_Disease_Ablation'
     data_dict = {}
     for folder in ['Train','Test','Validation']:
         lits_files = [i for i in os.listdir(os.path.join(base_path,folder)) if i.find('Overall_mask')==0]
@@ -18,7 +18,7 @@ def get_patient_data_dict():
     return data_dict
 
 
-def mhd_files_to_niftii(working_path=r'D:\Liver_Disease_Ablation\Raystation_Exports'):
+def mhd_files_to_niftii(working_path=r'H:\Liver_Disease_Ablation\Raystation_Exports'):
     data_dict = get_patient_data_dict()
     files = [i for i in os.listdir(working_path) if i.find('.mhd') != -1]
     for file in files:
@@ -46,7 +46,7 @@ def mhd_files_to_niftii(working_path=r'D:\Liver_Disease_Ablation\Raystation_Expo
     return None
 
 
-def replace_old_masks(working_path=r'D:\Liver_Disease_Ablation\Raystation_Exports', new_output=r'D:\Liver_Disease_Ablation\Old_Masks'):
+def replace_old_masks(working_path=r'H:\Liver_Disease_Ablation\Raystation_Exports', new_output=r'H:\Liver_Disease_Ablation\Old_Masks'):
     data_dict = get_patient_data_dict()
     files = [i for i in os.listdir(working_path) if i.find('.nii.gz') != -1]
     for file in files:

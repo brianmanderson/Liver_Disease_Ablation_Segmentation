@@ -7,7 +7,7 @@ import pandas as pd
 
 
 reader = sitk.ImageFileReader()
-image_path = r'D:\Liver_Disease_Ablation'
+image_path = r'H:\Liver_Disease_Ablation'
 description = {'Folder':[],'File':[],'Spacing_x':[],'Spacing_y':[],'Spacing_z':[]}
 for folder in ['Train','Validation','Test']:
     path = os.path.join(image_path, folder)

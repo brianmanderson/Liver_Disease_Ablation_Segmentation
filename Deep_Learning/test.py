@@ -4,7 +4,7 @@ from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plo
 import os
 
 
-path = r'D:\Liver_Disease_Ablation\Predictionsdense\ValidationTF2_Multi_Cube_Dense'
+path = r'H:\Liver_Disease_Ablation\Predictionsdense\ValidationTF2_Multi_Cube_Dense'
 bad_image = os.path.join(path, 'Overall_Data_LiTs_{}.nii.gz_Image.nii.gz'.format(1))
 good_image = os.path.join(path, 'Overall_Data_LiTs_{}.nii.gz_Image.nii.gz'.format(123))
 

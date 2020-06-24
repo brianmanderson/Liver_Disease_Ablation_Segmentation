@@ -49,7 +49,7 @@ class Threshold_and_Expand(object):
 
 
 class Create_Sphericity(object):
-    def process(self,out_dict, path=r'D:\Liver_Disease_Ablation\Train\Overall_mask_LiTs_y8.nii.gz'):
+    def process(self,out_dict, path=r'H:\Liver_Disease_Ablation\Train\Overall_mask_LiTs_y8.nii.gz'):
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         RelabelComponent = sitk.RelabelComponentImageFilter()
         temp_dict = {'Group':[],'Patient_ID': [], 'Tumor_ID': [], 'Sphericity': [], 'Volume_cm3':[],'Voxels':[]}
@@ -98,7 +98,7 @@ def make_sphericity_excel(thread_count=int(cpu_count() * .9 - 1),out_path=os.pat
         t = Thread(target=worker_def, args=(A,))
         t.start()
         threads.append(t)
-    path_base = r'D:\Liver_Disease_Ablation'
+    path_base = r'H:\Liver_Disease_Ablation'
     inputs = []
     overall_dict = {}
     for folder in ['Train','Test','Validation']:

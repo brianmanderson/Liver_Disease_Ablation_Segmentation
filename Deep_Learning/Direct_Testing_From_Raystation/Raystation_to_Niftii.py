@@ -5,7 +5,7 @@ import os
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 
 
-def mhd_to_nifii(path=r'D:\Liver_Disease_Ablation\test_export'):
+def mhd_to_nifii(path=r'H:\Liver_Disease_Ablation\test_export'):
     exam = sitk.ReadImage(os.path.join(path,'Examination.mhd'))
     liver = sitk.ReadImage(os.path.join(path,'Liver.mhd'))
     ablation = sitk.ReadImage(os.path.join(path,'Ablation.mhd'))

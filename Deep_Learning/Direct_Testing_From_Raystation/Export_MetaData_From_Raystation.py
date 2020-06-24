@@ -2,7 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 5/26/2020
 import os
 
-path = r'D:\Liver_Disease_Ablation\test_export'
+path = r'H:\Liver_Disease_Ablation\test_export'
 exam_name = 'CT 16'
 case.Examinations[exam_name].ExportExaminationAsMetaImage(MetaFileName=os.path.join(path,'Examination.mhd'))
 case.PatientModel.StructureSets[exam_name].RoiGeometries['Liver'].ExportRoiGeometryAsMetaImage(MetaFileName=os.path.join(path,'Liver.mhd'),AsExamination=True)

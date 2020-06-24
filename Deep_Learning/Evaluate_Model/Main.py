@@ -15,8 +15,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 def main():
     desc = 'TF2_Multi_Cube_1mm'
-    model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\model_34'
-    weight_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\cp-0201.ckpt'
+    model_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\model_34'
+    weight_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_34\cp-0201.ckpt'
     dense = True
     path_ext = ''
     if not os.path.exists(model_path) and not dense:
@@ -41,15 +41,15 @@ def main():
     create_prediction = False
     if create_prediction:
         from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-        validation_path = [r'D:\Liver_Disease_Ablation\Records\Validation_whole_Records']
+        validation_path = [r'H:\Liver_Disease_Ablation\Records\Validation_whole_Records']
         create_prediction_files(is_test=False, desc=desc, model_path=model_path, path_ext=path_ext, validation_path=validation_path)
-        validation_path = [r'D:\Liver_Disease_Ablation\Records\Test_Records']
+        validation_path = [r'H:\Liver_Disease_Ablation\Records\Test_Records']
         create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext, validation_path=validation_path)
 
     evaluate_prediction = False
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
-        path = r'D:\Liver_Disease_Ablation\Predictions{}\Validation{}'.format(path_ext, desc)
+        path = r'H:\Liver_Disease_Ablation\Predictions{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles'),
                             seed_range=np.arange(0.8,1.0,0.01),
                             threshold_range=np.arange(0.1,.6,0.05), re_write=False, thread_count=10)
@@ -57,7 +57,7 @@ def main():
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
-        path = r'D:\Liver_Disease_Ablation\Predictions{}\Test{}'.format(path_ext, desc)
+        path = r'H:\Liver_Disease_Ablation\Predictions{}\Test{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output'),
                             seed_range=[.93], threshold_range=[.2], re_write=False,
                             write_final_prediction=True)

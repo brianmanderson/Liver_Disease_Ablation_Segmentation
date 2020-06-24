@@ -6,7 +6,7 @@ import SimpleITK as sitk
 import numpy as np
 from Make_Single_Images.Image_Processors_Module.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image, plt
 
-path = r'D:\Liver_Disease_Ablation\Train'
+path = r'H:\Liver_Disease_Ablation\Train'
 files = [i for i in os.listdir(path) if i.find('mask') != -1]
 
 out_dict = {'image_names':[],'percent_disease':[]}

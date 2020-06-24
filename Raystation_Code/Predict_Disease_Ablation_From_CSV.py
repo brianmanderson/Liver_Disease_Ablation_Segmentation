@@ -24,8 +24,10 @@ class create_RT_Structure():
         info_all = self.patient_db.QueryPatientInfo(Filter={"PatientID": self.MRN}, UseIndexService=False)
         if not info_all:
             info_all = self.patient_db.QueryPatientInfo(Filter={"PatientID": self.MRN}, UseIndexService=True)
+        if len(info_all) > 1:
+            print('{} has multiple ids'.format(MRN))
         for info in info_all:
-            if info['PatientID'] == self.MRN:
+            if info['PatientID'] == self.MRN and info['LastName'].find('_') == -1:
                 self.patient = self.patient_db.LoadPatient(PatientInfo=info, AllowPatientUpgrade=True)
                 self.MRN = self.patient.PatientID
                 return None
@@ -165,9 +167,8 @@ class create_RT_Structure():
         return None
 
 
-def main():
-    prediction_class = create_RT_Structure(roi_name='Liver_Disease_Ablation')
-    text_file = r'D:\Liver_Disease_Ablation\Raystation_Disease_Status'
+def create_RT_of_disease_ablation(prediction_class):
+    text_file = r'H:\Liver_Disease_Ablation\Raystation_Disease_Status'
     csv_path = r'H:\Modular_Projects\Liver_Disease_Ablation_Segmentation\Raystation_Code\MRNs_All_Primary_Secondary_exam.csv'
     fid = open(csv_path)
     fid.readline()
@@ -178,7 +179,13 @@ def main():
     fid.close()
     for index in range(len(data)):
         MRN, primary, secondary = data[index]
-        prediction_class.ChangePatient(MRN)
+        status_file = os.path.join(text_file, '{}_Predicted.txt'.format(MRN))
+        if os.path.exists(status_file):
+            continue
+        try:
+            prediction_class.ChangePatient(MRN)
+        except:
+            continue
         for case in prediction_class.patient.Cases:
             prediction_class.case = case
             # prediction_class.get_rois_in_case()
@@ -188,15 +195,70 @@ def main():
             # case.SetCurrent()
             # continue
             for exam in [primary, secondary]:
-                status_file = os.path.join(text_file,'{}_{}_{}.txt'.format(MRN, case.CaseName,exam))
-                if os.path.exists(status_file):
-                    continue
                 try:
                     prediction_class.create_RT_Liver(case.Examinations[exam])
                 except:
                     xxx = 1
-                fid = open(status_file,'w+')
-                fid.close()
+            fid = open(status_file,'w+')
+            fid.close()
+
+
+def export_RTs_as_mhds(prediction_class):
+    text_file = r'H:\Liver_Disease_Ablation\Raystation_Disease_Export_Status'
+    csv_path = r'H:\Modular_Projects\Liver_Disease_Ablation_Segmentation\Raystation_Code\MRNs_All_Primary_Secondary_exam.csv'
+    fid = open(csv_path)
+    fid.readline()
+    data = []
+    for line in fid:
+        line = line.strip('\n')
+        data.append(line.split(','))
+    fid.close()
+    pred_roi = 'Liver_Disease_Ablation_BMA_Program_0'
+    for index in range(len(data)):
+        MRN, primary, secondary = data[index]
+        status_file = os.path.join(text_file, '{}_Predicted.txt'.format(MRN))
+        if os.path.exists(status_file):
+            continue
+        try:
+            prediction_class.ChangePatient(MRN)
+        except:
+            continue
+        for case in prediction_class.patient.Cases:
+            prediction_class.case = case
+            rois_in_case = []
+            for roi in case.PatientModel.RegionsOfInterest:
+                rois_in_case.append(roi.Name)
+            break_out = False
+            for roi in ['Liver', pred_roi, 'GTV', 'Ablation']:
+                if roi not in rois_in_case:
+                    break_out = True
+                    break
+            if break_out:
+                continue
+            if case.PatientModel.StructureSets[primary].RoiGeometries['GTV'].HasContours() and case.PatientModel.StructureSets[primary].RoiGeometries[pred_roi].HasContours():
+                case.PatientModel.StructureSets[primary].RoiGeometries[pred_roi].ExportRoiGeometryAsMetaImage(
+                    MetaFileName=exam_path.replace('Exam', roi),
+                    AsExamination=True)
+            for exam in [primary, secondary]:
+                try:
+                    prediction_class.create_RT_Liver(case.Examinations[exam])
+                except:
+                    xxx = 1
+            fid = open(status_file,'w+')
+            fid.close()
+    rois_in_case = [i for i in rois_in_case if i.split('_')[-1] in identifier]
+    for roi in rois_in_case:
+        if not os.path.exists(exam_path.replace('Exam', roi)):
+            if
+
+def main():
+    create_disease = False
+    prediction_class = create_RT_Structure(roi_name='Liver_Disease_Ablation')
+    if create_disease:
+        create_RT_of_disease_ablation(prediction_class)
+
+    export_RTs = True
+    if export_RTs:
 
 
 if __name__ == '__main__':

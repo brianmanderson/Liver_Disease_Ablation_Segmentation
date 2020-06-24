@@ -136,9 +136,9 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                                                        SparseCategoricalMeanDSC(num_classes=2)])
                             callbacks = []
                             i += 1
-                            if os.path.exists(r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i)):
+                            if os.path.exists(r'H:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i)):
                                 continue
-                            k = TensorBoard(log_dir=r'D:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i), profile_batch=0, histogram_freq=5, write_graph=True)
+                            k = TensorBoard(log_dir=r'H:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i), profile_batch=0, histogram_freq=5, write_graph=True)
                             k.set_model(Model_val)
                             k.on_train_begin()
                             tf.keras.backend.clear_session()

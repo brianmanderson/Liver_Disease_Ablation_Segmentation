@@ -28,7 +28,7 @@ if separate_to_train_etc:
 if make_single_images:
     from Pre_Processing.Make_Single_Images.Make_Single_Images_Class import run_main
     # path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
-    path = r'D:\Liver_Disease_Ablation'
+    path = r'H:\Liver_Disease_Ablation'
     desired_output_spacing = (None, None, None)
     extension = 32
     write_images = False
@@ -36,7 +36,7 @@ if make_single_images:
     run_main(path,desired_output_spacing,extension, write_images, re_write_pickle, file_ext='_None')
 
 if make_TF2_images:
-    path = r'D:\Liver_Disease_Ablation'
+    path = r'H:\Liver_Disease_Ablation'
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
     thread_count = 5

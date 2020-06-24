@@ -9,12 +9,12 @@ __author__ = 'Brian M Anderson'
 convert_mhd_to_nifti = False
 if convert_mhd_to_nifti:
     from Deep_Learning.Direct_Testing_From_Raystation.Raystation_to_Niftii import mhd_to_nifii
-    mhd_to_nifii(path = r'D:\Liver_Disease_Ablation\test_export')
+    mhd_to_nifii(path = r'H:\Liver_Disease_Ablation\test_export')
 
 #Now make it into a tf record
 make_tf_record = False
 if make_tf_record:
-    path = r'D:\Liver_Disease_Ablation\test_export'
+    path = r'H:\Liver_Disease_Ablation\test_export'
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record, os
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
     image_processors = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True),
@@ -24,7 +24,7 @@ if make_tf_record:
                     is_3D=True, rewrite=True, shuffle=True, thread_count=1)
 
 desc='Raystation'
-model_path = r'D:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_199\model'
+model_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Models\Trial_ID_199\model'
 create_prediction = False
 if create_prediction:
     from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files

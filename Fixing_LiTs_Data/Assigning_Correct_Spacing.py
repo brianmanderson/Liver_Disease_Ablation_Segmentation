@@ -6,8 +6,8 @@ import os
 from Resample_Class.Resample_Class import Resample_Class_Object
 
 
-base_path = r'D:\Liver_Disease_Ablation'
-new_path = r'D:\Liver_Disease_Ablation\Incorrect_Size'
+base_path = r'H:\Liver_Disease_Ablation'
+new_path = r'H:\Liver_Disease_Ablation\Incorrect_Size'
 files = [r'Train\Overall_Data_LiTs_28.nii.gz', r'Train\Overall_Data_LiTs_35.nii.gz',
          r'Train\Overall_Data_LiTs_40.nii.gz', r'Train\Overall_Data_LiTs_44.nii.gz',
          r'Validation\Overall_Data_LiTs_30.nii.gz', r'Validation\Overall_Data_LiTs_37.nii.gz',

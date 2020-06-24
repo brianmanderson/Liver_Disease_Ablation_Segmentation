@@ -41,7 +41,7 @@ Remake single_images
 remake_single = False
 if remake_single:
     from Pre_Processing.Make_Single_Images.Make_Single_Images_Class import run_main
-    path = r'D:\Liver_Disease_Ablation'
+    path = r'H:\Liver_Disease_Ablation'
     desired_output_spacing = (None, None, None)
     extension = 32
     write_images = True

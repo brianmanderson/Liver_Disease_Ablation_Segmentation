@@ -4,7 +4,7 @@ __author__ = 'Brian M Anderson'
 import os
 import shutil
 
-out_path = r'D:\Liver_Disease_Ablation\tensorboard'
+out_path = r'H:\Liver_Disease_Ablation\tensorboard'
 input_path = r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Disease_Ablation_Segmentation_Work\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training\Tensorboard'
 for trial_id in os.listdir(input_path):
     if not os.path.exists(os.path.join(out_path,trial_id)):

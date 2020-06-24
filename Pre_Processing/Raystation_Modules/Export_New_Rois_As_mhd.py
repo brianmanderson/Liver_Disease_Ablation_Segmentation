@@ -19,7 +19,7 @@ def export_roi(patient, case, exam, roi, base_export_path=''):
 
 def main():
     patient_db = get_current("PatientDB")
-    base_export_path = 'D:\Liver_Disease_Ablation\Raystation_Exports'
+    base_export_path = 'H:\Liver_Disease_Ablation\Raystation_Exports'
     info_all = patient_db.QueryPatientInfo(Filter={"PatientID": 'LiTs'})
     new_roi = 'Disease_BMA_0'
     for info in info_all:
