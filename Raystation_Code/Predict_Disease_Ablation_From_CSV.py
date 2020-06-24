@@ -248,7 +248,7 @@ def export_RTs_as_mhds(prediction_class):
             os.makedirs(patient_path)
             export_path = os.path.join(patient_path,'{}.mhd')
             for exam, roi_name, name in zip([primary, secondary],['GTV','Ablation'],['Primary','Secondary']):
-                if case.PatientModel.StructureSets[exam].RoiGeometries[roi_name].HasContours() and case.PatientModel.StructureSets[primary].RoiGeometries[pred_roi].HasContours():
+                if case.PatientModel.StructureSets[exam].RoiGeometries[roi_name].HasContours() and case.PatientModel.StructureSets[exam].RoiGeometries[pred_roi].HasContours():
                     export_roi(case=case, exam_name=exam, name=name, roi_name=roi_name, export_path=export_path)
                     export_roi(case=case, exam_name=exam, name=name, roi_name=pred_roi, export_path=export_path)
                     if case.PatientModel.StructureSets[exam].RoiGeometries['Liver'].HasContours():
