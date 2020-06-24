@@ -203,6 +203,12 @@ def create_RT_of_disease_ablation(prediction_class):
             fid.close()
 
 
+def export_roi(case, exam_name, name, roi_name, export_path):
+    case.PatientModel.StructureSets[exam_name].RoiGeometries[roi_name].ExportRoiGeometryAsMetaImage(
+        MetaFileName=export_path.format('{}_{}'.format(roi_name,name)), AsExamination=True)
+    return None
+
+
 def export_RTs_as_mhds(prediction_class):
     text_file = r'H:\Liver_Disease_Ablation\Raystation_Disease_Export_Status'
     csv_path = r'H:\Modular_Projects\Liver_Disease_Ablation_Segmentation\Raystation_Code\MRNs_All_Primary_Secondary_exam.csv'
@@ -214,8 +220,12 @@ def export_RTs_as_mhds(prediction_class):
         data.append(line.split(','))
     fid.close()
     pred_roi = 'Liver_Disease_Ablation_BMA_Program_0'
+    base_export = r'H:\Liver_Disease_Ablation\Disease_Ablation_From_Raystation_Test'
     for index in range(len(data)):
         MRN, primary, secondary = data[index]
+        patient_path = os.path.join(base_export,MRN)
+        if os.path.exists(patient_path):
+            continue
         status_file = os.path.join(text_file, '{}_Predicted.txt'.format(MRN))
         if os.path.exists(status_file):
             continue
@@ -235,21 +245,18 @@ def export_RTs_as_mhds(prediction_class):
                     break
             if break_out:
                 continue
-            if case.PatientModel.StructureSets[primary].RoiGeometries['GTV'].HasContours() and case.PatientModel.StructureSets[primary].RoiGeometries[pred_roi].HasContours():
-                case.PatientModel.StructureSets[primary].RoiGeometries[pred_roi].ExportRoiGeometryAsMetaImage(
-                    MetaFileName=exam_path.replace('Exam', roi),
-                    AsExamination=True)
-            for exam in [primary, secondary]:
-                try:
-                    prediction_class.create_RT_Liver(case.Examinations[exam])
-                except:
-                    xxx = 1
-            fid = open(status_file,'w+')
-            fid.close()
-    rois_in_case = [i for i in rois_in_case if i.split('_')[-1] in identifier]
-    for roi in rois_in_case:
-        if not os.path.exists(exam_path.replace('Exam', roi)):
-            if
+            os.makedirs(patient_path)
+            export_path = os.path.join(patient_path,'{}.mhd')
+            for exam, roi_name, name in zip([primary, secondary],['GTV','Ablation'],['Primary','Secondary']):
+                if case.PatientModel.StructureSets[exam].RoiGeometries[roi_name].HasContours() and case.PatientModel.StructureSets[primary].RoiGeometries[pred_roi].HasContours():
+                    export_roi(case=case, exam_name=exam, name=name, roi_name=roi_name, export_path=export_path)
+                    export_roi(case=case, exam_name=exam, name=name, roi_name=pred_roi, export_path=export_path)
+                    if case.PatientModel.StructureSets[exam].RoiGeometries['Liver'].HasContours():
+                        export_roi(case=case, exam_name=exam, name=name, roi_name='Liver', export_path=export_path)
+                    elif case.PatientModel.StructureSets[exam].RoiGeometries['Liver_BMA_Program_4'].HasContours():
+                        export_roi(case=case, exam_name=exam, name=name, roi_name='Liver_BMA_Program_4', export_path=export_path)
+    return None
+
 
 def main():
     create_disease = False
@@ -259,6 +266,7 @@ def main():
 
     export_RTs = True
     if export_RTs:
+        export_RTs_as_mhds(prediction_class)
 
 
 if __name__ == '__main__':
