@@ -19,3 +19,6 @@
 [submodule "Local_Recurrence_Work"]
 	path = Local_Recurrence_Work
 	url = https://github.com/brianmanderson/Local_Recurrence_Work.git
+[submodule "Raystation_Code/Dicom_RT_and_Images_to_Mask"]
+	path = Raystation_Code/Dicom_RT_and_Images_to_Mask
+	url = https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask.git
