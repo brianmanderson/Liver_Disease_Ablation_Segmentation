@@ -34,7 +34,7 @@ def calc_dice_single_patient(export_path, patient_dictionaries, MRN):
         truth_array = sitk.GetArrayFromImage(gt)
         volume = truth_array[truth_array == 1].shape[0] * np.prod(gt.GetSpacing()) / 1000
         patient_dict['{}_Volume'.format(exam_name)].append(volume)
-        connected_image = Connected_Component_Filter.Execute(gt)
+        connected_image = Connected_Component_Filter.Execute(gt * pred_primary)
         stats.Execute(connected_image)
         seeds_gt = [stats.GetCentroid(l) for l in stats.GetLabels()]
         seeds_gt = [pred_primary.TransformPhysicalPointToIndex(i) for i in seeds_gt]
