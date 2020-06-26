@@ -36,10 +36,10 @@ def calc_dice_single_patient(export_path, patient_dictionaries, MRN):
         patient_dict['{}_Volume'.format(exam_name)].append(volume)
         connected_image = Connected_Component_Filter.Execute(gt * pred_primary)
         stats.Execute(connected_image)
-        seeds_gt = [stats.GetCentroid(l) for l in stats.GetLabels()]
-        seeds_gt = [pred_primary.TransformPhysicalPointToIndex(i) for i in seeds_gt]
+        seeds_pred = [stats.GetCentroid(l) for l in stats.GetLabels()]
+        seeds_pred = [pred_primary.TransformPhysicalPointToIndex(i) for i in seeds_pred]
 
-        Connected_Threshold.SetSeedList(seeds_gt)
+        Connected_Threshold.SetSeedList(seeds_pred)
         Connected_Threshold.SetLower(1)
         pred_grown = Connected_Threshold.Execute(pred_primary)
         overlap_measures_filter.Execute(pred_grown, gt)
