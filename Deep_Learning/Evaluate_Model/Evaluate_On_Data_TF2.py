@@ -74,7 +74,7 @@ class SurfaceDistanceMeasures(Enum):
     hausdorff_distance, mean_surface_distance, median_surface_distance, std_surface_distance, max_surface_distance = range(5)
 
 
-class run_metrics(object):
+class run_metrics_single_patient(object):
     def __init__(self, save_path):
         self.save_path = save_path
 
@@ -184,12 +184,137 @@ class run_metrics(object):
                     all_surface_distances)
                 out_dict[SurfaceDistanceMeasures.max_surface_distance.name][i, j] = np.max(
                     all_surface_distances)
-        save_obj(os.path.join(self.save_path,'{}_out_dict.pkl'.format(pat_name)),out_dict)
+        save_obj(os.path.join(self.save_path,'{}_out_dict_single_patient.pkl'.format(pat_name)),out_dict)
+
+
+class run_metrics_single_disease(object):
+    def __init__(self, save_path):
+        self.save_path = save_path
+
+    def process(self, threshold_range, seed_range, file, write_final_prediction=False):
+        resampler = Resample_Class_Object()
+        reader = sitk.ImageFileReader()
+        reader.LoadPrivateTagsOn()
+        pat_name = os.path.split(file)[-1].split('.')[0]
+        print(pat_name)
+        truth_base = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
+        mask = sitk.ReadImage(file.replace('_Image','_Mask'), sitk.sitkUInt8)
+        mask_filter = sitk.MaskImageFilter()
+        mask_filter.SetMaskingValue(0)
+        prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
+        prediction = resampler.resample_image(prediction, ref_handle=truth_base)
+        prediction = mask_filter.Execute(prediction, mask)
+        overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
+
+        statistics_image_filter = sitk.StatisticsImageFilter()
+
+        hausdorff_distance_filter = sitk.HausdorffDistanceImageFilter()
+
+        fill_binary = Fill_Binary_Holes()
+        Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
+        Connected_Threshold = sitk.ConnectedThresholdImageFilter()
+        Connected_Threshold.SetUpper(2)
+        stats = sitk.LabelShapeStatisticsImageFilter()
+        connected_truth = Connected_Component_Filter.Execute(truth_base)
+        stats.Execute(connected_truth)
+        tumor_labels = stats.GetLabels()
+        out_dict = {'volume':[stats.GetNumberOfPixels(i)*np.prod(truth_base.GetSpacing())/1000 for i in tumor_labels]}  # In cc
+        for _, measured_name in enumerate(OverlapMeasures):
+            out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range), len(tumor_labels)))
+        for _, measured_name in enumerate(SurfaceDistanceMeasures):
+            out_dict[measured_name.name] = np.ones((len(threshold_range), len(seed_range), len(tumor_labels)))*999
+        for j, seed_value in enumerate(seed_range):
+            thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
+            connected_image = Connected_Component_Filter.Execute(thresholded_image)
+            stats.Execute(connected_image)
+            seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
+            seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
+            Connected_Threshold.SetSeedList(seeds)
+            print('Seed value {}'.format(seed_value))
+            Connected_Threshold_for_pred = sitk.ConnectedThresholdImageFilter()
+            Connected_Threshold_for_pred.SetUpper(2)
+            Connected_Threshold_for_pred.SetLower(1)
+            for i, threshold_value in enumerate(threshold_range):
+                print('Threshold value {}'.format(threshold_value))
+                Connected_Threshold.SetLower(threshold_value)
+                threshold_pred_base = Connected_Threshold.Execute(prediction)
+                if write_final_prediction:
+                    threshold_pred_base = fill_binary.process(threshold_pred_base)
+                    threshold_pred_base.SetOrigin(truth_base.GetOrigin())
+                    threshold_pred_base.SetDirection(truth_base.GetDirection())
+                    sitk.WriteImage(threshold_pred_base, file.replace('_Image', '_FinalPrediction'))
+                for k, tumor_label in enumerate(tumor_labels):
+                    truth = connected_truth == tumor_label
+                    stats.Execute(threshold_pred_base * truth)
+                    if not stats.GetLabels():
+                        continue
+                    seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
+                    seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
+                    Connected_Threshold_for_pred.SetSeedList(seeds)
+                    threshold_pred = Connected_Threshold_for_pred.Execute(threshold_pred_base)
+                    reference_surface = sitk.LabelContour(truth)
+                    reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
+                                                                                   useImageSpacing=True))
+                    statistics_image_filter.Execute(reference_surface)
+                    num_reference_surface_pixels = int(statistics_image_filter.GetSum())
+                    overlap_measures_filter.Execute(truth, threshold_pred)
+                    out_dict[OverlapMeasures.jaccard.name][i, j, k] = overlap_measures_filter.GetJaccardCoefficient()
+                    out_dict[OverlapMeasures.dice.name][i, j, k] = overlap_measures_filter.GetDiceCoefficient()
+                    out_dict[OverlapMeasures.volume_similarity.name][i, j, k] = overlap_measures_filter.GetVolumeSimilarity()
+                    out_dict[OverlapMeasures.false_negative.name][i, j, k] = overlap_measures_filter.GetFalseNegativeError()
+                    out_dict[OverlapMeasures.false_positive.name][i, j, k] = overlap_measures_filter.GetFalsePositiveError()
+
+                    # Symmetric surface distance measures
+                    segmented_distance_map = sitk.Abs(
+                        sitk.SignedMaurerDistanceMap(threshold_pred, squaredDistance=False, useImageSpacing=True))
+                    segmented_surface = sitk.LabelContour(threshold_pred)
+
+                    # Multiply the binary surface segmentations with the distance maps. The resulting distance
+                    # maps contain non-zero values only on the surface (they can also contain zero on the surface)
+                    seg2ref_distance_map = reference_distance_map * sitk.Cast(segmented_surface, sitk.sitkFloat32)
+                    ref2seg_distance_map = segmented_distance_map * sitk.Cast(reference_surface, sitk.sitkFloat32)
+
+                    # Get the number of pixels in the reference surface by counting all pixels that are 1.
+                    statistics_image_filter.Execute(segmented_surface)
+                    num_segmented_surface_pixels = int(statistics_image_filter.GetSum())
+
+                    # Get all non-zero distances and then add zero distances if required.
+                    seg2ref_distance_map_arr = sitk.GetArrayViewFromImage(seg2ref_distance_map)
+                    seg2ref_distances = list(seg2ref_distance_map_arr[seg2ref_distance_map_arr != 0])
+                    seg2ref_distances = seg2ref_distances + \
+                                        list(np.zeros(num_segmented_surface_pixels - len(seg2ref_distances)))
+                    ref2seg_distance_map_arr = sitk.GetArrayViewFromImage(ref2seg_distance_map)
+                    ref2seg_distances = list(ref2seg_distance_map_arr[ref2seg_distance_map_arr != 0])
+                    ref2seg_distances = ref2seg_distances + \
+                                        list(np.zeros(num_reference_surface_pixels - len(ref2seg_distances)))
+
+                    all_surface_distances = seg2ref_distances + ref2seg_distances
+
+                    # The maximum of the symmetric surface distances is the Hausdorff distance between the surfaces. In
+                    # general, it is not equal to the Hausdorff distance between all voxel/pixel points of the two
+                    # segmentations, though in our case it is. More on this below.
+
+                    try:
+                        hausdorff_distance_filter.Execute(truth, threshold_pred)
+                        out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
+                            i, j, k] = hausdorff_distance_filter.GetHausdorffDistance()
+                    except:
+                        out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
+                            i, j, k] = 9999
+                    out_dict[SurfaceDistanceMeasures.mean_surface_distance.name][i, j, k] = np.mean(
+                        all_surface_distances)
+                    out_dict[SurfaceDistanceMeasures.median_surface_distance.name][i, j, k] = np.median(
+                        all_surface_distances)
+                    out_dict[SurfaceDistanceMeasures.std_surface_distance.name][i, j, k] = np.std(
+                        all_surface_distances)
+                    out_dict[SurfaceDistanceMeasures.max_surface_distance.name][i, j, k] = np.max(
+                        all_surface_distances)
+        save_obj(os.path.join(self.save_path,'{}_out_dict_single_disease.pkl'.format(pat_name)),out_dict)
 
 
 def worker_def(A):
     q, save_path = A
-    base_class = run_metrics(save_path)
+    base_class = run_metrics_single_disease(save_path)
     while True:
         item = q.get()
         if item is None:
