@@ -187,12 +187,12 @@ def create_RT_of_disease_ablation(prediction_class):
         except:
             continue
         for case in prediction_class.patient.Cases:
+            # case.SetCurrent()
             prediction_class.case = case
             # prediction_class.get_rois_in_case()
             # if 'Liver_Disease_Ablation_BMA_Program_0' in prediction_class.rois_in_case:
             #     prediction_class.case.PatientModel.RegionsOfInterest['Liver_Disease_Ablation_BMA_Program_0'].DeleteRoi()
             #     prediction_class.patient.Save()
-            # case.SetCurrent()
             # continue
             for exam in [primary, secondary]:
                 try:
@@ -259,12 +259,12 @@ def export_RTs_as_mhds(prediction_class):
 
 
 def main():
-    create_disease = False
+    create_disease = True
     prediction_class = create_RT_Structure(roi_name='Liver_Disease_Ablation')
     if create_disease:
         create_RT_of_disease_ablation(prediction_class)
 
-    export_RTs = True
+    export_RTs = False
     if export_RTs:
         export_RTs_as_mhds(prediction_class)
 

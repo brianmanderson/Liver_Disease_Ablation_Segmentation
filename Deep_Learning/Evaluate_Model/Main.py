@@ -52,14 +52,14 @@ def main():
         path = r'H:\Liver_Disease_Ablation\Predictions{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles'),
                             seed_range=np.arange(0.8,1.0,0.01),
-                            threshold_range=np.arange(0.1,.6,0.05), re_write=False, thread_count=10)
+                            threshold_range=np.arange(0.1,.6,0.05), re_write=False, thread_count=20)
 
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
         path = r'H:\Liver_Disease_Ablation\Predictions{}\Test{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output'),
-                            seed_range=[.93], threshold_range=[.2], re_write=False,
+                            seed_range=[.87], threshold_range=[.4], re_write=False,
                             write_final_prediction=True)
 
     write_box_plots = True
@@ -71,9 +71,9 @@ def main():
         df = pd.read_excel(out_path, engine='xlrd')
         volumes = df['volume'].values
         values = df['dice'].values
-        values = values[volumes>20]
-        values = values[values<1000]
-        create_plot('Dice for greater than 20 cc volumes',values=values,metric='Dice', out_path=os.path.join('.','Images'),
+        values = values[volumes > 2]
+        values = values[values < 1000]
+        create_plot('Dice for greater than 2 cc volumes',values=values,metric='Dice', out_path=os.path.join('.','Images'),
                     y_ticks=[0,.1,.2,.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
         xxx = 1
 

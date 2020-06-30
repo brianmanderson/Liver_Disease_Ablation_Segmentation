@@ -328,18 +328,24 @@ def worker_def(A):
 
 
 def combine_patient_pickles(out_path):
-    image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict.pkl') != -1]
+    image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict_single_disease.pkl') != -1]
     out_dict = {'volume':[],'patient_name':[]}
     for file in image_list:
         pat_name = os.path.split(file)[-1].split('_out_dict')[0]
-        out_dict['patient_name'].append(pat_name)
         patient_dict = load_obj(file)
         for key in patient_dict:
             if key not in out_dict:
                 out_dict[key] = []
-            out_dict[key].append(patient_dict[key])
+            out_dict[key].append(np.asarray(patient_dict[key]))
+        out_dict['patient_name'].append(np.asarray([pat_name for _ in range(np.asarray(patient_dict[key]).shape[-1])]))
     for key in out_dict.keys():
-        out_dict[key] = np.asarray(out_dict[key])
+        if type(out_dict[key][0]) is np.ndarray:
+            item = out_dict[key][0]
+            for i in range(1,len(out_dict[key])):
+                item = np.concatenate([item, out_dict[key][i]], axis=-1)
+            out_dict[key] = item
+        else:
+            out_dict[key] = np.asarray(out_dict[key])
     return out_dict
 
 
@@ -348,12 +354,11 @@ def find_best_threshold_seed(threshold_range, seed_range, out_path):
     threshold_names = ['Threshold_{}'.format(i) for i in threshold_range]
     seed_names = ['Seed_{}'.format(i) for i in seed_range]
     volume = out_dict['volume']
-    mask = volume>20
-    patient_names = out_dict['patient_name'][mask]
+    mask = volume > 1
     for key in out_dict.keys():
         if key == 'volume' or key == 'patient_name':
             continue
-        data = np.median(out_dict[key][mask], axis=0)
+        data = np.median(out_dict[key][..., mask], axis=-1)
         if key in ['jaccard','dice', 'volume_similarity']:
             threshold, seed = np.where(np.round(data,4) == np.max(np.round(data,4)))
             title = 'Max'
@@ -387,7 +392,7 @@ def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validatio
         threads.append(t)
     for file in image_list:
         pat_name = os.path.split(file)[-1].split('.')[0]
-        if os.path.exists(os.path.join(out_path, '{}_out_dict.pkl'.format(pat_name))) and not re_write:
+        if os.path.exists(os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
             continue
         item = {'threshold_range': threshold_range, 'seed_range': seed_range,
                 'write_final_prediction': write_final_prediction, 'file':file}
