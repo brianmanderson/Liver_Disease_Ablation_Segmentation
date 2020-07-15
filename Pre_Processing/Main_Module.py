@@ -33,7 +33,7 @@ if make_single_images:
     extension = 32
     write_images = False
     re_write_pickle = True
-    run_main(path,desired_output_spacing,extension, write_images, re_write_pickle, file_ext='_None')
+    run_main(path, desired_output_spacing,extension, write_images, re_write_pickle, file_ext='_None')
 
 if make_TF2_images:
     path = r'H:\Liver_Disease_Ablation'

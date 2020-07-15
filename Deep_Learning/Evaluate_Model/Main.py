@@ -71,9 +71,9 @@ def main():
         df = pd.read_excel(out_path, engine='xlrd')
         volumes = df['volume'].values
         values = df['dice'].values
-        values = values[volumes > 2]
+        values = values[volumes < 1]
         values = values[values < 1000]
-        create_plot('Dice for greater than 2 cc volumes',values=values,metric='Dice', out_path=os.path.join('.','Images'),
+        create_plot('Dice for less than 1 cc volumes',values=values,metric='Dice', out_path=os.path.join('.','Images'),
                     y_ticks=[0,.1,.2,.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
         xxx = 1
 

@@ -1,0 +1,13 @@
+Pre_Processing -> Turn LiTs into nifti and records files
+Deep_Learning -> Train and optimize model
+Local_Recurrence_Work -> Looking at minimum DTA
+minimum DTA and comments ->
+	Paper ->
+		DTA_Recurrence_RayTrace_Results
+Physician evaluation ->
+	Paper ->
+		DTA_Physician_Evaluation_shortcut
+
+Evaluating disease/ablation segmentations ->
+	Paper ->
+		GTV_Ablation_Dice_Values_and_Qualitative_Comparison
