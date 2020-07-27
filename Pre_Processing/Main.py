@@ -2,9 +2,9 @@ __author__ = 'Brian M Anderson'
 # Created on 2/14/2020
 # With a large amount of help from Bastien githut.com/guatavita
 
-from Nifti_To_Dicom.Conversion_Definition import convert_niftii_to_dicom
+from Pre_Processing.Nifti_To_Dicom.Conversion_Definition import convert_niftii_to_dicom
 import os
-from Nifti_To_Dicom.Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack, sitk
+from Pre_Processing.Nifti_To_Dicom.Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack, sitk
 
 base_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
 out_path_base = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Nifti_to_dicom\LiTs'
