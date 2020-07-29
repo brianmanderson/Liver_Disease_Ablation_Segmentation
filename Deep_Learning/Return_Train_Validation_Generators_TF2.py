@@ -126,9 +126,9 @@ def return_dictionary_dense(base_dict, run_best=False):
                       min_lr=6e-7, max_lr=8e-3)
                       ]
     dictionary = [
-        base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+        base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
                   min_lr=1e-6, max_lr=1e-3),
-        base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
+        base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
                   min_lr=1e-6, max_lr=1e-2)
     ]
     return dictionary
@@ -261,7 +261,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
                          block(filters, batch_norm=False, activation=None, out_name=name)]
             encoding += [lc.concat_layer(names)]
             names = names[:]
-            # filters += growth_rate
+            filters += growth_rate
             filters = min([filters, max_filters])
         filters /= 2
         encoding_names.append(names)
@@ -285,7 +285,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
                      block(filters, batch_norm=False, activation=None, out_name=name)]
         encoding += [lc.concat_layer(names)]
         names = names[:]
-        # filters += growth_rate
+        filters += growth_rate
         filters = min([filters, max_filters])
 
     layers_dict['Base'] = encoding
@@ -310,7 +310,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
                          block(filters, batch_norm=False, activation=None, out_name=name)]
             encoding += [lc.concat_layer(names)]
             names = names[:]
-            # filters += growth_rate
+            filters += growth_rate
             filters = min([filters, max_filters])
         layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
         filters *= 2
