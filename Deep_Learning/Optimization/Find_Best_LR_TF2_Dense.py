@@ -16,7 +16,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
         for growth_rate in [0]:
             for layer in [2]:
                 for max_conv_blocks in [4]:
-                    for filters in [8, 16, 32]:
+                    for filters in [8, 16]:
                         for num_conv_blocks in [2]:
                             for conv_lambda in [0, 1]:
                                 base_path, morfeus_drive = return_paths()
@@ -24,7 +24,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
                                             'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
                                             'growth_rate':growth_rate}
                                 layers_dict = get_layers_dict_dense_new(**run_data)
-                                things = ['layers{}'.format(layer), 'max_conv_blocks_{}'.format(max_conv_blocks),
+                                things = ['new', 'layers{}'.format(layer), 'max_conv_blocks_{}'.format(max_conv_blocks),
                                           'filters_{}'.format(filters), 'num_conv_blocks_{}'.format(num_conv_blocks),
                                           'conv_lambda_{}'.format(conv_lambda), 'growth_rate_{}'.format(growth_rate), 'last_skip',
                                           '{}_Iteration'.format(iteration)]
