@@ -260,9 +260,13 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         for i in range(num_conv_blocks):
             name = 'Layer_{}_Conv_Encoding_{}'.format(layer, i)
             names.append(name)
-            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                         block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
-                         block(filters, batch_norm=False, activation=None, out_name=name)]
+            if i != 0:
+                encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                             block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                             block(filters, batch_norm=False, activation=None, out_name=name)]
+            else:
+                encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                             block(filters, batch_norm=False, activation=None, out_name=name)]
             encoding += [lc.concat_layer(names)]
             names = names[:]
             filters += growth_rate
@@ -273,7 +277,6 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         previous_name = 'Layer_{}_Down'.format(layer)
         layers_dict['Layer_' + str(layer)]['Pooling']['Encoding'] = [
             lc.activation_layer('elu'), lc.batch_norm_layer(),
-            block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
             lc.convolution_layer(filters, strides=pool, activation=None, batch_norm=False, out_name=previous_name)
         ]
         num_conv_blocks += conv_lambda
@@ -284,9 +287,13 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     for i in range(num_conv_blocks):
         name = 'Base_{}'.format(i)
         names.append(name)
-        encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                     block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
-                     block(filters, batch_norm=False, activation=None, out_name=name)]
+        if i != 0:
+            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                         block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                         block(filters, batch_norm=False, activation=None, out_name=name)]
+        else:
+            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                         block(filters, batch_norm=False, activation=None, out_name=name)]
         encoding += [lc.concat_layer(names)]
         names = names[:]
         filters += growth_rate
@@ -298,7 +305,6 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         up_name = 'Layer_{}_Up'.format(layer)
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [
             lc.activation_layer('elu'), lc.batch_norm_layer(),
-            block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
             lc.upsampling_layer(pool_size=pool),
             lc.convolution_layer(filters, activation=None, batch_norm=False, out_name=up_name)
         ]
@@ -309,9 +315,13 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         for i in range(num_conv_blocks):
             name = 'Layer_{}_Conv_Decoding_{}'.format(layer, i)
             names.append(name)
-            encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                         block(filters, kernel=(1,1,1), batch_norm=True, activation='elu'),
-                         block(filters, batch_norm=False, activation=None, out_name=name)]
+            if i != 0:
+                encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                             block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                             block(filters, batch_norm=False, activation=None, out_name=name)]
+            else:
+                encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
+                             block(filters, batch_norm=False, activation=None, out_name=name)]
             encoding += [lc.concat_layer(names)]
             names = names[:]
             filters += growth_rate
