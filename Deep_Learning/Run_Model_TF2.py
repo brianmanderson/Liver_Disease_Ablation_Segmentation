@@ -95,7 +95,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     bn_before_activation = True
     step_size_factor = 6
     threshold = True
-    for iteration in [9, 10]:
+    for iteration in [9, 10, 11]:
         for flip in [False]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
