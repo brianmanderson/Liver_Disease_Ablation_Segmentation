@@ -127,13 +127,13 @@ def return_dictionary_dense(base_dict, run_best=False):
                       ]
     dictionary = [
         base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
-                  min_lr=2e-6, max_lr=4e-3),
+                  min_lr=3e-6, max_lr=1e-2),
         base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=0,
-                  min_lr=1e-5, max_lr=2e-2),
+                  min_lr=2e-6, max_lr=2e-2),
         base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
-                  min_lr=3e-6, max_lr=1e-3),
+                  min_lr=3e-6, max_lr=1e-2),
         base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=1, growth_rate=0,
-                  min_lr=1e-6, max_lr=4e-3)
+                  min_lr=2e-6, max_lr=1e-2)
     ]
     return dictionary
 

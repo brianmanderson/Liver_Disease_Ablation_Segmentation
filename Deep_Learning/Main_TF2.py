@@ -18,7 +18,7 @@ path_desc='TF_LR_Dense_1mm_new'
 model_name = 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm'
 cache_add = '_1mm'
 
-find_dense_lr_dense = True
+find_dense_lr_dense = False
 if find_dense_lr_dense:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
     find_best_lr(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add)
@@ -42,7 +42,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
     run_best = True
