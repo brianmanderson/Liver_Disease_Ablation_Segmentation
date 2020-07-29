@@ -127,9 +127,13 @@ def return_dictionary_dense(base_dict, run_best=False):
                       ]
     dictionary = [
         base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
-                  min_lr=1e-6, max_lr=1e-3),
-        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
-                  min_lr=1e-6, max_lr=1e-2)
+                  min_lr=2e-6, max_lr=4e-3),
+        base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=0,
+                  min_lr=1e-5, max_lr=2e-2),
+        base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=0, growth_rate=0,
+                  min_lr=3e-6, max_lr=1e-3),
+        base_dict(layers=2, max_conv_blocks=4, filters=16, num_conv_blocks=2, conv_lambda=1, growth_rate=0,
+                  min_lr=1e-6, max_lr=4e-3)
     ]
     return dictionary
 
@@ -427,5 +431,5 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    return_generators(add='_32', threshold=True, change_background=True, cache_add='_1mm_change_bckrd', threshold_val=10)
+    # return_generators(add='_32', threshold=True, change_background=True, cache_add='_1mm_change_bckrd', threshold_val=10)
     pass
