@@ -21,7 +21,9 @@ def identify_image_parameters(images_path=r'H:\Data\Local_Recurrence_Exports',
             dicom_handle = reader.Execute()
             slice_thickness = float(reader.GetMetaData(0, "0018|0050"))
             pixel_spacing = [float(i) for i in reader.GetMetaData(0, "0028|0030").split('\\')]
-            MRN = reader.GetMetaData(0, "0010|0020")
+            MRN = reader.GetMetaData(0, "0010|0020").strip(' ')
+            if MRN in out_dict['MRN']:
+                continue
             out_dict['MRN'].append(MRN)
             out_dict['Slice Thickness'].append(slice_thickness)
             out_dict['Pixel_X'].append(pixel_spacing[0])
