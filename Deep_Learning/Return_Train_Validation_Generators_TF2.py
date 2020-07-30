@@ -321,7 +321,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             filters += growth_rate
             filters = min([filters, max_filters])
         layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
-        filters /= 2
+        filters //= 2
     filters *= 2  # Get on same level
     final_steps = [lc.activation_layer('elu'), lc.batch_norm_layer(),
                    block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
