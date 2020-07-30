@@ -26,13 +26,15 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
     if is_test:
         ext = 'Test'
     ext += desc
-    pred_output_path = os.path.join('H:\Liver_Disease_Ablation\Predictions{}'.format(path_ext),ext)
+    pred_output_path = os.path.join('H:\Liver_Disease_Ablation\Predictions_New{}'.format(path_ext),ext)
     if not os.path.exists(pred_output_path):
         os.makedirs(pred_output_path)
     gen = eval_generator.data_set.as_numpy_iterator()
     for i in range(len(eval_generator)):
         x, y = next(gen)
         image_path = x[0][0].decode()
+        if not os.path.exists(image_path):
+            image_path = image_path.replace('D:', 'H:') # Moved data files...
         image_name = os.path.split(image_path)[-1]
         print(image_path)
         if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))) and not rewrite:
