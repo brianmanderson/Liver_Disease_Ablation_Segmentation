@@ -111,9 +111,9 @@ class run_index_single_disease(object):
         Connected_Threshold_for_pred.SetUpper(2)
         Connected_Threshold_for_pred.SetLower(1)
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
-        out_prediction = np.zeros(prediction.shape).astype('float16')
+
         stats = sitk.LabelShapeStatisticsImageFilter()
-        thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
+        thresholded_image = sitk.BinaryThreshold(sitk.GetImageFromArray(prediction), lowerThreshold=seed_value)
         connected_image = Connected_Component_Filter.Execute(thresholded_image)
         stats.Execute(connected_image)
         seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
@@ -124,7 +124,7 @@ class run_index_single_disease(object):
         Connected_Threshold_for_pred.SetLower(1)
 
         Connected_Threshold.SetLower(threshold_value)
-        threshold_pred_base = Connected_Threshold.Execute(prediction)
+        threshold_pred_base = Connected_Threshold.Execute(sitk.GetImageFromArray(prediction))
 
         truth = connected_truth == tumor_label
         stats.Execute(threshold_pred_base * truth)
@@ -136,15 +136,11 @@ class run_index_single_disease(object):
         threshold_pred = Connected_Threshold_for_pred.Execute(threshold_pred_base)
 
         overlap_measures_filter.Execute(truth, threshold_pred)
-        # print('Took {} and {} seconds to finish'.format(stop-start, time.time() - start))
-        for i, metric_value in enumerate(range(1, 2)):
-            threshold_pred = sitk.GetImageFromArray(out_prediction[..., metric_value].astype('float32'))
-            overlap_measures_filter.Execute(truth, threshold_pred > 0)
-            out_dict[OverlapMeasures.jaccard.name][index] = overlap_measures_filter.GetJaccardCoefficient()
-            out_dict[OverlapMeasures.dice.name][index] = overlap_measures_filter.GetDiceCoefficient()
-            out_dict[OverlapMeasures.volume_similarity.name][index] = overlap_measures_filter.GetVolumeSimilarity()
-            out_dict[OverlapMeasures.false_negative.name][index] = overlap_measures_filter.GetFalseNegativeError()
-            out_dict[OverlapMeasures.false_positive.name][index] = overlap_measures_filter.GetFalsePositiveError()
+        out_dict[OverlapMeasures.jaccard.name][index] = overlap_measures_filter.GetJaccardCoefficient()
+        out_dict[OverlapMeasures.dice.name][index] = overlap_measures_filter.GetDiceCoefficient()
+        out_dict[OverlapMeasures.volume_similarity.name][index] = overlap_measures_filter.GetVolumeSimilarity()
+        out_dict[OverlapMeasures.false_negative.name][index] = overlap_measures_filter.GetFalseNegativeError()
+        out_dict[OverlapMeasures.false_positive.name][index] = overlap_measures_filter.GetFalsePositiveError()
             # print(out_dict[OverlapMeasures.dice.name][index])
         print('{}% Done'.format(percentage))
         return None
@@ -301,7 +297,7 @@ class run_metrics_single_disease(object):
         mask_filter.SetMaskingValue(0)
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
         prediction = resampler.resample_image(prediction, ref_handle=truth_base)
-        prediction = mask_filter.Execute(prediction, mask)
+        prediction = sitk.GetArrayFromImage(mask_filter.Execute(prediction, mask))
 
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
@@ -340,6 +336,10 @@ class run_metrics_single_disease(object):
                             'tumor_label': tumor_label,
                             'percentage': percentage}
                     q.put(item)
+        for i in range(thread_count):
+            q.put(None)
+        for t in threads:
+            t.join()
         save_obj(os.path.join(self.save_path,'{}_out_dict_single_disease.pkl'.format(pat_name)),out_dict)
 
 
@@ -419,8 +419,8 @@ def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validatio
         pat_name = os.path.split(file)[-1].split('.')[0]
         if os.path.exists(os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
             continue
-        item = {'threshold_range': threshold_range, 'seed_range': seed_range,
-                'write_final_prediction': write_final_prediction, 'file': file, 'thread_count': thread_count}
+        item = {'threshold_range': threshold_range, 'seed_range': seed_range, 'file': file,
+                'thread_count': thread_count}
         single_disease_runner.process(**item)
         # q.put(item)
     # for i in range(thread_count):
@@ -438,7 +438,5 @@ def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validatio
     df.to_excel(os.path.join(out_path, 'Final_Prediction.xlsx'), index=0)
 
 
-
 if __name__ == '__main__':
     pass
-
