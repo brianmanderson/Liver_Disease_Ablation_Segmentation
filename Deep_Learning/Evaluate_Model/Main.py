@@ -15,8 +15,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 def main():
     desc = 'TF2_Multi_Cube_1mm'
-    model_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_74\model_74'
-    weight_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_74\cp-0201.ckpt'
+    model_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_88\model_88'
+    weight_path = r'H:\Liver_Disease_Ablation\Keras\TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm\Models\Trial_ID_88\cp-0201.ckpt'
     dense = True
     path_ext = ''
     if not os.path.exists(model_path) and not dense:
@@ -51,16 +51,16 @@ def main():
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = r'H:\Liver_Disease_Ablation\Predictions_New{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles_New'),
-                            seed_range=np.arange(0.8,1.0,0.01),
-                            threshold_range=np.arange(0.1,.8,0.05), re_write=False, thread_count=20)
+                            seed_range=np.arange(0.3, 1.0, 0.05),
+                            threshold_range=np.arange(0.2, .76, 0.01), re_write=False, thread_count=12)
 
     evaluate_test = False
     if evaluate_test:
-        from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart
+        from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = r'H:\Liver_Disease_Ablation\Predictions_New{}\Test{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New'),
-                            seed_range=[.87], threshold_range=[.4], re_write=False,
-                            write_final_prediction=True)
+                            seed_range=[.53], write_final_prediction=True,
+                            threshold_range=[.275], re_write=False, thread_count=1)
 
     write_box_plots = False
     if write_box_plots:

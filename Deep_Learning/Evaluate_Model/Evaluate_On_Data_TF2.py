@@ -120,9 +120,9 @@ class run_index_single_disease(object):
         thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
         connected_image = Connected_Component_Filter.Execute(thresholded_image)
         stats.Execute(connected_image)
-        seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
-        seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
-        Connected_Threshold.SetSeedList(seeds)
+        pred_seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
+        pred_seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in pred_seeds]
+        Connected_Threshold.SetSeedList(pred_seeds)
         Connected_Threshold_for_pred = sitk.ConnectedThresholdImageFilter()
         Connected_Threshold_for_pred.SetUpper(2)
         Connected_Threshold_for_pred.SetLower(1)
@@ -130,16 +130,17 @@ class run_index_single_disease(object):
         Connected_Threshold.SetLower(threshold_value)
         threshold_pred_base = Connected_Threshold.Execute(prediction)
 
-        Connected_Threshold_for_pred.SetSeedList(seeds)
+        Connected_Threshold_for_pred.SetSeedList(pred_seeds)
         for tumor_index, tumor_label in enumerate(tumor_labels):
             index = tuple(base_index + [tumor_index])
             truth = connected_truth == tumor_label
-            stats.Execute(threshold_pred_base * truth)
+            stats.Execute(truth)
             if not stats.GetLabels():
                 continue
             seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
             seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
-            Connected_Threshold_for_pred.SetSeedList(seeds)
+            new_seeds = pred_seeds[np.argmin(np.sum(np.abs(np.subtract(pred_seeds, seeds[0])),axis=-1))]
+            Connected_Threshold_for_pred.SetSeedList([new_seeds])
             threshold_pred = Connected_Threshold_for_pred.Execute(threshold_pred_base)
 
             overlap_measures_filter.Execute(truth, threshold_pred)
@@ -321,8 +322,8 @@ class run_metrics_single_disease(object):
         total = len(threshold_range) ** 1 * len(seed_range) ** 1
         checkpoint = 0
         for i, threshold_value in enumerate(threshold_range):
+            print('Threshold value {}'.format(threshold_value))
             for j, seed_value in enumerate(seed_range):
-                print('Threshold value {}'.format(threshold_value))
                 already_done = False
                 for k, tumor_label in enumerate(tumor_labels):
                     index = tuple([i, j, k])
@@ -396,8 +397,11 @@ def find_best_threshold_seed(threshold_range, seed_range, out_path):
         if key == 'volume' or key == 'patient_name':
             continue
         with pd.ExcelWriter(os.path.join(out_path,'{}.xlsx'.format(key))) as writer:
-            for volume_threshold in [1, 2, 5, 10, 20]:
-                mask = volume > volume_threshold
+            lower_volume = 0
+            for volume_threshold in [1, 5, 20, 9999]:
+                mask_upper = volume > lower_volume
+                mask_lower = volume <= volume_threshold
+                mask = mask_upper * mask_lower
                 data = np.median(out_dict[key][..., mask], axis=-1)
                 if key in ['jaccard','dice', 'volume_similarity']:
                     threshold, seed = np.where(np.round(data,4) == np.max(np.round(data,4)))
@@ -412,7 +416,8 @@ def find_best_threshold_seed(threshold_range, seed_range, out_path):
                                                                            np.round(threshold_range[threshold],2),
                                                                            np.round(seed_range[seed],2)))
                 df = pd.DataFrame(data=data, index=threshold_names, columns=seed_names)
-                df.to_excel(writer, sheet_name='Volume {} cc'.format(volume_threshold))
+                df.to_excel(writer, sheet_name='{} <= x < {}cc'.format(lower_volume, volume_threshold))
+                lower_volume = volume_threshold
     return None
 
 
@@ -442,9 +447,9 @@ def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validatio
         return None
     out_dict = combine_patient_pickles(out_path)
     for key in out_dict.keys():
-        out_dict[key] = list(np.squeeze(out_dict[key]))
-    df = pd.DataFrame(data=out_dict)
-    df.to_excel(os.path.join(out_path, 'Final_Prediction.xlsx'), index=0)
+        out_dict[key] = np.squeeze(out_dict[key])
+    df = pd.DataFrame(out_dict)
+    df.to_excel(os.path.join(out_path,'Final_Prediction.xlsx'), index=0)
 
 
 if __name__ == '__main__':
