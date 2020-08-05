@@ -38,7 +38,7 @@ def main():
         model.load_weights(weight_path)
         model.save(model_path)
 
-    create_prediction = False
+    create_prediction = True
     if create_prediction:
         from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
         validation_path = [r'H:\Liver_Disease_Ablation\Records\Validation_whole_Records']
@@ -52,15 +52,15 @@ def main():
         path = r'H:\Liver_Disease_Ablation\Predictions_New{}\Validation{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles_New'),
                             seed_range=np.arange(0.3, 1.0, 0.05),
-                            threshold_range=np.arange(0.2, .76, 0.01), re_write=False, thread_count=12)
+                            threshold_range=np.arange(0.1, .76, 0.01), re_write=False, thread_count=12)
 
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = r'H:\Liver_Disease_Ablation\Predictions_New{}\Test{}'.format(path_ext, desc)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New'),
-                            seed_range=[.53], write_final_prediction=True,
-                            threshold_range=[.275], re_write=False, thread_count=1)
+                            seed_range=[.63], write_final_prediction=True,
+                            threshold_range=[.25], re_write=False, thread_count=12)
 
     write_box_plots = False
     if write_box_plots:
