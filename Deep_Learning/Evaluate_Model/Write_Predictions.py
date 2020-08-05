@@ -35,14 +35,14 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         image_path = x[0][0].decode()
         if not os.path.exists(image_path):
             image_path = image_path.replace('D:', 'H:') # Moved data files...
-        image_name = os.path.split(image_path)[-1]
+        image_name = os.path.split(image_path)[-1].split('.nii.gz')[0]
         print(image_path)
         if os.path.exists(os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name))) and not rewrite:
             continue
         elif model_val is None:
             model_val = load_model(model_path, compile=False)
         x = x[1:]
-        image, mask_base = x[0], x[1]
+
         y = y[0]
         reader.SetFileName(image_path)
         reader.Execute()
@@ -95,9 +95,6 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         pred = np.squeeze(pred[...,1])
         if padded:
             pred = pred[1:]
-
-        image_handle = sitk.GetImageFromArray(x)
-        image_handle.SetSpacing(reader.GetSpacing())
 
         pred_handle = sitk.GetImageFromArray(pred)
         pred_handle.SetSpacing(resampled_image_handle.GetSpacing())
