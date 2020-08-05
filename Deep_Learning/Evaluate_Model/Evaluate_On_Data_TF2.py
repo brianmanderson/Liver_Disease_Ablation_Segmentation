@@ -189,14 +189,10 @@ class run_metrics_single_patient(object):
         pat_name = os.path.split(file)[-1].split('.')[0]
         print(pat_name)
         truth = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
-        mask = sitk.ReadImage(file.replace('_Image','_Mask'), sitk.sitkUInt8)
-        mask_filter = sitk.MaskImageFilter()
-        mask_filter.SetMaskingValue(0)
         truth_array = sitk.GetArrayFromImage(truth)
         volume = truth_array[truth_array == 1].shape[0] * np.prod(truth.GetSpacing()) / 1000
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
         prediction = resampler.resample_image(prediction, ref_handle=truth)
-        prediction = mask_filter.Execute(prediction, mask)
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
 
         statistics_image_filter = sitk.StatisticsImageFilter()
@@ -315,12 +311,8 @@ class run_metrics_single_disease(object):
         pat_name = os.path.split(file)[-1].split('.')[0]
         print(pat_name)
         truth_base = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
-        mask = sitk.ReadImage(file.replace('_Image','_Mask'), sitk.sitkUInt8)
-        mask_filter = sitk.MaskImageFilter()
-        mask_filter.SetMaskingValue(0)
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
         prediction = resampler.resample_image(prediction, ref_handle=truth_base)
-        prediction = sitk.GetArrayFromImage(mask_filter.Execute(prediction, mask))
 
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
