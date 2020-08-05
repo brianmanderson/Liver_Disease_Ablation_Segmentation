@@ -44,36 +44,31 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         x = x[1:]
         image, mask_base = x[0], x[1]
         y = y[0]
-        resize = True
         reader.SetFileName(image_path)
         reader.Execute()
-        image_handle = reader
         padded = False
-        if resize:
-            spacing = reader.GetSpacing()
-            image_shape, mask_shape = image.shape, mask_base.shape
-            image_handle = sitk.GetImageFromArray(np.squeeze(x[0]).astype('float32'))
-            mask_handle = sitk.GetImageFromArray(np.squeeze(x[1]).astype('float32'))
-            for handle in [image_handle, mask_handle]:
-                handle.SetSpacing(spacing)
-                handle.SetOrigin(reader.GetOrigin())
-                handle.SetDirection(reader.GetDirection())
-            # input_spacing = image_handle.GetSpacing()
-            resampled_image_handle = resampler.resample_image(image_handle,
-                                                              output_spacing=(spacing[0], spacing[1], 1.))
-            resampled_mask_handle = resampler.resample_image(mask_handle,
-                                                             output_spacing=(spacing[0], spacing[1], 1.))
-            image_handle = resampled_image_handle
-            image = sitk.GetArrayFromImage(resampled_image_handle)[None,...,None]
-            mask = sitk.GetArrayFromImage(resampled_mask_handle)[None,...,None]
-            mask[mask > 0.5] = 1
-            mask = mask.astype('int')
-            image[mask == 0] = 0
-            if image.shape[1] % 2 != 0:
-                padded = True
-                image = np.pad(image,[[0,0],[1,0],[0,0],[0,0],[0,0]])
-                mask = np.pad(mask,[[0,0],[1,0],[0,0],[0,0],[0,0]])
-            x = [image, mask]
+        spacing = reader.GetSpacing()
+        image_handle = sitk.GetImageFromArray(np.squeeze(x[0]).astype('float32'))
+        mask_handle = sitk.GetImageFromArray(np.squeeze(x[1]).astype('float32'))
+        for handle in [image_handle, mask_handle]:
+            handle.SetSpacing(spacing)
+            handle.SetOrigin(reader.GetOrigin())
+            handle.SetDirection(reader.GetDirection())
+        # input_spacing = image_handle.GetSpacing()
+        resampled_image_handle = resampler.resample_image(image_handle,
+                                                          output_spacing=(spacing[0], spacing[1], 1.))
+        resampled_mask_handle = resampler.resample_image(mask_handle,
+                                                         output_spacing=(spacing[0], spacing[1], 1.))
+        image = sitk.GetArrayFromImage(resampled_image_handle)[None,...,None]
+        mask = sitk.GetArrayFromImage(resampled_mask_handle)[None,...,None]
+        mask[mask > 0.5] = 1
+        mask = mask.astype('int')
+        image[mask == 0] = 0
+        if image.shape[1] % 2 != 0:
+            padded = True
+            image = np.pad(image,[[0,0],[1,0],[0,0],[0,0],[0,0]])
+            mask = np.pad(mask,[[0,0],[1,0],[0,0],[0,0],[0,0]])
+        x = [image, mask]
 
         step = 160//2
         shift = 120//2
@@ -97,11 +92,18 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                 start += shift
         else:
             pred = model_val.predict(x)
-        x = np.squeeze(x[0])
         pred = np.squeeze(pred[...,1])
         if padded:
-            x = x[1:]
             pred = pred[1:]
+
+        image_handle = sitk.GetImageFromArray(x)
+        image_handle.SetSpacing(reader.GetSpacing())
+
+        pred_handle = sitk.GetImageFromArray(pred)
+        pred_handle.SetSpacing(resampled_image_handle.GetSpacing())
+        pred_handle = resampler.resample_image(pred_handle, image_handle)
+        pred = sitk.GetArrayFromImage(pred_handle)
+
         truth = sitk.GetImageFromArray(np.squeeze(y).astype('float32'))
         truth.SetDirection(image_handle.GetDirection())
         truth.SetOrigin(image_handle.GetOrigin())
@@ -109,12 +111,12 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         truth.SetSpacing(reader.GetSpacing())
         sitk.WriteImage(truth, os.path.join(pred_output_path, '{}_Truth.nii.gz'.format(image_name)))
 
-        mask = sitk.GetImageFromArray(np.squeeze(mask_base).astype('float32'))
-        mask.SetDirection(image_handle.GetDirection())
-        mask.SetOrigin(image_handle.GetOrigin())
-        mask.SetDirection(image_handle.GetDirection())
-        mask.SetSpacing(reader.GetSpacing())
-        sitk.WriteImage(mask, os.path.join(pred_output_path, '{}_Mask.nii.gz'.format(image_name)))
+        # mask = sitk.GetImageFromArray(np.squeeze(mask_base).astype('float32'))
+        # mask.SetDirection(image_handle.GetDirection())
+        # mask.SetOrigin(image_handle.GetOrigin())
+        # mask.SetDirection(image_handle.GetDirection())
+        # mask.SetSpacing(reader.GetSpacing())
+        # sitk.WriteImage(mask, os.path.join(pred_output_path, '{}_Mask.nii.gz'.format(image_name)))
 
         prediction = sitk.GetImageFromArray(np.squeeze(pred).astype('float32'))
         prediction.SetOrigin(image_handle.GetOrigin())
@@ -122,11 +124,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         prediction.SetSpacing(image_handle.GetSpacing())
         sitk.WriteImage(prediction, os.path.join(pred_output_path, '{}_Prediction.nii.gz'.format(image_name)))
 
-        image = sitk.GetImageFromArray(np.squeeze(x).astype('float32'))
-        image.SetOrigin(image_handle.GetOrigin())
-        image.SetDirection(image_handle.GetDirection())
-        image.SetSpacing(image_handle.GetSpacing())
-        sitk.WriteImage(image, os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name)))
+        sitk.WriteImage(image_handle, os.path.join(pred_output_path, '{}_Image.nii.gz'.format(image_name)))
     K.clear_session()
     return None
 
