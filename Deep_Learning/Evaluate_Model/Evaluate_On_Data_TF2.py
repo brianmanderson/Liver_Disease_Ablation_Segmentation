@@ -101,7 +101,7 @@ class run_index_single_disease(object):
         xxx = 1
 
     def process(self, base_index, seed_value, threshold_value, prediction, connected_truth, out_dict, percentage,
-                tumor_labels):
+                tumor_labels, write_final_prediction=False):
         # start = time.time()
         prediction = sitk.GetImageFromArray(prediction)
         prediction.SetSpacing(connected_truth.GetSpacing())
@@ -149,6 +149,58 @@ class run_index_single_disease(object):
             out_dict[OverlapMeasures.volume_similarity.name][index] = overlap_measures_filter.GetVolumeSimilarity()
             out_dict[OverlapMeasures.false_negative.name][index] = overlap_measures_filter.GetFalseNegativeError()
             out_dict[OverlapMeasures.false_positive.name][index] = overlap_measures_filter.GetFalsePositiveError()
+            if write_final_prediction:
+                hausdorff_distance_filter = sitk.HausdorffDistanceImageFilter()
+                statistics_image_filter = sitk.StatisticsImageFilter()
+                reference_surface = sitk.LabelContour(truth)
+                reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
+                                                                               useImageSpacing=True))
+
+                statistics_image_filter.Execute(reference_surface)
+                num_reference_surface_pixels = int(statistics_image_filter.GetSum())
+                segmented_distance_map = sitk.Abs(
+                    sitk.SignedMaurerDistanceMap(threshold_pred, squaredDistance=False, useImageSpacing=True))
+                segmented_surface = sitk.LabelContour(threshold_pred)
+
+                # Multiply the binary surface segmentations with the distance maps. The resulting distance
+                # maps contain non-zero values only on the surface (they can also contain zero on the surface)
+                seg2ref_distance_map = reference_distance_map * sitk.Cast(segmented_surface, sitk.sitkFloat32)
+                ref2seg_distance_map = segmented_distance_map * sitk.Cast(reference_surface, sitk.sitkFloat32)
+
+                # Get the number of pixels in the reference surface by counting all pixels that are 1.
+                statistics_image_filter.Execute(segmented_surface)
+                num_segmented_surface_pixels = int(statistics_image_filter.GetSum())
+
+                # Get all non-zero distances and then add zero distances if required.
+                seg2ref_distance_map_arr = sitk.GetArrayViewFromImage(seg2ref_distance_map)
+                seg2ref_distances = list(seg2ref_distance_map_arr[seg2ref_distance_map_arr != 0])
+                seg2ref_distances = seg2ref_distances + \
+                                    list(np.zeros(num_segmented_surface_pixels - len(seg2ref_distances)))
+                ref2seg_distance_map_arr = sitk.GetArrayViewFromImage(ref2seg_distance_map)
+                ref2seg_distances = list(ref2seg_distance_map_arr[ref2seg_distance_map_arr != 0])
+                ref2seg_distances = ref2seg_distances + \
+                                    list(np.zeros(num_reference_surface_pixels - len(ref2seg_distances)))
+
+                all_surface_distances = seg2ref_distances + ref2seg_distances
+
+                # The maximum of the symmetric surface distances is the Hausdorff distance between the surfaces. In
+                # general, it is not equal to the Hausdorff distance between all voxel/pixel points of the two
+                # segmentations, though in our case it is. More on this below.
+
+                try:
+                    hausdorff_distance_filter.Execute(truth, threshold_pred)
+                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][index] = hausdorff_distance_filter.GetHausdorffDistance()
+                except:
+                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][index] = 9999
+                out_dict[SurfaceDistanceMeasures.mean_surface_distance.name][index] = np.mean(
+                    all_surface_distances)
+
+                out_dict[SurfaceDistanceMeasures.median_surface_distance.name][index] = np.median(
+                    all_surface_distances)
+                out_dict[SurfaceDistanceMeasures.std_surface_distance.name][index] = np.std(
+                    all_surface_distances)
+                out_dict[SurfaceDistanceMeasures.max_surface_distance.name][index] = np.max(
+                    all_surface_distances)
             # print(out_dict[OverlapMeasures.dice.name][index])
         print('{}% Done'.format(percentage))
         return None
@@ -286,7 +338,8 @@ class run_metrics_single_disease(object):
     def __init__(self, save_path):
         self.save_path = save_path
 
-    def process(self, threshold_range, seed_range, file, thread_count=int(cpu_count()*.95-1)):
+    def process(self, threshold_range, seed_range, file, thread_count=int(cpu_count()*.95-1),
+                write_final_prediction=False):
         q = Queue(maxsize=thread_count)
         A = [q, ]
         threads = []
@@ -342,7 +395,8 @@ class run_metrics_single_disease(object):
                         'connected_truth': connected_truth,
                         'out_dict': out_dict,
                         'tumor_labels': tumor_labels,
-                        'percentage': percentage}
+                        'percentage': percentage,
+                        'write_final_prediction': write_final_prediction}
                 q.put(item)
         for i in range(thread_count):
             q.put(None)
@@ -390,11 +444,22 @@ def combine_patient_pickles(out_path):
 
 def find_best_threshold_seed(threshold_range, seed_range, out_path):
     out_dict = combine_patient_pickles(out_path)
+    new_output = {'Volume': np.squeeze(out_dict['volume']), 'patient_name': np.squeeze(out_dict['patient_name']),
+                  'dice': [], 'seed_value': [], 'threshold_value': []}
+    data = np.round(out_dict['dice'], 4)
+    values = np.column_stack(np.unravel_index(data.reshape(data.shape[-1],-1).argmax(axis=1), data[...,0].shape))
+    threshold_indexes = values[:, 0]
+    seed_indexes = values[:, 1]
+    new_output['threshold_value'] = threshold_range[threshold_indexes]
+    new_output['seed_value'] = seed_range[seed_indexes]
+    new_output['dice'] = np.max(data,axis=(0,1))
+    df = pd.DataFrame(new_output)
+    df.to_excel(os.path.join(out_path,'pattern_draw.xlsx'), index=0)
     threshold_names = ['Threshold_{}'.format(i) for i in threshold_range]
     seed_names = ['Seed_{}'.format(i) for i in seed_range]
     volume = out_dict['volume']
     for key in out_dict.keys():
-        if key == 'volume' or key == 'patient_name':
+        if key == 'volume' or key == 'patient_name' or key.find('distance') != -1:
             continue
         with pd.ExcelWriter(os.path.join(out_path,'{}.xlsx'.format(key))) as writer:
             lower_volume = 0
@@ -434,7 +499,7 @@ def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validatio
         if os.path.exists(os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
             continue
         item = {'threshold_range': threshold_range, 'seed_range': seed_range, 'file': file,
-                'thread_count': thread_count}
+                'thread_count': thread_count, 'write_final_prediction': write_final_prediction}
         single_disease_runner.process(**item)
         # q.put(item)
     # for i in range(thread_count):
