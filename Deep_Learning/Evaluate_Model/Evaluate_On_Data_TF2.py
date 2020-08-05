@@ -71,29 +71,7 @@ class OverlapMeasures(Enum):
 
 
 class SurfaceDistanceMeasures(Enum):
-    hausdorff_distance, mean_surface_distance, median_surface_distance, std_surface_distance, max_surface_distance = range(5)
-
-
-def createseeds(predictionimage, seed_value):
-    Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
-    stats = sitk.LabelShapeStatisticsImageFilter()
-    thresholded_image = sitk.BinaryThreshold(sitk.Cast(predictionimage, sitk.sitkFloat32), lowerThreshold=seed_value)
-    connected_image = Connected_Component_Filter.Execute(thresholded_image)
-    stats.Execute(connected_image)
-    seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
-    seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
-    del stats, Connected_Component_Filter, connected_image, predictionimage, seed_value
-    return seeds
-
-
-def createthreshold(predictionimage, seeds, thresholdvalue):
-    Connected_Threshold = sitk.ConnectedThresholdImageFilter()
-    Connected_Threshold.SetUpper(2)
-    Connected_Threshold.SetSeedList(seeds)
-    Connected_Threshold.SetLower(thresholdvalue)
-    threshold_prediction = Connected_Threshold.Execute(sitk.Cast(predictionimage, sitk.sitkFloat32))
-    del Connected_Threshold, predictionimage, seeds, thresholdvalue
-    return threshold_prediction
+    mean_surface_distance, median_surface_distance, std_surface_distance, max_surface_distance = range(4)
 
 
 class run_index_single_disease(object):
@@ -150,7 +128,6 @@ class run_index_single_disease(object):
             out_dict[OverlapMeasures.false_negative.name][index] = overlap_measures_filter.GetFalseNegativeError()
             out_dict[OverlapMeasures.false_positive.name][index] = overlap_measures_filter.GetFalsePositiveError()
             if write_final_prediction:
-                hausdorff_distance_filter = sitk.HausdorffDistanceImageFilter()
                 statistics_image_filter = sitk.StatisticsImageFilter()
                 reference_surface = sitk.LabelContour(truth)
                 reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
@@ -187,11 +164,6 @@ class run_index_single_disease(object):
                 # general, it is not equal to the Hausdorff distance between all voxel/pixel points of the two
                 # segmentations, though in our case it is. More on this below.
 
-                try:
-                    hausdorff_distance_filter.Execute(truth, threshold_pred)
-                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][index] = hausdorff_distance_filter.GetHausdorffDistance()
-                except:
-                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][index] = 9999
                 out_dict[SurfaceDistanceMeasures.mean_surface_distance.name][index] = np.mean(
                     all_surface_distances)
 
@@ -228,8 +200,6 @@ class run_metrics_single_patient(object):
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
 
         statistics_image_filter = sitk.StatisticsImageFilter()
-
-        hausdorff_distance_filter = sitk.HausdorffDistanceImageFilter()
 
         out_dict = {'volume':volume}
         for _, measured_name in enumerate(OverlapMeasures):
@@ -299,14 +269,6 @@ class run_metrics_single_patient(object):
                 # The maximum of the symmetric surface distances is the Hausdorff distance between the surfaces. In
                 # general, it is not equal to the Hausdorff distance between all voxel/pixel points of the two
                 # segmentations, though in our case it is. More on this below.
-
-                try:
-                    hausdorff_distance_filter.Execute(truth, threshold_pred)
-                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
-                        i, j] = hausdorff_distance_filter.GetHausdorffDistance()
-                except:
-                    out_dict[SurfaceDistanceMeasures.hausdorff_distance.name][
-                        i, j] = 9999
                 out_dict[SurfaceDistanceMeasures.mean_surface_distance.name][i, j] = np.mean(
                     all_surface_distances)
 
@@ -405,9 +367,9 @@ class run_metrics_single_disease(object):
         save_obj(os.path.join(self.save_path,'{}_out_dict_single_disease.pkl'.format(pat_name)),out_dict)
 
 
-def worker_def(A):
+def worker_def_single_patient(A):
     q, save_path = A
-    base_class = run_metrics_single_disease(save_path)
+    base_class = run_metrics_single_patient(save_path)
     while True:
         item = q.get()
         if item is None:
@@ -486,26 +448,43 @@ def find_best_threshold_seed(threshold_range, seed_range, out_path):
     return None
 
 
-def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.','Threshold'),
+def create_metric_chart(path=r'H:\Liver_Disease_Ablation\Predictions\Validation', out_path=os.path.join('.', 'Threshold'),
                         threshold_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
                         seed_range=[0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
-                        thread_count=int(cpu_count()*.95-1), re_write=False, write_final_prediction=False):
+                        thread_count=int(cpu_count()*.95-1), re_write=False, write_final_prediction=False,
+                        single_disease=True):
     image_list = [os.path.join(path,i) for i in os.listdir(path) if i.find('_Image') != -1]
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    single_disease_runner = run_metrics_single_disease(out_path)
-    for file in image_list:
-        pat_name = os.path.split(file)[-1].split('.')[0]
-        if os.path.exists(os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
-            continue
-        item = {'threshold_range': threshold_range, 'seed_range': seed_range, 'file': file,
-                'thread_count': thread_count, 'write_final_prediction': write_final_prediction}
-        single_disease_runner.process(**item)
-        # q.put(item)
-    # for i in range(thread_count):
-    #     q.put(None)
-    # for t in threads:
-    #     t.join()
+    if single_disease:
+        single_disease_runner = run_metrics_single_disease(out_path)
+        for file in image_list:
+            pat_name = os.path.split(file)[-1].split('.')[0]
+            if os.path.exists(os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
+                continue
+            item = {'threshold_range': threshold_range, 'seed_range': seed_range, 'file': file,
+                    'thread_count': thread_count, 'write_final_prediction': write_final_prediction}
+            single_disease_runner.process(**item)
+    else:
+        q = Queue(maxsize=thread_count)
+        A = [q, out_path]
+        threads = []
+        for worker in range(thread_count):
+            t = Thread(target=worker_def_single_patient, args=(A,))
+            t.start()
+            threads.append(t)
+        for file in image_list:
+            pat_name = os.path.split(file)[-1].split('.')[0]
+            if os.path.exists(
+                    os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
+                continue
+            item = {'threshold_range': threshold_range, 'seed_range': seed_range,
+                    'write_final_prediction': write_final_prediction, 'file': file}
+            q.put(item)
+        for i in range(thread_count):
+            q.put(None)
+        for t in threads:
+            t.join()
 
     if not write_final_prediction:
         find_best_threshold_seed(threshold_range=threshold_range, seed_range=seed_range, out_path=out_path)
@@ -514,7 +493,7 @@ def create_metric_chart(path = r'H:\Liver_Disease_Ablation\Predictions\Validatio
     for key in out_dict.keys():
         out_dict[key] = np.squeeze(out_dict[key])
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join(out_path,'Final_Prediction.xlsx'), index=0)
+    df.to_excel(os.path.join(out_path,'Final_Prediction2.xlsx'), index=0)
 
 
 if __name__ == '__main__':
