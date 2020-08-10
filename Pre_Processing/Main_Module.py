@@ -87,5 +87,5 @@ if make_TF2_images:
                               Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3,
                                          power_val_c=2**3),
                               Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    write_tf_record(os.path.join(path, 'Test'), out_path=os.path.join(path,'Records_1mm','Test_Records'), image_processors=image_processors_test,
+    write_tf_record(os.path.join(path, 'Test'), out_path=os.path.join(path,'Records','Test_Records'), image_processors=image_processors_test,
                     is_3D=True, rewrite=False, thread_count=thread_count)
