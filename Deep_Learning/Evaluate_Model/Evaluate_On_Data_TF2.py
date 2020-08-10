@@ -202,6 +202,8 @@ class run_metrics_single_patient(object):
             out_dict[measured_name.name] = np.zeros((len(threshold_range), len(seed_range)))
         for _, measured_name in enumerate(SurfaceDistanceMeasures):
             out_dict[measured_name.name] = np.ones((len(threshold_range), len(seed_range)))*999
+        out_dict['Sensitivity'] = np.zeros((len(threshold_range), len(seed_range)))
+        out_dict['Specificity'] = np.zeros((len(threshold_range), len(seed_range)))
         reference_surface = sitk.LabelContour(truth)
         reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
                                                                        useImageSpacing=True))
@@ -211,6 +213,7 @@ class run_metrics_single_patient(object):
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
         Connected_Threshold.SetUpper(2)
         stats = sitk.LabelShapeStatisticsImageFilter()
+        staple = sitk.STAPLEImageFilter()
         num_reference_surface_pixels = int(statistics_image_filter.GetSum())
         for j, seed_value in enumerate(seed_range):
             thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
@@ -230,6 +233,9 @@ class run_metrics_single_patient(object):
                     threshold_pred.SetDirection(truth.GetDirection())
                     sitk.WriteImage(threshold_pred, file.replace('_Image','_FinalPrediction'))
                 overlap_measures_filter.Execute(truth, threshold_pred)
+                staple.Execute(threshold_pred, truth)
+                out_dict['Sensitivity'][i, j] = staple.GetSensitivity()[0]
+                out_dict['Specificity'][i, j] = staple.GetSpecificity()[0]
                 out_dict[OverlapMeasures.jaccard.name][i, j] = overlap_measures_filter.GetJaccardCoefficient()
                 out_dict[OverlapMeasures.dice.name][i, j] = overlap_measures_filter.GetDiceCoefficient()
                 out_dict[OverlapMeasures.volume_similarity.name][i, j] = overlap_measures_filter.GetVolumeSimilarity()
@@ -305,14 +311,13 @@ class run_metrics_single_disease(object):
             t = Thread(target=worker_def_index_single_disease, args=(A,))
             t.start()
             threads.append(t)
-        resampler = Resample_Class_Object()
         reader = sitk.ImageFileReader()
         reader.LoadPrivateTagsOn()
         pat_name = os.path.split(file)[-1].split('.')[0]
         print(pat_name)
         truth_base = sitk.ReadImage(file.replace('_Image','_Truth'), sitk.sitkUInt8)
         prediction = sitk.ReadImage(file.replace('_Image','_Prediction'))
-        prediction = resampler.resample_image(prediction, ref_handle=truth_base)
+        prediction = sitk.GetArrayFromImage(prediction)
 
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
@@ -374,8 +379,12 @@ def worker_def_single_patient(A):
             q.task_done()
 
 
-def combine_patient_pickles(out_path):
-    image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict_single_disease.pkl') != -1]
+def combine_patient_pickles(out_path, is_disease=True):
+    if is_disease:
+        add = 'disease'
+    else:
+        add = 'patient'
+    image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict_single_{}.pkl'.format(add)) != -1]
     out_dict = {'volume':[],'patient_name':[]}
     for file in image_list:
         pat_name = os.path.split(file)[-1].split('_out_dict')[0]
@@ -383,16 +392,17 @@ def combine_patient_pickles(out_path):
         for key in patient_dict:
             if key not in out_dict:
                 out_dict[key] = []
-            out_dict[key].append(np.asarray(patient_dict[key]))
+            out_dict[key].append(np.asarray(np.squeeze(patient_dict[key])))
         out_dict['patient_name'].append(np.asarray([pat_name for _ in range(np.asarray(patient_dict[key]).shape[-1])]))
-    for key in out_dict.keys():
-        if type(out_dict[key][0]) is np.ndarray:
-            item = out_dict[key][0]
-            for i in range(1,len(out_dict[key])):
-                item = np.concatenate([item, out_dict[key][i]], axis=-1)
-            out_dict[key] = item
-        else:
-            out_dict[key] = np.asarray(out_dict[key])
+    if is_disease:
+        for key in out_dict.keys():
+            if type(out_dict[key][0]) is np.ndarray:
+                item = out_dict[key][0]
+                for i in range(1,len(out_dict[key])):
+                    item = np.concatenate([item, out_dict[key][i]], axis=-1)
+                out_dict[key] = item
+            else:
+                out_dict[key] = np.asarray(out_dict[key])
     return out_dict
 
 
@@ -468,7 +478,7 @@ def create_metric_chart(path=r'H:\Liver_Disease_Ablation\Predictions\Validation'
         for file in image_list:
             pat_name = os.path.split(file)[-1].split('.')[0]
             if os.path.exists(
-                    os.path.join(out_path, '{}_out_dict_single_disease.pkl'.format(pat_name))) and not re_write:
+                    os.path.join(out_path, '{}_out_dict_single_patient.pkl'.format(pat_name))) and not re_write:
                 continue
             item = {'threshold_range': threshold_range, 'seed_range': seed_range,
                     'write_final_prediction': write_final_prediction, 'file': file}
@@ -481,7 +491,7 @@ def create_metric_chart(path=r'H:\Liver_Disease_Ablation\Predictions\Validation'
     if not write_final_prediction:
         find_best_threshold_seed(threshold_range=threshold_range, seed_range=seed_range, out_path=out_path)
         return None
-    out_dict = combine_patient_pickles(out_path)
+    out_dict = combine_patient_pickles(out_path, is_disease=single_disease)
     for key in out_dict.keys():
         out_dict[key] = np.squeeze(out_dict[key])
     df = pd.DataFrame(out_dict)
