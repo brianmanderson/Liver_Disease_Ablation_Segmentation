@@ -61,6 +61,12 @@ def main():
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New'),
                             seed_range=[.63], write_final_prediction=True,
                             threshold_range=[.25], re_write=False, thread_count=12)
+        create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New'),
+                            seed_range=[.63], write_final_prediction=True, single_disease=True,
+                            threshold_range=[.25], re_write=False, thread_count=12)
+        create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New_Whole_Patient'),
+                            seed_range=[.63], write_final_prediction=True, single_disease=False,
+                            threshold_range=[.25], re_write=False, thread_count=12)
 
     write_box_plots = False
     if write_box_plots:
