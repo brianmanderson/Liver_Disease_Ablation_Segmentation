@@ -421,13 +421,13 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
     start = time.time()
     generators = [validation_generator]
-    if not evaluation:
-        generators += [train_generator]
-        for generator in generators: #
-            data_set = iter(generator.data_set)
-            for _ in range(len(generator)):
-                x, y = next(data_set)
-                print(x[0].shape)
+    # if not evaluation:
+    #     generators += [train_generator]
+    #     for generator in generators: #
+    #         data_set = iter(generator.data_set)
+    #         for _ in range(len(generator)):
+    #             x, y = next(data_set)
+    #             print(x[0].shape)
     print(time.time()-start)
     #     print(data[1][0].shape)
     # data = next(data_set)
