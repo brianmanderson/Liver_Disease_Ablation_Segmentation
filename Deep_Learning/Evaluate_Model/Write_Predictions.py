@@ -2,7 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 3/2/2020
 from tensorflow.python.keras.models import *
 import numpy as np
-import os
+import os, time
 import SimpleITK as sitk
 from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Resample_Class.Resample_Class import Resample_Class_Object
 from Return_Train_Validation_Generators_TF2 import return_generators, plot_scroll_Image
@@ -27,6 +27,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
         ext = 'Test'
     ext += desc
     pred_output_path = os.path.join('H:\Liver_Disease_Ablation\Predictions_New{}'.format(path_ext),ext)
+    total_time = []
     if not os.path.exists(pred_output_path):
         os.makedirs(pred_output_path)
     gen = eval_generator.data_set.as_numpy_iterator()
@@ -41,8 +42,8 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
             continue
         elif model_val is None:
             model_val = load_model(model_path, compile=False)
+        start_time = time.time()
         x = x[1:]
-
         y = y[0]
         reader.SetFileName(image_path)
         reader.Execute()
@@ -92,6 +93,10 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
                 start += shift
         else:
             pred = model_val.predict(x)
+        stop_time = time.time()
+        total_time.append(stop_time-start_time)
+        print(np.mean(total_time))
+        print(np.std(total_time))
         pred = np.squeeze(pred[...,1])
         if padded:
             pred = pred[1:]
