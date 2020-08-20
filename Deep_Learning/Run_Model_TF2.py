@@ -96,7 +96,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     step_size_factor = 6
     threshold = True
     for iteration in [43, 44, 45, 46, 47]:
-        for flip in [False]:
+        for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
                     base_path, morfeus_drive = return_paths()
