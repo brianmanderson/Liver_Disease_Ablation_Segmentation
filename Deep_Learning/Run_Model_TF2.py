@@ -44,7 +44,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if run_best:
         image_frequency = 10
         val_frequency = 1
-        checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.ckpt')
+        # checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.ckpt')
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
