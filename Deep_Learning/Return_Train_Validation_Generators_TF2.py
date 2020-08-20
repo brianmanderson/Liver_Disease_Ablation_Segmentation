@@ -404,7 +404,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         ]
     if flip:
         train_processors += [
-        Flip_Images(keys=['image','mask','annotation'],
+        Flip_Images(keys=['image', 'mask', 'annotation'],
                     flip_lr=True, flip_up_down=True, flip_3D_together=True,flip_z=True)
         ]
     train_processors += [
