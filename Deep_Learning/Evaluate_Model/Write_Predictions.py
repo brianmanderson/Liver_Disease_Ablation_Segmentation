@@ -9,7 +9,8 @@ from Return_Train_Validation_Generators_TF2 import return_generators, plot_scrol
 
 
 def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='weights-improvement-best_FWHM.hdf5',
-                            cache=True, validation_path=None, rewrite=False):
+                            cache=True, validation_path=None, rewrite=False,
+                            out_path='H:\Liver_Disease_Ablation\Predictions_93{}'):
     resampler = Resample_Class_Object()
     reader = sitk.ImageFileReader()
     reader.LoadPrivateTagsOn()
@@ -26,7 +27,7 @@ def create_prediction_files(is_test=False, path_ext = '', desc='', model_path='w
     if is_test:
         ext = 'Test'
     ext += desc
-    pred_output_path = os.path.join('H:\Liver_Disease_Ablation\Predictions_New{}'.format(path_ext),ext)
+    pred_output_path = os.path.join(out_path.format(path_ext),ext)
     total_time = []
     if not os.path.exists(pred_output_path):
         os.makedirs(pred_output_path)
