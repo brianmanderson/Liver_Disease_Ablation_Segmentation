@@ -62,7 +62,7 @@ def main():
         path = os.path.join(out_path.format(path_ext), 'Validation{}'.format(desc))
         create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_93'),
                             seed_range=np.arange(0.3, 1.0, 0.01),
-                            threshold_range=np.arange(0.05, .76, 0.01), re_write=False, thread_count=20)
+                            threshold_range=np.arange(0.05, .76, 0.01), re_write=False, thread_count=int(cpu_count()*.9-1))
 
     evaluate_test = False
     if evaluate_test:
