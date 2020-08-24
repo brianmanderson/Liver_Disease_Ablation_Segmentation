@@ -396,10 +396,15 @@ def combine_patient_pickles(out_path, is_disease=True):
         out_dict['patient_name'].append(np.asarray([pat_name for _ in range(np.asarray(patient_dict[key]).shape[-1])]))
     if is_disease:
         for key in out_dict.keys():
+            print(key)
             if type(out_dict[key][0]) is np.ndarray:
                 item = out_dict[key][0]
                 for i in range(1,len(out_dict[key])):
-                    item = np.concatenate([item, out_dict[key][i]], axis=-1)
+                    print(i)
+                    val = out_dict[key][i]
+                    if len(val.shape) == 0:
+                        val = val[..., None]
+                    item = np.concatenate([item, val], axis=-1)
                 out_dict[key] = item
             else:
                 out_dict[key] = np.asarray(out_dict[key])
@@ -495,7 +500,7 @@ def create_metric_chart(path=r'H:\Liver_Disease_Ablation\Predictions\Validation'
     for key in out_dict.keys():
         out_dict[key] = np.squeeze(out_dict[key])
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join(out_path,'Final_Prediction2.xlsx'), index=0)
+    df.to_excel(os.path.join(out_path,'Final_Prediction93.xlsx'), index=0)
 
 
 if __name__ == '__main__':
