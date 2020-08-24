@@ -23,7 +23,8 @@ def main():
                                'Trial_ID_93', 'cp-best.cpkt')
     print(os.listdir(os.path.join(base_path, 'Keras', 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm', 'Models',
                                'Trial_ID_93')))
-    weight_path = r' ./../../../../raid/Liver_GTV_Ablation/Keras/TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm/Models/Trial_ID_93/cp-best.ckpt'
+    weight_path = r'./../../../../raid/Liver_GTV_Ablation/Keras/TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm/Models/Trial_ID_93/cp-best.ckpt'
+    print(os.listdir(r'./../../../../raid/Liver_GTV_Ablation/Keras/TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm'))
     dense = True
     path_ext = ''
     if not os.path.exists(model_path) and not dense:
