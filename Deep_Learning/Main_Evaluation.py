@@ -21,6 +21,8 @@ def main():
                               'Trial_ID_93', 'model_93')
     weight_path = os.path.join(base_path, 'Keras', 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm', 'Models',
                                'Trial_ID_93', 'cp-best.cpkt')
+    print(os.listdir(os.path.join(base_path, 'Keras', 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm', 'Models',
+                               'Trial_ID_93')))
     dense = True
     path_ext = ''
     if not os.path.exists(model_path) and not dense:
@@ -45,7 +47,7 @@ def main():
         return None
 
     out_path = os.path.join(base_path, 'Predictions_93', '{}')
-    create_prediction = True
+    create_prediction = False
     if create_prediction:
         from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
         validation_path = [r'H:\Liver_Disease_Ablation\Records\Validation_whole_Records']
@@ -58,16 +60,16 @@ def main():
     evaluate_prediction = True
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
-        path = os.path.join(out_path.format(path_ext), '{}'.format(desc))
-        create_metric_chart(path=path,out_path=os.path.join('.','Threshold_Seed_Pickles_New'),
+        path = os.path.join(out_path.format(path_ext), 'Validation{}'.format(desc))
+        create_metric_chart(path=path,out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_93'),
                             seed_range=np.arange(0.3, 1.0, 0.01),
                             threshold_range=np.arange(0.05, .76, 0.01), re_write=False, thread_count=20)
 
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
-        path = r'H:\Liver_Disease_Ablation\Predictions_New{}\Test{}'.format(path_ext, desc)
-        create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New'),
+        path = os.path.join(out_path.format(path_ext), 'Test{}'.format(desc))
+        create_metric_chart(path=path,out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_93'),
                             seed_range=[.63], write_final_prediction=True, single_disease=True,
                             threshold_range=[.25], re_write=False, thread_count=12)
         create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New_Whole_Patient'),
