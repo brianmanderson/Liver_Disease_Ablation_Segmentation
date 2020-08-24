@@ -58,7 +58,7 @@ def main():
 
     evaluate_prediction = True
     if evaluate_prediction:
-        from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
+        from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
         path = os.path.join(out_path.format(path_ext), 'Validation{}'.format(desc))
         create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_93'),
                             seed_range=np.arange(0.3, 1.0, 0.01),
