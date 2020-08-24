@@ -3,7 +3,7 @@ __author__ = 'Brian M Anderson'
 
 import sys, os
 
-
+sys.path.append('..')
 if len(sys.argv) > 1:
     gpu = int(sys.argv[1])
 else:
@@ -21,10 +21,7 @@ def main():
                               'Trial_ID_93', 'model_93')
     weight_path = os.path.join(base_path, 'Keras', 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm', 'Models',
                                'Trial_ID_93', 'cp-best.cpkt')
-    print(os.listdir(os.path.join(base_path, 'Keras', 'TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm', 'Models',
-                               'Trial_ID_93')))
-    weight_path = r'./../../../../raid/Liver_GTV_Ablation/Keras/TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm/Models/Trial_ID_93/cp-best.ckpt'
-    print(os.listdir(r'./../../../../raid/Liver_GTV_Ablation/Keras/TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm'))
+    # weight_path = r'./../../../../raid/Liver_GTV_Ablation/Keras/TF2_3D_Fully_Atrous_Variable_Cube_Training_1mm/Models/Trial_ID_93/cp-best.ckpt'
     dense = True
     path_ext = ''
     if not os.path.exists(model_path) and not dense:
@@ -63,7 +60,7 @@ def main():
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = os.path.join(out_path.format(path_ext), 'Validation{}'.format(desc))
-        create_metric_chart(path=path,out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_93'),
+        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_93'),
                             seed_range=np.arange(0.3, 1.0, 0.01),
                             threshold_range=np.arange(0.05, .76, 0.01), re_write=False, thread_count=20)
 
