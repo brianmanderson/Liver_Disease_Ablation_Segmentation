@@ -56,7 +56,7 @@ def main():
         create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext,
                                 out_path=out_path, validation_path=validation_path)
 
-    evaluate_prediction = True
+    evaluate_prediction = False
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
         path = os.path.join(out_path.format(path_ext), 'Validation{}'.format(desc))
@@ -68,12 +68,17 @@ def main():
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = os.path.join(out_path.format(path_ext), 'Test{}'.format(desc))
-        create_metric_chart(path=path,out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_93'),
-                            seed_range=[.63], write_final_prediction=True, single_disease=True,
-                            threshold_range=[.25], re_write=False, thread_count=12)
-        create_metric_chart(path=path,out_path=os.path.join('.','Test_Output_New_Whole_Patient'),
-                            seed_range=[.63], write_final_prediction=True, single_disease=False,
-                            threshold_range=[.25], re_write=False, thread_count=12)
+        # create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_93'),
+        #                     seed_range=[.67], write_final_prediction=True, single_disease=True,
+        #                     threshold_range=[.3], re_write=False, thread_count=12)
+        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_New_Whole_Patient_93'),
+                            seed_range=[.67], write_final_prediction=True, single_disease=False,
+                            threshold_range=[.3], re_write=False, thread_count=12)
+
+    write_sensitivity_specificity = True
+    if write_sensitivity_specificity:
+        from Deep_Learning.Evaluate_Model.Sensitivity_and_Specificity_Measures import write_sensitivity_specificity
+        write_sensitivity_specificity(excel_path=os.path.join('.', 'Evaluate_Model', 'Sensitivity_and_FP.xlsx'))
 
     write_box_plots = False
     if write_box_plots:

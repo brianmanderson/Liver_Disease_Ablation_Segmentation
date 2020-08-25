@@ -320,8 +320,6 @@ class run_metrics_single_disease(object):
         prediction = sitk.GetArrayFromImage(prediction)
 
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
-        Connected_Threshold = sitk.ConnectedThresholdImageFilter()
-        Connected_Threshold.SetUpper(2)
         stats = sitk.LabelShapeStatisticsImageFilter()
         connected_truth = Connected_Component_Filter.Execute(truth_base)
         stats.Execute(connected_truth)
