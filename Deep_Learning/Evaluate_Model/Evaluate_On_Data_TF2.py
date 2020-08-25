@@ -385,28 +385,26 @@ def combine_patient_pickles(out_path, is_disease=True):
     else:
         add = 'patient'
     image_list = [os.path.join(out_path, i) for i in os.listdir(out_path) if i.find('_out_dict_single_{}.pkl'.format(add)) != -1]
-    out_dict = {'volume':[],'patient_name':[]}
+    out_dict = {'patient_name': []}
     for file in image_list:
         pat_name = os.path.split(file)[-1].split('_out_dict')[0]
         patient_dict = load_obj(file)
         for key in patient_dict:
+            data = patient_dict[key]
+            if not is_disease:
+                data = [data]
             if key not in out_dict:
-                out_dict[key] = []
-            out_dict[key].append(np.asarray(np.squeeze(patient_dict[key])))
-        out_dict['patient_name'].append(np.asarray([pat_name for _ in range(np.asarray(patient_dict[key]).shape[-1])]))
+                out_dict[key] = data
+            else:
+                if type(data) is list:
+                    out_dict[key] += data
+                elif is_disease:
+                    out_dict[key] = np.concatenate([out_dict[key], data], axis=-1)
+        out_dict['patient_name'] += [pat_name for _ in range(np.asarray(patient_dict[key]).shape[-1])]
     if is_disease:
         for key in out_dict.keys():
             print(key)
-            if type(out_dict[key][0]) is np.ndarray:
-                item = out_dict[key][0]
-                for i in range(1,len(out_dict[key])):
-                    print(i)
-                    val = out_dict[key][i]
-                    if len(val.shape) == 0:
-                        val = val[..., None]
-                    item = np.concatenate([item, val], axis=-1)
-                out_dict[key] = item
-            else:
+            if type(out_dict[key][0]) is not np.ndarray:
                 out_dict[key] = np.asarray(out_dict[key])
     return out_dict
 
@@ -500,7 +498,7 @@ def create_metric_chart(path=r'H:\Liver_Disease_Ablation\Predictions\Validation'
     for key in out_dict.keys():
         out_dict[key] = np.squeeze(out_dict[key])
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join(out_path,'Final_Prediction93.xlsx'), index=0)
+    df.to_excel(os.path.join(out_path,'Final_Prediction_93.xlsx'), index=0)
 
 
 if __name__ == '__main__':
