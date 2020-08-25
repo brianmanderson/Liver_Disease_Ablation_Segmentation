@@ -88,11 +88,16 @@ def determine_false_positive_rate(path=r'H:\Liver_Disease_Ablation\Predictions_9
     return out_dict
 
 
-if __name__ == '__main__':
+def write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP.xlsx')):
     out_dict_false_postive = determine_false_positive_rate()
     out_dict_sensitivity = determine_sensitivity()
-    with pd.ExcelWriter(os.path.join('.', 'Sensitivity_and_FP.xlsx')) as writer:
+    with pd.ExcelWriter(excel_path) as writer:
         df = pd.DataFrame(out_dict_false_postive)
         df.to_excel(writer, sheet_name='False Positive Rate', index=0)
         df = pd.DataFrame(out_dict_sensitivity)
         df.to_excel(writer, sheet_name='Sensitivity', index=0)
+
+
+if __name__ == '__main__':
+    # write_sensitivity_specificity()
+    pass
