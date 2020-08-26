@@ -24,8 +24,8 @@ def determine_sensitivity(path=r'H:\Liver_Disease_Ablation\Predictions_93\TestTF
         stats.Execute(labeled_truth)
         tumor_labels = stats.GetLabels()
         spacing = np.prod(truth.GetSpacing())
-        for label in tumor_labels:
-            single_site = sitk.GetArrayFromImage(labeled_truth == label).astype('int')
+        for tumor_label in tumor_labels:
+            single_site = sitk.GetArrayFromImage(labeled_truth == tumor_label).astype('int')
             total = np.sum(single_site)
             difference = single_site - prediction > 0
             remainder = np.sum(difference)
@@ -89,8 +89,8 @@ def determine_false_positive_rate(path=r'H:\Liver_Disease_Ablation\Predictions_9
 
 
 def write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP.xlsx')):
-    out_dict_false_postive = determine_false_positive_rate()
     out_dict_sensitivity = determine_sensitivity()
+    out_dict_false_postive = determine_false_positive_rate()
     with pd.ExcelWriter(excel_path) as writer:
         df = pd.DataFrame(out_dict_false_postive)
         df.to_excel(writer, sheet_name='False Positive Rate', index=0)
