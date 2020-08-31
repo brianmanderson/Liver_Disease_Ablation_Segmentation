@@ -15,8 +15,8 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
     max_lr = 1
     for iteration in [0]:
         for growth_rate in [0]:
-            for layer in [2]:
-                for max_conv_blocks in [4]:
+            for layer in [4]:
+                for max_conv_blocks in [3]:
                     for filters in [8, 16]:
                         for num_conv_blocks in [2]:
                             for conv_lambda in [1]:
