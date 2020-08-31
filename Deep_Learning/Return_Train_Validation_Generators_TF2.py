@@ -339,7 +339,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
 def return_model(layers_dict, is_2D=False):
     image_size = (None, None, None, 1)
     if is_2D:
-        image_size = (None, None, 1),
+        image_size = (None, None, 1)
     model = my_UNet(layers_dict=layers_dict, image_size=image_size,
                     mask_output=True, explictly_defined=True, is_2D=is_2D).created_model
     return model

@@ -42,7 +42,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
                                 is_2D = False
                                 if image_size != (None, None, None, 1):
                                     is_2D = True
-                                model = return_model(layers_dict, image_size=image_size, is_2D=is_2D)
+                                model = return_model(layers_dict, is_2D=is_2D)
                                 k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
                                 k.set_model(model)
                                 k.on_train_begin()

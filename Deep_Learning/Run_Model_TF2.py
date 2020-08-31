@@ -15,7 +15,8 @@ from tensorboard.plugins.hparams.keras import Callback
 
 def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
               paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', run_best=False,
-              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,concat=True, **kwargs):
+              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
+              squeeze_kernel=(1, 1, 1), concat=True, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -64,7 +65,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     callbacks += [checkpoint]
     if not run_best:
         callbacks += [EarlyStopping(patience=15, verbose=1)]
-    Model_val = return_model(layers_dict)
+    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3))
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
@@ -84,18 +85,19 @@ def compare_base_current(data_frame, current_run_df, features_list):
 
 
 def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
-                run_best=False, debug=False, add='', dense=False, cache_add='_1mm'):
-    batch_size = 16
-    if add != '':
-        batch_size = 8
+                run_best=False, debug=False, add='', dense=False, cache_add='_1mm', kernel=(3, 3, 3),
+                squeeze_kernel=(1, 1, 1), is_2D=False, batch_size=8, change_background=True):
     optimizers = ['Adam']
+    pool = (2, 2, 2)
+    if is_2D:
+        pool = (2, 2)
     concat = True
     if run_best:
         save_a_model = True
     bn_before_activation = True
     step_size_factor = 6
     threshold = True
-    for iteration in [43, 44, 45, 46, 47]:
+    for iteration in [99, 98, 97]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
@@ -105,12 +107,12 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                     base_dict = return_base_dict_dense(step_size_factor=step_size_factor, save_a_model=save_a_model)
                     if run_best:
                         if dense:
-                            overall_dictionary = return_dictionary_dense(base_dict,run_best=run_best)
+                            overall_dictionary = return_dictionary_dense(base_dict, run_best=run_best, is_2D=is_2D)
                         else:
                             overall_dictionary = return_best_dictionary(base_dict)
                     else:
                         # overall_dictionary = return_dictionary(base_dict)
-                        overall_dictionary = return_dictionary_dense(base_dict)
+                        overall_dictionary = return_dictionary_dense(base_dict, is_2D=is_2D)
                     overall_dictionary = np.asarray(overall_dictionary)
                     perm = np.arange(len(overall_dictionary))
                     np.random.shuffle(perm)
@@ -124,11 +126,13 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         run_data['Model_Style'] = 'new'
                         run_data['concat'] = concat
                         run_data['flipped'] = flip
-                        run_data['change_background'] = True
+                        run_data['change_background'] = change_background
                         run_data['threshold'] = threshold
                         run_data['threshold_val'] = threshold_val
                         if debug:
-                            layers_dict = get_layers_dict_dense_new(**run_data, bn_before_activation=bn_before_activation)
+                            layers_dict = get_layers_dict_dense_new(**run_data, kernel=kernel,
+                                                                    squeeze_kernel=squeeze_kernel,
+                                                                    bn_before_activation=bn_before_activation)
                             Model_val = return_model(layers_dict)
                             Model_val.compile(optimizer,
                                               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -147,7 +151,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             return None
                         tf.random.set_seed(iteration)
                         run_data['batch_size'] = batch_size
-                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_Dense.xlsx')
+                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_Dense2D.xlsx')
                         print(base_path)
                         run_data['Iteration'] = iteration
                         run_data['Trial_ID'] = 0
@@ -164,12 +168,13 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         data_frame = data_frame.append(current_run_df, ignore_index=True)
                         data_frame.to_excel(excel_path, index=0)
                         _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
-                                                                                        flip=flip, change_background=True,
+                                                                                        flip=flip, change_background=change_background,
                                                                                         threshold=threshold, threshold_val=threshold_val)
                         step_size = len(train_generator)
                         hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
-                        layers_dict = get_layers_dict_dense_new(**run_data)
+                        layers_dict = get_layers_dict_dense_new(**run_data, kernel=kernel,
+                                                                squeeze_kernel=squeeze_kernel, pool=pool)
                         paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                                         is_keras_model=False)
                         paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
@@ -180,9 +185,10 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             continue
                         run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
                                   step_size=step_size, optimizer=optimizer,
-                                  validation_generator=validation_generator,run_best=run_best,
+                                  validation_generator=validation_generator,run_best=run_best, kernel=kernel,
+                                  squeeze_kernel=squeeze_kernel,
                                   paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
-                                  base_path=base_path, epochs=epochs,**run_data)
+                                  base_path=base_path, epochs=epochs, **run_data)
                         return None # break out!
 
 

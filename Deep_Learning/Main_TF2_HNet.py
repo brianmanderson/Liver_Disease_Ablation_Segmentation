@@ -19,7 +19,7 @@ cache_add = '_1mm'
 
 kernel = (3, 3)
 squeeze_kernel = (1, 1)
-find_dense_lr_dense = True
+find_dense_lr_dense = False
 if find_dense_lr_dense:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
     find_best_lr(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, kernel=kernel,
@@ -40,11 +40,13 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model_TF2 import train_model
-    run_best = True
-    train_model(epochs=201, model_name=model_name, run_best=run_best, debug=False, add=add, dense=True, cache_add=cache_add)
+    run_best = False
+    train_model(epochs=201, model_name=model_name, run_best=run_best, debug=False, add=add, dense=True,
+                cache_add=cache_add, kernel=kernel, squeeze_kernel=squeeze_kernel, is_2D=True, batch_size=0,
+                change_background=False)
 
 make_opt_excel = False
 if make_opt_excel:
