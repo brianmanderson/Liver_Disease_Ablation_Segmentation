@@ -4,9 +4,9 @@ __author__ = 'Brian M Anderson'
 import os, pydicom, shutil
 import SimpleITK as sitk
 from Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack
-from Dicom_RT_and_Images_to_Mask.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 import numpy as np
+import pandas as pd
 
 
 def add_dicom_tag(path):
@@ -34,8 +34,38 @@ def add_FrameOfReferenceUID_patid(path, patient_id):
     return None
 
 
+def copy_predictions():
+    prediction_out_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Output'
+    image_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+    for folder in os.listdir(prediction_out_path):
+        if folder.startswith('3DCIR'):
+            patient_folder = os.path.join(image_path, 'Patient_{}'.format(folder.split('_')[-1]))
+            down_folder = os.listdir(os.path.join(prediction_out_path, folder))[0]
+            files = os.listdir(os.path.join(prediction_out_path, folder, down_folder))
+            for file in files:
+                if file.endswith('.dcm'):
+                    shutil.copyfile(os.path.join(prediction_out_path, folder, down_folder, file),
+                                    os.path.join(patient_folder, file))
+    return None
+
+
 def create_predictions():
     prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
+    image_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+    for patient in os.listdir(image_path):
+        print(patient)
+        if os.path.exists(os.path.join(image_path, patient, 'Copied_Files.txt')):
+            continue
+        if not os.path.exists(os.path.join(prediction_path, patient)):
+            os.makedirs(os.path.join(prediction_path, patient))
+        for file in os.listdir(os.path.join(image_path, patient)):
+            if file.endswith('.dcm'):
+                shutil.copyfile(os.path.join(image_path, patient, file), os.path.join(prediction_path, patient, file))
+        fid = open(os.path.join(prediction_path, patient, 'Completed.txt'), 'w+')
+        fid.close()
+        fid = open(os.path.join(image_path, patient, 'Copied_Files.txt'), 'w+')
+        fid.close()
+    return None
 
 
 def create_dicom_RT():
@@ -87,5 +117,35 @@ def create_dicom_RT():
         image_reader.with_annotations(background, output_dir=out_dir, ROI_Names=['Liver', 'Disease'])
 
 
+def compare_predictions():
+    path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+    out_dict = {'Patient_ID':[], 'DSC': []}
+    overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
+    for patient in os.listdir(path):
+        print(patient)
+        patient_path = os.path.join(path, patient)
+        dicom_reader = Dicom_to_Imagestack(get_images_mask=True, arg_max=False,
+                                           Contour_Names=['Disease', 'Liver_Disease_Ablation_BMA_Program_0'])
+        dicom_reader.Make_Contour_From_directory(patient_path)
+        truth = sitk.GetImageFromArray(dicom_reader.mask[..., 1])
+        prediction = sitk.GetImageFromArray(dicom_reader.mask[..., -1])
+        for handle in [truth, prediction]:
+            handle.SetSpacing(dicom_reader.dicom_handle.GetSpacing())
+            handle.SetDirection(dicom_reader.dicom_handle.GetDirection())
+            handle.SetOrigin(dicom_reader.dicom_handle.GetOrigin())
+        overlap_measures_filter.Execute(truth, prediction)
+        out_dict['DSC'].append(overlap_measures_filter.GetDiceCoefficient())
+        out_dict['Patient_ID'].append(patient)
+    df = pd.DataFrame(out_dict)
+    df.to_excel(os.path.join('.', 'Dice_Results.xlsx'), index=0)
+    return None
+
+
 if __name__ == '__main__':
-    create_dicom_RT()
+    # create_dicom_RT()
+    # create_predictions()
+    # copy_predictions()
+    compare_predictions()
+    '''
+    Load into Raystation for viewing
+    '''
