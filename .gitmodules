@@ -22,3 +22,12 @@
 [submodule "Raystation_Code/Dicom_RT_and_Images_to_Mask"]
 	path = Raystation_Code/Dicom_RT_and_Images_to_Mask
 	url = https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask.git
+[submodule "French_3DCIR_Data/Create_RT_From_Dicom_and_Mask"]
+	path = French_3DCIR_Data/Create_RT_From_Dicom_and_Mask
+	url = https://github.com/brianmanderson/Create_RT_From_Dicom_and_Mask.git
+[submodule "French_3DCIR_Data/Plot_And_Scroll_Images"]
+	path = French_3DCIR_Data/Plot_And_Scroll_Images
+	url = https://github.com/brianmanderson/Plot_And_Scroll_Images.git
+[submodule "French_3DCIR_Data/Dicom_RT_and_Images_to_Mask"]
+	path = French_3DCIR_Data/Dicom_RT_and_Images_to_Mask
+	url = https://github.com/brianmanderson/Dicom_RT_and_Images_to_Mask.git
