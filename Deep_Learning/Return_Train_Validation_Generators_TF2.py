@@ -231,8 +231,9 @@ def get_layers_dict_dense(layers=1, filters=12, growth_rate=6, max_filters=np.in
 
 
 def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4,
-                              num_classes=2, pool=(2, 2, 2), kernel=(3, 3, 3), max_filters=np.inf, **kwargs):
-    lc = Return_Layer_Functions(kernel=kernel, strides=(1, 1, 1), padding='same', batch_norm=True,
+                              num_classes=2, pool=(2, 2, 2), kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
+                              max_filters=np.inf, **kwargs):
+    lc = Return_Layer_Functions(kernel=kernel, strides=squeeze_kernel, padding='same', batch_norm=True,
                                 pooling_type='Max', pool_size=pool, bn_before_activation=False)
     block = lc.convolution_layer
     start = [block(filters, out_name='start', batch_norm=False, activation=None)]
@@ -256,7 +257,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             names.append(name)
             if i != 0:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                             block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                             block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                              block(filters, batch_norm=False, activation=None, out_name=name)]
             else:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
@@ -283,7 +284,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         names.append(name)
         if i != 0:
             encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                         block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                         block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                          block(filters, batch_norm=False, activation=None, out_name=name)]
         else:
             encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
@@ -312,7 +313,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             names.append(name)
             if i != 0:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                             block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                             block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                              block(filters, batch_norm=False, activation=None, out_name=name)]
             else:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
@@ -323,14 +324,14 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             filters = min([filters, max_filters])
         layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
     final_steps = [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                   block(filters, kernel=(1, 1, 1), batch_norm=True, activation='elu'),
+                   block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                    lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
     layers_dict['Final_Steps'] = final_steps
     return layers_dict
 
 
-def return_model(layers_dict):
-    model = my_UNet(layers_dict=layers_dict, image_size=(None, None, None, 1),
+def return_model(layers_dict, image_size=(None, None, None, 1)):
+    model = my_UNet(layers_dict=layers_dict, image_size=image_size,
                     mask_output=True, explictly_defined=True).created_model
     return model
 
@@ -384,7 +385,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ]
     train_processors += [
         Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
-    if not evaluation:
+    if not evaluation and cache:
         train_processors += [
         {'cache': os.path.join(base_path,'cache', 'Train{}{}'.format(add, cache_add))}
     ]
@@ -393,7 +394,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
     if cache:
         validation_processors += [
-        # {'cache': os.path.join(base_path,'cache','{}{}{}'.format(ext,add,cache_add))}
+        {'cache': os.path.join(base_path,'cache','{}{}{}'.format(ext,add,cache_add))}
         ]
     if threshold:
         train_processors += [
@@ -409,14 +410,14 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         ]
     train_processors += [
         Return_Outputs(wanted_keys),
-        {'shuffle': len(train_generator)},
-        {'batch': batch_size},
-        {'repeat'}
-    ]
+        {'shuffle': len(train_generator)}]
     validation_processors += [
-        Return_Outputs(wanted_keys),
-        {'batch': 1},
-        {'repeat'}]
+        Return_Outputs(wanted_keys)]
+    if batch_size != 0:
+        train_processors += [{'batch': batch_size}]
+        validation_processors += [{'batch': 1}]
+    train_processors += [{'repeat'}]
+    validation_processors += [{'repeat'}]
     train_generator.compile_data_set(image_processors=train_processors, debug=False)
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
     start = time.time()
@@ -435,5 +436,6 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', threshold=True, change_background=True, cache_add='_1mm_change_bckrd', threshold_val=10)
+    # return_generators(add='_32', threshold=True, change_background=False, cache_add='2DTest',
+    #                   threshold_val=10, batch_size=0, cache=False)
     pass
