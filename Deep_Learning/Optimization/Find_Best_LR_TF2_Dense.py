@@ -17,7 +17,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
         for growth_rate in [0]:
             for layer in [2]:
                 for max_conv_blocks in [4]:
-                    for filters in [8]:
+                    for filters in [8, 16]:
                         for num_conv_blocks in [2]:
                             for conv_lambda in [1]:
                                 base_path, morfeus_drive = return_paths()
@@ -39,12 +39,14 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
                                 base_path, morfeus_drive, train_generator, validation_generator = return_generators(
                                     batch_size=batch_size, add=add, threshold_val=10, change_background=False,
                                     cache_add=cache_add)
-                                model = return_model(layers_dict, image_size=image_size)
+                                is_2D = False
+                                if image_size != (None, None, None, 1):
+                                    is_2D = True
+                                model = return_model(layers_dict, image_size=image_size, is_2D=is_2D)
                                 k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
                                 k.set_model(model)
                                 k.on_train_begin()
                                 lr_opt = tf.keras.optimizers.Adam
-                                os.makedirs(out_path)
                                 print(out_path)
                                 LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'],
                                                    out_path=out_path, optimizer=lr_opt,
