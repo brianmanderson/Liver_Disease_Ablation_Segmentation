@@ -9,20 +9,22 @@ from Return_Train_Validation_Generators_TF2 import return_generators, return_bas
     return_paths, return_model, get_layers_dict_dense_new
 
 
-def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
+def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
+                 image_size=(None, None, None, 1)):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0]:
         for growth_rate in [0]:
             for layer in [2]:
                 for max_conv_blocks in [4]:
-                    for filters in [8, 16]:
+                    for filters in [8]:
                         for num_conv_blocks in [2]:
-                            for conv_lambda in [0, 1]:
+                            for conv_lambda in [1]:
                                 base_path, morfeus_drive = return_paths()
                                 run_data = {'layers':layer,'max_conv_blocks':max_conv_blocks,'filters':filters,
                                             'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
-                                            'growth_rate':growth_rate}
+                                            'growth_rate':growth_rate, 'kernel': kernel,
+                                            'squeeze_kernel': squeeze_kernel, 'pool': (2, 2)}
                                 layers_dict = get_layers_dict_dense_new(**run_data)
                                 things = ['new', 'layers{}'.format(layer), 'max_conv_blocks_{}'.format(max_conv_blocks),
                                           'filters_{}'.format(filters), 'num_conv_blocks_{}'.format(num_conv_blocks),
@@ -34,15 +36,16 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm'):
                                 if os.path.exists(out_path):
                                     print('already done')
                                     continue
-                                os.makedirs(out_path)
-                                print(out_path)
                                 base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-                                    batch_size=batch_size, add=add, threshold_val=10, change_background=True, cache_add=cache_add)
-                                model = return_model(layers_dict)
+                                    batch_size=batch_size, add=add, threshold_val=10, change_background=False,
+                                    cache_add=cache_add)
+                                model = return_model(layers_dict, image_size=image_size)
                                 k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
                                 k.set_model(model)
                                 k.on_train_begin()
                                 lr_opt = tf.keras.optimizers.Adam
+                                os.makedirs(out_path)
+                                print(out_path)
                                 LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'],
                                                    out_path=out_path, optimizer=lr_opt,
                                                    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
