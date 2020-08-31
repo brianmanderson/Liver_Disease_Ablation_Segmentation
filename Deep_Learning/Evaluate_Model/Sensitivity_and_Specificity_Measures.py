@@ -77,20 +77,21 @@ def determine_false_positive_rate(path=r'H:\Liver_Disease_Ablation\Predictions_9
         This is the prediction grown by seeds in the ground truth
         '''
         difference = prediction - seed_grown_pred  #Now we have our prediction, subtracting those that include truth
-        out_dict['False Seeded Volume (cc)'].append(np.sum(difference) * spacing / 1000)
         labeled_difference = Connected_Component_Filter.Execute(sitk.GetImageFromArray(difference.astype('int')))
         stats.Execute(labeled_difference)
         difference_labels = stats.GetLabels()
         out_dict['Patient_Name'].append(patient_name)
         out_dict['Number False Positives'].append(len(difference_labels))
+        difference -= truth  # Subtract truth in case seed didn't land
+        out_dict['False Seeded Volume (cc)'].append(np.sum(difference > 0) * spacing / 1000)
         volume = np.sum(sitk.GetArrayFromImage(truth_handle)) * spacing / 1000
         out_dict['Volume (cc)'].append(volume)
     return out_dict
 
 
 def write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP.xlsx')):
-    out_dict_sensitivity = determine_sensitivity()
     out_dict_false_postive = determine_false_positive_rate()
+    out_dict_sensitivity = determine_sensitivity()
     with pd.ExcelWriter(excel_path) as writer:
         df = pd.DataFrame(out_dict_false_postive)
         df.to_excel(writer, sheet_name='False Positive Rate', index=0)
