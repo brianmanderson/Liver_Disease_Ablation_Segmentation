@@ -99,7 +99,13 @@ def return_dictionary(base_dict):
     return dictionary
 
 
-def return_dictionary_dense(base_dict, run_best=False):
+def return_dictionary_dense(base_dict, run_best=False, is_2D=False):
+    if is_2D:
+        dictionary = [
+            base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=1, growth_rate=4,
+                      min_lr=1e-6, max_lr=1e-3)
+            ]
+        return dictionary
     dictionary = [
         base_dict(layers=2, max_conv_blocks=4, filters=8, num_conv_blocks=2, conv_lambda=0, growth_rate=4,
                   min_lr=6e-7, max_lr=1e-3),
@@ -330,9 +336,12 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     return layers_dict
 
 
-def return_model(layers_dict, image_size=(None, None, None, 1)):
+def return_model(layers_dict, is_2D=False):
+    image_size = (None, None, None, 1)
+    if is_2D:
+        image_size = (None, None, 1),
     model = my_UNet(layers_dict=layers_dict, image_size=image_size,
-                    mask_output=True, explictly_defined=True).created_model
+                    mask_output=True, explictly_defined=True, is_2D=is_2D).created_model
     return model
 
 
