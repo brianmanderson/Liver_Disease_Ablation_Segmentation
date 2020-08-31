@@ -13,7 +13,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
                  image_size=(None, None, None, 1)):
     min_lr = 1e-7
     max_lr = 1
-    for iteration in [0]:
+    for iteration in [0, 1, 2]:
         for growth_rate in [0]:
             for layer in [4]:
                 for max_conv_blocks in [3]:
