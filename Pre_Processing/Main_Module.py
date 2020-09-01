@@ -40,7 +40,7 @@ if make_TF2_images:
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
     thread_count = 5
-    cube_size = (32, 120, 120)
+    cube_size = (16, 128, 128)
     base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True), To_Categorical(3)]
     image_processors_train = []
     image_processors_train += base_normalizer
@@ -52,6 +52,16 @@ if make_TF2_images:
                                                   min_z=cube_size[0])]
 
     write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records_1mm','Train_32_Records'), image_processors=image_processors_train,
+                    is_3D=True, rewrite=False, thread_count=thread_count)
+    image_processors_train = []
+    image_processors_train += base_normalizer
+    image_processors_train += [Cast_Data({'annotation': 'float16'}),
+                               Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=2,
+                                                        min_voxel_volume=300, max_voxels=1350000),
+                               Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
+                                                  min_z=cube_size[0])]
+
+    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records','Train_32_Records'), image_processors=image_processors_train,
                     is_3D=True, rewrite=False, thread_count=thread_count)
 
     image_processors_validation = []
@@ -71,7 +81,7 @@ if make_TF2_images:
                                     Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=2**3, power_val_r=2**3,
                                                power_val_c=2**3),
                                     Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records','Validation_whole_Records'), thread_count=thread_count,
+    write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records','Validation_Records'), thread_count=thread_count,
                     image_processors=image_processors_validation,
                     is_3D=True, rewrite=False)
     # processors = []
