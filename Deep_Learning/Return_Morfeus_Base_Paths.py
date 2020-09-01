@@ -13,10 +13,14 @@ def return_paths():
             base_path = os.path.join(base,
                                      r'Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data')
         os.listdir(base_path)
+        morfeus_drive = os.path.abspath(
+            os.path.join(base, 'Morfeus', 'BMAnderson', 'Modular_Projects', 'Liver_Disease_Ablation_Segmentation_Work'))
     except:
         base = find_raid_dir()
         base_path = os.path.join(base, 'Liver_GTV_Ablation')
-    morfeus_drive = os.path.abspath(os.path.join(base,'Morfeus','BMAnderson','Modular_Projects','Liver_Disease_Ablation_Segmentation_Work'))
+        morfeus_drive = os.path.abspath(
+            os.path.join(find_base_dir(), 'Morfeus', 'BMAnderson', 'Modular_Projects', 'Liver_Disease_Ablation_Segmentation_Work'))
+
     return base_path, morfeus_drive
 
 
