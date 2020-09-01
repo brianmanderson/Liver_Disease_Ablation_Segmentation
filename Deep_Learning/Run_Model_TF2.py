@@ -40,7 +40,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         print('already done')
         return None
     checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
-    image_frequency = 20
+    image_frequency = 10
     val_frequency = 1
     if run_best:
         image_frequency = 10
