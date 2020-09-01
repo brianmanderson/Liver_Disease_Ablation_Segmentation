@@ -191,7 +191,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                         run_data['max_lr'] = 1e-2
                     else:
                         run_data['min_lr'] = 1e-8
-                        run_data['max_lr'] = 1e-5
+                        run_data['max_lr'] = 1e-4
                     run_data['percentile_normed'] = True
                     run_data['sampling'] = 1
                     run_data['mirror_max'] = False
