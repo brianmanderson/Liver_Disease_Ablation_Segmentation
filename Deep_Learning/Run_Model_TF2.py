@@ -39,7 +39,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if os.listdir(tensorboard_output):
         print('already done')
         return None
-    checkpoint_path = os.path.join(model_path_out,'cp-best.h5')
+    checkpoint_path = os.path.join(model_path_out,'cp-best.hdf5')
     image_frequency = 20
     val_frequency = 1
     if run_best:
@@ -179,7 +179,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [6, 7]:
+    for iteration in [8]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
