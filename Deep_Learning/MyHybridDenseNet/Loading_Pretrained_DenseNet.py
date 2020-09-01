@@ -3,6 +3,7 @@ __author__ = 'Brian M Anderson'
 from tensorflow.keras import backend
 import tensorflow as tf
 from tensorflow.keras.applications import imagenet_utils
+from Deep_Learning.Base_Deeplearning_Code.Models.TF_Keras_Models import base_UNet, ExpandDimension, SqueezeDimension
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
 from tensorflow.python.keras.utils import data_utils
@@ -103,7 +104,7 @@ def conv_block(x, growth_rate, name):
 
 
 def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None,
-             model_name='unique', classes=1000, classifier_activation='softmax'):
+             model_name='unique', classes=1000, layers_dict=None):
     """Instantiates the DenseNet architecture.
     
     Reference:
@@ -219,8 +220,12 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
         x = layers.BatchNormalization(name="BN_{}".format(index))(x)
         x = layers.Activation('relu', name='activation_{}'.format(index))(x)
         x = layers.Add()([x, across])
-
-    x = layers.Conv2D(filters=classes, kernel_size=(1, 1), activation='softmax', padding='same')(x)
+    if layers_dict is not None:
+        myunet = base_UNet(layers_dict=layers_dict, is_2D=False, explictly_defined=True)
+        x = myunet.run_unet(ExpandDimension(axis=0)(x))
+        x = SqueezeDimension(axis=0)(x)
+    else:
+        x = layers.Conv2D(filters=classes, kernel_size=(1, 1), activation='softmax', padding='same')(x)
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
     sum_vals_base = tf.where(mask > 0, 0, 1)
     zeros = tf.where(mask > 0, 0, 0)
@@ -287,7 +292,7 @@ def DenseNet121(include_top=True,
                 input_tensor=None,
                 input_shape=None,
                 pooling=None,
-                classes=1000):
+                classes=1000, layers_dict=None):
     """Instantiates the Densenet121 architecture."""
     return DenseNet(blocks=[6, 12, 24, 16], include_top=include_top, weights=weights, input_tensor=input_tensor,
-                    input_shape=input_shape, pooling=pooling, classes=classes)
+                    input_shape=input_shape, pooling=pooling, classes=classes, layers_dict=layers_dict)
