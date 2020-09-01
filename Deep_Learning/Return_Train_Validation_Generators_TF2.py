@@ -437,7 +437,7 @@ def get_layers_dict_dense_less_decode(layers=1, filters=12, growth_rate=6, conv_
     return layers_dict
 
 
-def return_model(layers_dict, is_2D=False, densenet=False, all_trainable=False):
+def return_model(layers_dict, is_2D=False, densenet=False, all_trainable=False, weights_path=None):
     image_size = (None, None, None, 1)
     if is_2D:
         image_size = (None, None, 1)
@@ -446,6 +446,12 @@ def return_model(layers_dict, is_2D=False, densenet=False, all_trainable=False):
                         mask_output=True, explictly_defined=True, is_2D=is_2D).created_model
     else:
         model = DenseNet121(include_top=False, classes=2)
+        if weights_path is not None:
+            if not os.path.exists(weights_path):
+                model.load_weights(weights_path.replace('.h5', '.ckpt'))
+                model.save(weights_path)
+            else:
+                model.load_weights(weights_path, by_name=True)
         if not all_trainable:
             trainable = False
             for index, layer in enumerate(model.layers):
