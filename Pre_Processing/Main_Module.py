@@ -39,7 +39,7 @@ if make_TF2_images:
     path = r'H:\Liver_Disease_Ablation'
     from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
     from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
-    thread_count = 5
+    thread_count = 10
     cube_size = (16, 128, 128)
     power_val = 2**5
     base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True), To_Categorical(3)]
@@ -52,7 +52,7 @@ if make_TF2_images:
                                Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
                                                   min_z=cube_size[0])]
 
-    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records_1mm','Train_32_Records'), image_processors=image_processors_train,
+    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records_1mm','Train_{}_Records'.format(cube_size[0])), image_processors=image_processors_train,
                     is_3D=True, rewrite=False, thread_count=thread_count)
     image_processors_train = []
     image_processors_train += base_normalizer
@@ -62,7 +62,7 @@ if make_TF2_images:
                                Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
                                                   min_z=cube_size[0])]
 
-    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records','Train_32_Records'), image_processors=image_processors_train,
+    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records','Train_{}_Records'.format(cube_size[0])), image_processors=image_processors_train,
                     is_3D=True, rewrite=False, thread_count=thread_count)
 
     image_processors_validation = []
