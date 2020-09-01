@@ -51,7 +51,7 @@ if run_200:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
     train_DenseNet(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=0,
-                   change_background=False, path_lead='Records')
+                   change_background=False, path_lead='Records', validation_name='_64')
 
 make_opt_excel = False
 if make_opt_excel:

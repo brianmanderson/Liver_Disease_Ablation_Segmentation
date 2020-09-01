@@ -173,7 +173,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
 def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                    run_best=False, add='', cache_add='_1mm', batch_size=0,
                    change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
-                   all_trainable=False, path_lead=''):
+                   all_trainable=False, path_lead='', validation_name=''):
     optimizers = ['Adam']
     concat = True
     if run_best:
@@ -220,7 +220,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
                                                                                     flip=flip, change_background=change_background,
                                                                                     threshold=threshold, threshold_val=threshold_val,
-                                                                                    path_lead=path_lead)
+                                                                                    path_lead=path_lead, validation_name=validation_name)
                     step_size = len(train_generator)
                     hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
