@@ -10,15 +10,18 @@ from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
 
 add = ''
 cache_add = ''
-base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,
-                                                                                    threshold_val=10,
-                                                                                    change_background=False,
-                                                                                    cache_add=cache_add, cache=False,
-                                                                                    path_lead='Records')
-x,y = next(iter(train_generator.data_set))
+base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+    batch_size=0, add='_16', threshold_val=10, change_background=False,
+    cache_add=cache_add, path_lead='Records', validation_name='_64')
+# x,y = next(iter(train_generator.data_set))
 # x1,y1 = next(iter(validation_generator.data_set))
 model = DenseNet121(include_top=False, classes=2)
-model.compile(tfk.optimizers.SGD(1e-2),
+trainable = False
+for index, layer in enumerate(model.layers):
+    if layer.name.find('Upsampling') == 0:
+        trainable = True
+    model.layers[index].trainable = trainable
+model.compile(tfk.optimizers.Adam(),
               loss=tfk.losses.SparseCategoricalCrossentropy(from_logits=False),
               metrics=[tfk.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
 model.fit(train_generator.data_set, epochs=10,steps_per_epoch=len(train_generator),
