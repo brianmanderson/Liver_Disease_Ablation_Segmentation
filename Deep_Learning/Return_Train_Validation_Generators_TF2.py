@@ -509,7 +509,6 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
         {'cache': os.path.join(base_path,'cache', 'Train{}{}'.format(add, cache_add))}
     ]
     validation_processors += [
-        Ensure_Image_Proportions(image_rows=512, image_cols=512),
         Return_Add_Mult_Disease(change_background=change_background),
         Cast_Data({'annotation': 'float16', 'mask': 'int32'})]
     if cache:
