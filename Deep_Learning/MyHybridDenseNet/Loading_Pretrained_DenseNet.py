@@ -278,7 +278,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
                     file_hash='c13680b51ded0fb44dff2d8f86ac8bb1')
         model.load_weights(weights_path, by_name=True)
     elif weights is not None:
-        model.load_weights(weights)
+        model.load_weights(weights, by_name=True)
 
     return model
 
