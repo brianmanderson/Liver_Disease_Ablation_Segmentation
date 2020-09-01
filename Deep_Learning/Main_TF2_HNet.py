@@ -12,18 +12,23 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 cube_size = (16, 120, 120)
-add = '_32'
+add = '_16'
 path_desc='TF_LR_2D_Dense_1mm_new'
 model_name = 'TF2_2D_Fully_Atrous_Variable_Cube_Training_1mm'
-cache_add = '_1mm'
+cache_add = ''
 
 kernel = (3, 3)
 squeeze_kernel = (1, 1)
-find_dense_lr_dense = True
+find_dense_lr_dense = False
 if find_dense_lr_dense:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
     find_best_lr(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, kernel=kernel,
                  squeeze_kernel=squeeze_kernel, image_size=(None, None, 1))
+
+find_dense_lr_densenet121 = True
+if find_dense_lr_densenet121:
+    from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
+    find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records')
 
 '''
 Plot the LR, get the min and max from the images
