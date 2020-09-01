@@ -28,7 +28,8 @@ if find_dense_lr_dense:
 find_dense_lr_densenet121 = True
 if find_dense_lr_densenet121:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
-    find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records')
+    find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+                          all_trainable=False)
 
 '''
 Plot the LR, get the min and max from the images
@@ -38,7 +39,7 @@ if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
     from Return_Train_Validation_Generators_TF2 import return_paths
     _, morfeus_drive = return_paths()
-    path = os.path.join(morfeus_drive,path_desc, 'Dense')
+    path = os.path.join(morfeus_drive,path_desc, 'DenseNet121')
     make_plots(path)
 
 '''
