@@ -10,6 +10,7 @@ else:
 print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+os.environ['TF_GPU_THREAD_MODE'] = 'gpu_private'
 
 cube_size = (16, 120, 120)
 add = '_16'
