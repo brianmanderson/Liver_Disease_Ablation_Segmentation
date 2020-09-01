@@ -58,7 +58,8 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
                                 return None # repeat!
 
 
-def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records'):
+def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records',
+                          all_trainable=False):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0, 1, 2]:
@@ -73,11 +74,12 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
             print('already done')
             continue
         model = DenseNet121(include_top=False, classes=2)
-        trainable = False  # Only train the new weights
-        for layer in model.layers:
-            if layer.name.find('Upsampling') == 0:
-                trainable = True
-            layer.trainable = trainable
+        if not all_trainable:
+            trainable = False
+            for index, layer in enumerate(model.layers):
+                if layer.name.find('Upsampling') == 0:
+                    trainable = True
+                model.layers[index].trainable = trainable
         k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
         k.set_model(model)
         k.on_train_begin()
