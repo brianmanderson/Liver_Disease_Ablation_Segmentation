@@ -10,21 +10,21 @@ from Return_Train_Validation_Generators_TF2 import return_generators, return_bas
 
 
 def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
-                 image_size=(None, None, None, 1)):
+                 image_size=(None, None, None, 1), pool=(2, 2, 2)):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0, 1, 2]:
         for growth_rate in [0]:
             for layer in [4]:
                 for max_conv_blocks in [3]:
-                    for filters in [8, 16]:
+                    for filters in [96]:
                         for num_conv_blocks in [2]:
                             for conv_lambda in [1]:
                                 base_path, morfeus_drive = return_paths()
                                 run_data = {'layers':layer,'max_conv_blocks':max_conv_blocks,'filters':filters,
                                             'num_conv_blocks':num_conv_blocks, 'conv_lambda':conv_lambda,
                                             'growth_rate':growth_rate, 'kernel': kernel,
-                                            'squeeze_kernel': squeeze_kernel, 'pool': (2, 2)}
+                                            'squeeze_kernel': squeeze_kernel, 'pool': pool}
                                 layers_dict = get_layers_dict_dense_new(**run_data)
                                 things = ['new', 'layers{}'.format(layer), 'max_conv_blocks_{}'.format(max_conv_blocks),
                                           'filters_{}'.format(filters), 'num_conv_blocks_{}'.format(num_conv_blocks),
