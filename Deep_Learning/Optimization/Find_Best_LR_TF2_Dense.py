@@ -59,7 +59,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
 
 
 def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records',
-                          all_trainable=False):
+                          all_trainable=False, weights='imagenet'):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0, 1, 2]:
@@ -73,7 +73,7 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
         if os.path.exists(out_path):
             print('already done')
             continue
-        model = DenseNet121(include_top=False, classes=2)
+        model = DenseNet121(include_top=False, classes=2, weights=weights)
         if not all_trainable:
             trainable = False
             for index, layer in enumerate(model.layers):
