@@ -41,7 +41,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         return None
     checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
     image_frequency = 20
-    val_frequency = 5
+    val_frequency = 1
     if run_best:
         image_frequency = 10
         val_frequency = 1
@@ -97,7 +97,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     bn_before_activation = True
     step_size_factor = 6
     threshold = True
-    for iteration in [99, 98, 97]:
+    for iteration in [99, 98, 97, 96]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
