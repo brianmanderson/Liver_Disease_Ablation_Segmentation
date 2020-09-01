@@ -7,6 +7,7 @@ from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import Lea
 from tensorflow.keras.callbacks import TensorBoard
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict_dense,\
     return_paths, return_model, get_layers_dict_dense_new
+from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
 
 
 def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
@@ -18,7 +19,7 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
             for layer in [4]:
                 for max_conv_blocks in [3]:
                     for filters in [96]:
-                        for num_conv_blocks in [2]:
+                        for num_conv_blocks in [3]:
                             for conv_lambda in [1]:
                                 base_path, morfeus_drive = return_paths()
                                 run_data = {'layers':layer,'max_conv_blocks':max_conv_blocks,'filters':filters,
@@ -55,6 +56,40 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
                                                    train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
                                 tf.keras.backend.clear_session()
                                 return None # repeat!
+
+
+def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records'):
+    min_lr = 1e-7
+    max_lr = 1
+    for iteration in [0, 1, 2]:
+        things = ['{}_Iteration'.format(iteration)]
+        base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+            batch_size=batch_size, add=add, threshold_val=10, change_background=False,
+            cache_add=cache_add, path_lead=path_lead, validation_name='_64')
+        out_path = os.path.join(morfeus_drive, path_desc, 'DenseNet121')
+        for thing in things:
+            out_path = os.path.join(out_path, thing)
+        if os.path.exists(out_path):
+            print('already done')
+            continue
+        model = DenseNet121(include_top=False, classes=2)
+        trainable = False  # Only train the new weights
+        for layer in model.layers:
+            if layer.name.find('Upsampling') == 0:
+                trainable = True
+            layer.trainable = trainable
+        k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
+        k.set_model(model)
+        k.on_train_begin()
+        lr_opt = tf.keras.optimizers.Adam
+        print(out_path)
+        LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'],
+                           out_path=out_path, optimizer=lr_opt,
+                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                           steps_per_epoch=len(train_generator),
+                           train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
+        tf.keras.backend.clear_session()
+        return None  # repeat!
 
 
 if __name__ == '__main__':
