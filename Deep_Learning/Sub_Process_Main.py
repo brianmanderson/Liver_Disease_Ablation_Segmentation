@@ -11,7 +11,7 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
-args = "python Main_TF2.py {}".format(gpu)
+args = "python Main_TF2_HNet.py {}".format(gpu)
 # args = "python Return_Train_Validation_Generators_TF2.py {}".format(gpu)
 num_models = 18
 iterations = 3
