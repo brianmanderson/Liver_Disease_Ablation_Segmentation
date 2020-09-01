@@ -183,7 +183,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
 
     bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
     mask = layers.Input(shape=input_shape[:-1] + (1,), name='mask', dtype='int32')
-    x = layers.Concatenate(name='InputConcat')([img_input, tf.cast(mask, 'float32'), img_input])
+    x = layers.Concatenate(name='InputConcat')([img_input, img_input, img_input])
     inputs = [img_input, mask]
 
     encoding = []
@@ -220,9 +220,9 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
         x = layers.Activation('relu', name='activation_{}'.format(index))(x)
         x = layers.Add()([x, across])
 
-
-    x = layers.Conv2D(filters=classes, kernel_size=(1, 1), activation='softmax', padding='same')(x)
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
+    x = layers.Concatenate()([x, tf.cast(mask, 'float32')])
+    x = layers.Conv2D(filters=classes, kernel_size=(1, 1), activation='softmax', padding='same')(x)
     sum_vals_base = tf.where(mask > 0, 0, 1)
     zeros = tf.where(mask > 0, 0, 0)
     zeros = tf.repeat(zeros, repeats=classes-1, axis=-1)
