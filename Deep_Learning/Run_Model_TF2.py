@@ -179,7 +179,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [0, 1, 2]:
+    for iteration in [3, 4, 5]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
@@ -191,7 +191,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     run_data['percentile_normed'] = True
                     run_data['sampling'] = 1
                     run_data['mirror_max'] = False
-                    run_data['Model_Style'] = 'DenseNet_masklater'
+                    run_data['Model_Style'] = 'DenseNet'
                     run_data['concat'] = concat
                     run_data['all_trainable'] = all_trainable
                     run_data['flipped'] = flip
