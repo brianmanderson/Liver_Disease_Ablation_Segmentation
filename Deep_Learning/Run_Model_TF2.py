@@ -16,7 +16,7 @@ from tensorboard.plugins.hparams.keras import Callback
 def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
               paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', run_best=False,
               skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
-              all_trainable=False, densenet=False, **kwargs):
+              all_trainable=False, densenet=False, weights_path=None, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -65,7 +65,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     callbacks += [checkpoint]
     if not run_best:
         callbacks += [EarlyStopping(patience=15, verbose=1)]
-    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet)
+    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet, weights_path=weights_path)
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
@@ -174,7 +174,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
 def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                    run_best=False, add='', cache_add='_1mm', batch_size=0,
                    change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
-                   all_trainable=False, path_lead='', validation_name=''):
+                   all_trainable=False, path_lead='', validation_name='', weights_path=None):
     optimizers = ['Adam']
     concat = True
     if run_best:
@@ -189,6 +189,9 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     if not all_trainable:
                         run_data['min_lr'] = 5e-6
                         run_data['max_lr'] = 1e-2
+                    else:
+                        run_data['min_lr'] = 1e-6
+                        run_data['max_lr'] = 1e-3
                     run_data['percentile_normed'] = True
                     run_data['sampling'] = 1
                     run_data['mirror_max'] = False
@@ -237,7 +240,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                               step_size=step_size, optimizer=optimizer,
                               validation_generator=validation_generator, run_best=run_best,
                               paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
-                              base_path=base_path, epochs=epochs, **run_data)
+                              base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
                     return None # break out!
 
 
