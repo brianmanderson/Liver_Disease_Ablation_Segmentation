@@ -1,30 +1,20 @@
 """Test ImageNet pretrained DenseNet"""
 from __future__ import print_function
-import sys
-sys.path.insert(0,'/home/xmli/livertumor_xmli/Keras-2.0.8')
-sys.path.insert(0,'/home/xmli/livertumor_xmli/mylib')
-# sys.path.insert(0,'/research/pheng/xmli/livertumor/Keras-2.0.8')
-# sys.path.insert(0,'/research/pheng/xmli/livertumor/mylib')
 from multiprocessing.dummy import Pool as ThreadPool
 import random
-from medpy.io import load
 import numpy as np
-from keras.optimizers import SGD
-from keras.callbacks import ModelCheckpoint
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.callbacks import ModelCheckpoint
 import tensorflow as tf
-from keras.models import Model
-from keras.layers import Input, ZeroPadding2D, concatenate, add
-from keras.layers.core import Dropout, Activation
-from keras.layers.convolutional import UpSampling2D, Conv2D
-from keras.layers.pooling import AveragePooling2D, MaxPooling2D
-from keras.layers.normalization import BatchNormalization
-import keras.backend as K
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, ZeroPadding2D, concatenate, add, Dropout, Activation, UpSampling2D,\
+    Conv2D, AveragePooling2D, MaxPooling2D, BatchNormalization, Add
+import tensorflow.keras.backend as K
 import os
 import time
 from skimage.transform import resize
-from custom_layers import Scale
+from lib.custom_layers import Scale
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-K.set_image_dim_ordering('tf')
 
 path = './result_train_denseU167_fast_new/'
 batch_size = 10
@@ -82,7 +72,7 @@ def generate_arrays_from_file(batch_size, trainidx, img_list, tumor_list, tumorl
         X = np.zeros((batch_size, img_deps, img_rows, img_cols), dtype='float32')
         Y = np.zeros((batch_size, img_deps, img_rows, 1), dtype='int16')
         Parameter_List = []
-        for idx in xrange(batch_size):
+        for idx in range(batch_size):
             count = random.choice(trainidx)
             img = img_list[count]
             tumor = tumor_list[count]
@@ -100,7 +90,7 @@ def generate_arrays_from_file(batch_size, trainidx, img_list, tumor_list, tumorl
         result_list = pool.map(load_seq_crop_data_masktumor_try, Parameter_List)
         pool.close()
         pool.join()
-        for idx in xrange(len(result_list)):
+        for idx in range(len(result_list)):
             X[idx, :, :, :] = result_list[idx][0]
             Y[idx, :, :, 0] = result_list[idx][1]
         yield (X,Y)
@@ -148,15 +138,10 @@ def DenseUNet(nb_dense_block=4, growth_rate=48, nb_filter=96, reduction=0.0, dro
 
     # Handle Dimension Ordering for different backends
     global concat_axis
-    if K.image_dim_ordering() == 'tf':
-      concat_axis = 3
-      img_input = Input(batch_shape=(batch_size, img_deps, img_rows, 3), name='data')
-    else:
-      concat_axis = 1
-      img_input = Input(shape=(3, 224, 224), name='data')
+    concat_axis = 3
+    img_input = Input(batch_shape=(None, None, None, 3), name='data')
 
     # From architecture for ImageNet (Table 1 in the paper)
-    nb_filter = 96
     nb_layers = [6,12,36,24] # For DenseNet-161
     box = []
     # Initial convolution
@@ -188,25 +173,25 @@ def DenseUNet(nb_dense_block=4, growth_rate=48, nb_filter=96, reduction=0.0, dro
 
     up0 = UpSampling2D(size=(2,2))(x)
     line0 = Conv2D(2208, (1, 1), padding="same", kernel_initializer="normal", name="line0")(box[3])
-    up0_sum = add([line0, up0])
+    up0_sum = Add()([line0, up0])
     conv_up0 = Conv2D(768, (3, 3), padding="same", kernel_initializer="normal", name = "conv_up0")(up0_sum)
     bn_up0 = BatchNormalization(name = "bn_up0")(conv_up0)
     ac_up0 = Activation('relu', name='ac_up0')(bn_up0)
 
     up1 = UpSampling2D(size=(2,2))(ac_up0)
-    up1_sum = add([box[2], up1])
+    up1_sum = Add()([box[2], up1])
     conv_up1 = Conv2D(384, (3, 3), padding="same", kernel_initializer="normal", name = "conv_up1")(up1_sum)
     bn_up1 = BatchNormalization(name = "bn_up1")(conv_up1)
     ac_up1 = Activation('relu', name='ac_up1')(bn_up1)
 
     up2 = UpSampling2D(size=(2,2))(ac_up1)
-    up2_sum = add([box[1], up2])
+    up2_sum = Add()([box[1], up2])
     conv_up2 = Conv2D(96, (3, 3), padding="same", kernel_initializer="normal", name = "conv_up2")(up2_sum)
     bn_up2 = BatchNormalization(name = "bn_up2")(conv_up2)
     ac_up2 = Activation('relu', name='ac_up2')(bn_up2)
 
     up3 = UpSampling2D(size=(2,2))(ac_up2)
-    up3_sum = add([box[0], up3])
+    up3_sum = Add()([box[0], up3])
     conv_up3 = Conv2D(96, (3, 3), padding="same", kernel_initializer="normal", name = "conv_up3")(up3_sum)
     bn_up3 = BatchNormalization(name = "bn_up3")(conv_up3)
     ac_up3 = Activation('relu', name='ac_up3')(bn_up3)

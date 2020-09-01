@@ -16,7 +16,7 @@ from tensorboard.plugins.hparams.keras import Callback
 def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
               paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', run_best=False,
               skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
-              squeeze_kernel=(1, 1, 1), concat=True, **kwargs):
+              all_trainable=False, densenet=False, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -65,7 +65,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     callbacks += [checkpoint]
     if not run_best:
         callbacks += [EarlyStopping(patience=15, verbose=1)]
-    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3))
+    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet)
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
@@ -86,7 +86,8 @@ def compare_base_current(data_frame, current_run_df, features_list):
 
 def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                 run_best=False, debug=False, add='', dense=False, cache_add='_1mm', kernel=(3, 3, 3),
-                squeeze_kernel=(1, 1, 1), is_2D=False, batch_size=8, change_background=True):
+                squeeze_kernel=(1, 1, 1), is_2D=False, batch_size=8, change_background=True,
+                excel_file_name = 'parameters_list_by_trial_id_Dense.xlsx'):
     optimizers = ['Adam']
     pool = (2, 2, 2)
     if is_2D:
@@ -94,10 +95,9 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
     concat = True
     if run_best:
         save_a_model = True
-    bn_before_activation = True
     step_size_factor = 6
     threshold = True
-    for iteration in [99, 98, 97, 96]:
+    for iteration in [0, 1, 2]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
@@ -117,8 +117,6 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                     perm = np.arange(len(overall_dictionary))
                     np.random.shuffle(perm)
                     overall_dictionary = overall_dictionary[perm]
-                    if debug:
-                        i = 3
                     for run_data in overall_dictionary:
                         run_data['percentile_normed'] = True
                         run_data['sampling'] = 1
@@ -129,29 +127,9 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                         run_data['change_background'] = change_background
                         run_data['threshold'] = threshold
                         run_data['threshold_val'] = threshold_val
-                        if debug:
-                            layers_dict = get_layers_dict_dense_new(**run_data, kernel=kernel,
-                                                                    squeeze_kernel=squeeze_kernel,
-                                                                    bn_before_activation=bn_before_activation)
-                            Model_val = return_model(layers_dict)
-                            Model_val.compile(optimizer,
-                                              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                                              metrics=[tf.keras.metrics.SparseCategoricalAccuracy(),
-                                                       SparseCategoricalMeanDSC(num_classes=2)])
-                            callbacks = []
-                            i += 1
-                            if os.path.exists(r'H:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i)):
-                                continue
-                            k = TensorBoard(log_dir=r'H:\Liver_Disease_Ablation\tensorboard\test\{}'.format(i), profile_batch=0, histogram_freq=5, write_graph=True)
-                            k.set_model(Model_val)
-                            k.on_train_begin()
-                            tf.keras.backend.clear_session()
-                            continue
-                        if debug:
-                            return None
                         tf.random.set_seed(iteration)
                         run_data['batch_size'] = batch_size
-                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_Dense.xlsx')
+                        excel_path = os.path.join(morfeus_drive, excel_file_name)
                         print(base_path)
                         run_data['Iteration'] = iteration
                         run_data['Trial_ID'] = 0
@@ -190,6 +168,76 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                                   paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, **run_data)
                         return None # break out!
+
+
+def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
+                   run_best=False, add='', cache_add='_1mm', batch_size=0,
+                   change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
+                   all_trainable=False, path_lead=''):
+    optimizers = ['Adam']
+    concat = True
+    if run_best:
+        save_a_model = True
+    threshold = True
+    for iteration in [0, 1, 2]:
+        for flip in [True]:
+            for threshold_val in [10]:
+                for optimizer in optimizers:
+                    base_path, morfeus_drive = return_paths()
+                    run_data = {}
+                    if not all_trainable:
+                        run_data['min_lr'] = 5e-6
+                        run_data['max_lr'] = 1e-2
+                    run_data['percentile_normed'] = True
+                    run_data['sampling'] = 1
+                    run_data['mirror_max'] = False
+                    run_data['Model_Style'] = 'DenseNet'
+                    run_data['concat'] = concat
+                    run_data['all_trainable'] = all_trainable
+                    run_data['flipped'] = flip
+                    run_data['change_background'] = change_background
+                    run_data['threshold'] = threshold
+                    run_data['threshold_val'] = threshold_val
+                    tf.random.set_seed(iteration)
+                    run_data['batch_size'] = batch_size
+                    run_data['densenet'] = True
+                    excel_path = os.path.join(morfeus_drive, excel_file_name)
+                    print(base_path)
+                    run_data['Iteration'] = iteration
+                    run_data['Trial_ID'] = 0
+                    data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
+                    trial_id = 0
+                    while trial_id in data_frame['Trial_ID'].values:
+                        trial_id += 1
+                    run_data['Trial_ID'] = trial_id
+                    current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
+                    if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
+                        print('Already done')
+                        continue
+                    print(current_run_df)
+                    data_frame = data_frame.append(current_run_df, ignore_index=True)
+                    data_frame.to_excel(excel_path, index=0)
+                    _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
+                                                                                    flip=flip, change_background=change_background,
+                                                                                    threshold=threshold, threshold_val=threshold_val,
+                                                                                    path_lead=path_lead)
+                    step_size = len(train_generator)
+                    hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
+
+                    paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                                                    is_keras_model=False)
+                    paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
+                    tensorboard_output = paths_class.tensorboard_path_out
+                    print(tensorboard_output)
+                    if os.listdir(tensorboard_output):
+                        print('already done')
+                        continue
+                    run_model(trial_id=str(trial_id), layers_dict=None, train_generator=train_generator,
+                              step_size=step_size, optimizer=optimizer,
+                              validation_generator=validation_generator, run_best=run_best,
+                              paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
+                              base_path=base_path, epochs=epochs, **run_data)
+                    return None # break out!
 
 
 if __name__ == '__main__':

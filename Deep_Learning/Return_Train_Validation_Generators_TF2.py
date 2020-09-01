@@ -4,6 +4,7 @@ __author__ = 'Brian M Anderson'
 from Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Generator import Data_Generator_Class
 from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Image_Processors_DataSet import *
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_Functions, return_hollow_layers_dict
+from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
 from Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 import pandas as pd
@@ -436,12 +437,21 @@ def get_layers_dict_dense_less_decode(layers=1, filters=12, growth_rate=6, conv_
     return layers_dict
 
 
-def return_model(layers_dict, is_2D=False):
+def return_model(layers_dict, is_2D=False, densenet=False, all_trainable=False):
     image_size = (None, None, None, 1)
     if is_2D:
         image_size = (None, None, 1)
-    model = my_UNet(layers_dict=layers_dict, image_size=image_size,
-                    mask_output=True, explictly_defined=True, is_2D=is_2D).created_model
+    if not densenet:
+        model = my_UNet(layers_dict=layers_dict, image_size=image_size,
+                        mask_output=True, explictly_defined=True, is_2D=is_2D).created_model
+    else:
+        model = DenseNet121(include_top=False, classes=2)
+        if not all_trainable:
+            trainable = False
+            for index, layer in enumerate(model.layers):
+                if layer.name.find('Upsampling') == 0:
+                    trainable = True
+                model.layers[index].trainable = trainable
     return model
 
 

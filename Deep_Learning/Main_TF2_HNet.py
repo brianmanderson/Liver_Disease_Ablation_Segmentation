@@ -14,7 +14,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 cube_size = (16, 120, 120)
 add = '_16'
 path_desc='TF_LR_2D_Dense_1mm_new'
-model_name = 'TF2_2D_Fully_Atrous_Variable_Cube_Training_1mm'
+model_name = 'DenseNet'
 cache_add = ''
 
 kernel = (3, 3)
@@ -25,7 +25,7 @@ if find_dense_lr_dense:
     find_best_lr(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, kernel=kernel,
                  squeeze_kernel=squeeze_kernel, image_size=(None, None, 1))
 
-find_dense_lr_densenet121 = True
+find_dense_lr_densenet121 = False
 if find_dense_lr_densenet121:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
@@ -46,13 +46,12 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
-    from Run_Model_TF2 import train_model
+    from Run_Model_TF2 import train_DenseNet
     run_best = False
-    train_model(epochs=201, model_name=model_name, run_best=run_best, debug=False, add=add, dense=True,
-                cache_add=cache_add, kernel=kernel, squeeze_kernel=squeeze_kernel, is_2D=True, batch_size=0,
-                change_background=False)
+    train_DenseNet(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=0,
+                   change_background=False, path_lead='Records')
 
 make_opt_excel = False
 if make_opt_excel:
