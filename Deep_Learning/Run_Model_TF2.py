@@ -39,7 +39,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     if os.listdir(tensorboard_output):
         print('already done')
         return None
-    checkpoint_path = os.path.join(model_path_out,'cp-best.hdf5')
+    checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
     image_frequency = 20
     val_frequency = 1
     if run_best:
@@ -72,6 +72,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks, steps_per_epoch=step_size,
                   validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
                   validation_freq=val_frequency)
+    Model_val.save(os.path.join(model_path_out,'final_model.h5'))
     tf.keras.backend.clear_session()
     return None
 
@@ -179,7 +180,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [8]:
+    for iteration in [10, 11]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
