@@ -263,7 +263,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             names.append(name)
             if i != 0:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                             block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
+                             block(128, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                              block(filters, batch_norm=False, activation=None, out_name=name)]
             else:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
@@ -272,7 +272,9 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             names = names[:]
             filters += growth_rate
             filters = min([filters, max_filters])
-        filters *= 2
+        # filters *= 2
+        if filters == 96:
+            filters = 32
         encoding_names.append(names)
         layers_dict['Layer_' + str(layer)]['Encoding'] += encoding
         previous_name = 'Layer_{}_Down'.format(layer)
@@ -290,7 +292,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
         names.append(name)
         if i != 0:
             encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                         block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
+                         block(128, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                          block(filters, batch_norm=False, activation=None, out_name=name)]
         else:
             encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
@@ -302,7 +304,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
 
     layers_dict['Base'] = encoding
     for layer in layers_encoding[::-1]:
-        filters //= 2
+        # filters //= 2
         num_conv_blocks = num_blocks[layer]
         up_name = 'Layer_{}_Up'.format(layer)
         layers_dict['Layer_' + str(layer)]['Pooling']['Decoding'] = [
@@ -319,7 +321,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             names.append(name)
             if i != 0:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                             block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
+                             block(128, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                              block(filters, batch_norm=False, activation=None, out_name=name)]
             else:
                 encoding += [lc.activation_layer('elu'), lc.batch_norm_layer(),
@@ -330,7 +332,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
             filters = min([filters, max_filters])
         layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
     final_steps = [lc.activation_layer('elu'), lc.batch_norm_layer(),
-                   block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
+                   block(128, kernel=squeeze_kernel, batch_norm=True, activation='elu'),
                    lc.convolution_layer(num_classes, batch_norm=False, activation='softmax')]
     layers_dict['Final_Steps'] = final_steps
     return layers_dict
