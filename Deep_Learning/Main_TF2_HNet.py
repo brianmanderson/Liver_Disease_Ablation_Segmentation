@@ -28,7 +28,7 @@ if find_dense_lr_dense:
     find_best_lr(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, kernel=kernel,
                  squeeze_kernel=squeeze_kernel, image_size=(None, None, 1))
 
-find_dense_lr_densenet121 = True
+find_dense_lr_densenet121 = False
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_2', 'cp-best.h5')
 if find_dense_lr_densenet121:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
@@ -48,7 +48,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
+run_200 = True
 if run_200:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
