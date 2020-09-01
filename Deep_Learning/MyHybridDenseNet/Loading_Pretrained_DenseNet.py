@@ -161,11 +161,11 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
     ValueError: if `classifier_activation` is not `softmax` or `None` when
       using a pretrained top layer.
     """
-    if not (weights in {'imagenet', None} or file_io.file_exists(weights)):
-        raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization), `imagenet` '
-                         '(pre-training on ImageNet), '
-                         'or the path to the weights file to be loaded.')
+    # if not (weights in {'imagenet', None} or file_io.file_exists(weights)):
+    #     raise ValueError('The `weights` argument should be either '
+    #                      '`None` (random initialization), `imagenet` '
+    #                      '(pre-training on ImageNet), '
+    #                      'or the path to the weights file to be loaded.')
 
     if weights == 'imagenet' and include_top and classes != 1000:
         raise ValueError('If using `weights` as `"imagenet"` with `include_top`'
