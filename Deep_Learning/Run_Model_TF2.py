@@ -151,7 +151,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             return None
                         tf.random.set_seed(iteration)
                         run_data['batch_size'] = batch_size
-                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_Dense2D.xlsx')
+                        excel_path = os.path.join(morfeus_drive, 'parameters_list_by_trial_id_Dense.xlsx')
                         print(base_path)
                         run_data['Iteration'] = iteration
                         run_data['Trial_ID'] = 0
