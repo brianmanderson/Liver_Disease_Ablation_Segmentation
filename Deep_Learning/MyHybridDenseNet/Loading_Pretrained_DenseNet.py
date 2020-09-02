@@ -186,7 +186,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
 
     bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
     mask = layers.Input(shape=input_shape[:-1] + (1,), name='mask', dtype='int32')
-    x = layers.Concatenate(name='InputConcat')([img_input, tf.cast(mask, 'float32'), img_input])
+    x = layers.Concatenate(name='InputConcat')([img_input, img_input, img_input])
     inputs = [img_input, mask]
 
     encoding = []
