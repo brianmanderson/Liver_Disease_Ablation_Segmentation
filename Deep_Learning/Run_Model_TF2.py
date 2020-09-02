@@ -174,7 +174,7 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
 def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                    run_best=False, add='', cache_add='_1mm', batch_size=0,
                    change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
-                   all_trainable=False, path_lead='', validation_name='', weights_path=None):
+                   all_trainable=False, path_lead='', validation_name='', weights_path=None, layers_dict=None):
     optimizers = ['Adam']
     concat = True
     if run_best:
@@ -186,16 +186,19 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                 for optimizer in optimizers:
                     base_path, morfeus_drive = return_paths()
                     run_data = {}
-                    if not all_trainable:
+                    if not all_trainable and layers_dict is None:
                         run_data['min_lr'] = 5e-6
                         run_data['max_lr'] = 1e-2
+                    elif layers_dict is not None:
+                        run_data['min_lr'] = 4e-7
+                        run_data['max_lr'] = 1e-4
                     else:
                         run_data['min_lr'] = 1e-8
                         run_data['max_lr'] = 1e-4
                     run_data['percentile_normed'] = True
                     run_data['sampling'] = 1
                     run_data['mirror_max'] = False
-                    run_data['Model_Style'] = 'DenseNet'
+                    run_data['Model_Style'] = 'DenseNet3D'
                     run_data['concat'] = concat
                     run_data['all_trainable'] = all_trainable
                     run_data['flipped'] = flip
@@ -236,7 +239,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     if os.listdir(tensorboard_output):
                         print('already done')
                         continue
-                    run_model(trial_id=str(trial_id), layers_dict=None, train_generator=train_generator,
+                    run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
                               step_size=step_size, optimizer=optimizer,
                               validation_generator=validation_generator, run_best=run_best,
                               paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
