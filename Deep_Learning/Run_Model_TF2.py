@@ -188,7 +188,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     run_data = {}
                     if not all_trainable and layers_dict is None:
                         run_data['min_lr'] = 5e-6
-                        run_data['max_lr'] = 1e-2
+                        run_data['max_lr'] = 2e-2
                     elif layers_dict is not None:
                         run_data['min_lr'] = 4e-7
                         run_data['max_lr'] = 1e-4
