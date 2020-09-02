@@ -13,8 +13,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 os.environ['TF_GPU_THREAD_MODE'] = 'gpu_private'
 
 cube_size = (16, 120, 120)
-from Return_Train_Validation_Generators_TF2 import return_paths, get_layers_dict_dense_HNet
-layers_dict = get_layers_dict_dense_HNet(layers=3, filters=32, num_conv_blocks=4, conv_lambda=2, max_conv_blocks=8)
+from Return_Train_Validation_Generators_TF2 import return_paths
 base_path, morfeus_drive = return_paths()
 kernel = (3, 3)
 squeeze_kernel = (1, 1)
@@ -24,7 +23,7 @@ path_desc='TF_LR_2D_DenseNet'
 model_name = 'DenseNet'
 cache_add = ''
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
-find_dense_lr_densenet121_pretrained = True
+find_dense_lr_densenet121_pretrained = False
 if find_dense_lr_densenet121_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
@@ -43,15 +42,53 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = False
-if run_200:
+run_200_pretrained = True
+if run_200_pretrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
     all_trainable = False
     train_DenseNet(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=0,
                    change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
-                   weights_path=model_path, layers_dict=layers_dict)
+                   weights_path=None, layers_dict=None)
 
+'''
+Now, turn on all weights and retrain
+'''
+all_trainable=True
+weights_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
+find_dense_lr_densenet121_retrained = False
+if find_dense_lr_densenet121_retrained:
+    from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
+    find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+                          all_trainable=all_trainable, weights_path=weights_path, layers_dict=None)
+
+run_200_retrained = False
+if run_200_retrained:
+    from Run_Model_TF2 import train_DenseNet
+    run_best = False
+    train_DenseNet(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=0,
+                   change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
+                   weights_path=weights_path, layers_dict=None)
+
+
+'''
+Now slap on 3D and turn off trainable on 2D
+'''
+all_trainable=False
+weights_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
+find_dense_lr_densenet121_3D_pretrained = False
+if find_dense_lr_densenet121_3D_pretrained:
+    from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
+    find_best_lr_DenseNet3D(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+                          all_trainable=all_trainable, weights_path=weights_path)
+
+run_200_retrained = False
+if run_200_retrained:
+    from Run_Model_TF2 import train_DenseNet
+    run_best = False
+    train_DenseNet(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=0,
+                   change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
+                   weights_path=weights_path, layers_dict=1)
 make_opt_excel = False
 if make_opt_excel:
     '''
