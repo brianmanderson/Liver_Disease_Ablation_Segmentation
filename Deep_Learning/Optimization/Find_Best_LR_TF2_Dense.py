@@ -6,7 +6,7 @@ from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plo
 from Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
 from tensorflow.keras.callbacks import TensorBoard
 from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict, get_layers_dict_dense,\
-    return_paths, return_model, get_layers_dict_dense_new
+    return_paths, return_model, get_layers_dict_dense_new, get_layers_dict_dense_HNet
 from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
 
 
@@ -90,5 +90,41 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
         return None  # repeat!
 
 
+def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records',
+                          all_trainable=False, weights_path=None):
+    min_lr = 1e-7
+    max_lr = 1
+    for iteration in [0, 1, 2]:
+        for layers in [2, 3]:
+            for num_conv_blocks in [4]:
+                for conv_lambda in [2, 4]:
+                    layers_dict = get_layers_dict_dense_HNet(layers=layers, filters=32, num_conv_blocks=num_conv_blocks, conv_lambda=conv_lambda,
+                                                             max_conv_blocks=8)
+                    things = ['all_trainable_{}'.format(all_trainable), '3D_Model_{}'.format(layers_dict is not None)]
+                    things += ['layers_{}'.format(layers), 'conv_blocks_{}'.format(num_conv_blocks),
+                               'lambda_{}'.format(conv_lambda)]
+                    things += ['{}_Iteration'.format(iteration)]
+                    base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+                        batch_size=batch_size, add=add, threshold_val=10, change_background=False,
+                        cache_add=cache_add, path_lead=path_lead, validation_name='_64')
+                    out_path = os.path.join(morfeus_drive, path_desc, 'DenseNet121')
+                    for thing in things:
+                        out_path = os.path.join(out_path, thing)
+                    if os.path.exists(out_path):
+                        print('already done')
+                        continue
+                    model = return_model(layers_dict, weights_path=weights_path, densenet=True, all_trainable=all_trainable)
+                    k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
+                    k.set_model(model)
+                    k.on_train_begin()
+                    lr_opt = tf.keras.optimizers.Adam
+                    print(out_path)
+                    LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'],
+                                       out_path=out_path, optimizer=lr_opt,
+                                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                                       steps_per_epoch=len(train_generator),
+                                       train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
+                    tf.keras.backend.clear_session()
+                    return None  # repeat!
 if __name__ == '__main__':
     pass
