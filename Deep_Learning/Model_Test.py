@@ -24,6 +24,10 @@ add = ''
 cache_add = ''
 # x,y = next(iter(train_generator.data_set))
 # x1,y1 = next(iter(validation_generator.data_set))
+# predictions = os.listdir(r'H:\Liver_Disease_Ablation\Predictions_np')
+# for file in predictions:
+#     pred = np.load(os.path.join(r'H:\Liver_Disease_Ablation\Predictions_np', file))
+#     xxx = 1
 base_path, morfeus_drive, train_generator, validation_generator = return_generators(
     batch_size=0, add='_16', threshold_val=10, change_background=False,
     cache_add=cache_add, path_lead='Records', validation_name='_64', cache=False)
@@ -38,7 +42,9 @@ for i in range(len(validation_generator)):
     print(i)
     x, y = next(generator)
     pred = model.predict(x)
-    np.save(os.path.join(base_path, 'Predictions_np', '{}.npy'.format(i)), pred)
+    np.save(os.path.join(base_path, 'Predictions_np', 'Prediction_{}.npy'.format(i)), pred)
+    np.save(os.path.join(base_path, 'Predictions_np', 'Image_{}.npy'.format(i)), np.squeeze(x[0].numpy()))
+    np.save(os.path.join(base_path, 'Predictions_np', 'Truth_{}.npy'.format(i)), np.squeeze(y[0].numpy()))
     xxx = 1
 # model.compile(tfk.optimizers.Adam(),
 #               loss=tfk.losses.SparseCategoricalCrossentropy(from_logits=False),
