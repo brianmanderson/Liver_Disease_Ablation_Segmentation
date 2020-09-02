@@ -64,7 +64,7 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
     max_lr = 1
     for iteration in [0, 1, 2]:
         things = ['all_trainable_{}'.format(all_trainable)]
-        things += ['3D_Model_{}'.format(layers_dict is None)]
+        things += ['3D_Model_{}'.format(layers_dict is not None)]
         things += ['{}_Iteration'.format(iteration)]
         base_path, morfeus_drive, train_generator, validation_generator = return_generators(
             batch_size=batch_size, add=add, threshold_val=10, change_background=False,
