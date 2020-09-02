@@ -59,11 +59,14 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
 
 
 def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records',
-                          all_trainable=False, weights='imagenet'):
+                          all_trainable=False, weights_path=None, layers_dict=None):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0, 1, 2]:
-        things = ['{}_Iteration'.format(iteration)]
+        things = ['all_trainable_{}'.format(all_trainable)]
+        if layers_dict is not None:
+            things += ['3D_Model']
+        things += ['{}_Iteration'.format(iteration)]
         base_path, morfeus_drive, train_generator, validation_generator = return_generators(
             batch_size=batch_size, add=add, threshold_val=10, change_background=False,
             cache_add=cache_add, path_lead=path_lead, validation_name='_64')
@@ -73,13 +76,7 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
         if os.path.exists(out_path):
             print('already done')
             continue
-        model = DenseNet121(include_top=False, classes=2, weights=weights)
-        if not all_trainable:
-            trainable = False
-            for index, layer in enumerate(model.layers):
-                if layer.name.find('Upsampling') == 0:
-                    trainable = True
-                model.layers[index].trainable = trainable
+        model = return_model(layers_dict, weights_path=weights_path, densenet=True, all_trainable=all_trainable)
         k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
         k.set_model(model)
         k.on_train_begin()
