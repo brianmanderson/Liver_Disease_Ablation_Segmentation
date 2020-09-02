@@ -56,7 +56,7 @@ Turn on the weights, and find a good learning rate
 '''
 all_trainable=True
 weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_25', 'final_model.h5')
-find_dense_lr_densenet121_retrained = True
+find_dense_lr_densenet121_retrained = False
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
@@ -74,7 +74,7 @@ if plot_lr:
 '''
 Run with all weights turned on
 '''
-run_200_retrained = True
+run_200_retrained = False
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
@@ -87,8 +87,8 @@ if run_200_retrained:
 Now slap on 3D and turn off trainable on 2D
 '''
 all_trainable=False
-weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', '', 'final_model.h5')
-find_dense_lr_densenet121_3D_pretrained = False
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_27', 'final_model.h5')
+find_dense_lr_densenet121_3D_pretrained = True
 if find_dense_lr_densenet121_3D_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
     find_best_lr_DenseNet3D(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
