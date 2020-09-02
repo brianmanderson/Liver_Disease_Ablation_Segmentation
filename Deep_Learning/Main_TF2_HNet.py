@@ -20,7 +20,7 @@ squeeze_kernel = (1, 1)
 
 add = '_16'
 path_desc='TF_LR_2D_DenseNet'
-model_name = 'DenseNet'
+model_name = 'DenseNetNew'
 cache_add = ''
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
 find_dense_lr_densenet121_pretrained = False
