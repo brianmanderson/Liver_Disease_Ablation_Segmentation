@@ -8,7 +8,16 @@ from tensorflow.keras.callbacks import TensorBoard
 import tensorflow.keras as tfk
 from HDenseUNet.denseunet import DenseUNet
 from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
+import sys, os
 
+if len(sys.argv) > 1:
+    gpu = int(sys.argv[1])
+else:
+    gpu = 0
+print('Running on {}'.format(gpu))
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+os.environ['TF_GPU_THREAD_MODE'] = 'gpu_private'
 add = ''
 cache_add = ''
 # x,y = next(iter(train_generator.data_set))
