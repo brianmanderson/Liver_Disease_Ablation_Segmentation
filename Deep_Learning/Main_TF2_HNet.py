@@ -18,7 +18,7 @@ path_desc='TF_LR_2D_Dense_1mm_new'
 model_name = 'DenseNet'
 cache_add = ''
 from Return_Train_Validation_Generators_TF2 import return_paths, get_layers_dict_dense_HNet
-layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=4, conv_lambda=2)
+layers_dict = get_layers_dict_dense_HNet(layers=3, filters=32, num_conv_blocks=4, conv_lambda=2, max_conv_blocks=8)
 base_path, morfeus_drive = return_paths()
 kernel = (3, 3)
 squeeze_kernel = (1, 1)
