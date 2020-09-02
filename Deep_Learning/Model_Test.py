@@ -36,11 +36,12 @@ cache_add = ''
 base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,cache_add=cache_add,
                                                                                     flip=True, change_background=False,
                                                                                     threshold=True, threshold_val=10,
-                                                                                    path_lead='Records', validation_name='')
+                                                                                    path_lead='Records', validation_name='',
+                                                                                    cache=False)
 layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=4, conv_lambda=2)
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_21', 'final_model.h5')
 model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=model_path)
-
+model.save(os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_21', 'Model'))
 generator = iter(validation_generator.data_set)
 if not os.path.exists(os.path.join(base_path, 'Predictions_np')):
     os.makedirs(os.path.join(base_path, 'Predictions_np'))
