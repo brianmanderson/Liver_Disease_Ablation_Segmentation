@@ -17,8 +17,8 @@ add = '_16'
 path_desc='TF_LR_2D_Dense_1mm_new'
 model_name = 'DenseNet'
 cache_add = ''
-from Return_Train_Validation_Generators_TF2 import return_paths, get_layers_dict_dense_new
-layers_dict = get_layers_dict_dense_new(layers=2, filters=16, num_conv_blocks=3, conv_lambda=1)
+from Return_Train_Validation_Generators_TF2 import return_paths, get_layers_dict_dense_HNet
+layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=4, conv_lambda=2)
 base_path, morfeus_drive = return_paths()
 kernel = (3, 3)
 squeeze_kernel = (1, 1)
@@ -28,8 +28,8 @@ if find_dense_lr_dense:
     find_best_lr(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, kernel=kernel,
                  squeeze_kernel=squeeze_kernel, image_size=(None, None, 1))
 
-find_dense_lr_densenet121 = False
-model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_2', 'cp-best.h5')
+find_dense_lr_densenet121 = True
+model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
 if find_dense_lr_densenet121:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
