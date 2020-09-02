@@ -100,6 +100,18 @@ def return_dictionary(base_dict):
     return dictionary
 
 
+def return_dictionary_densenet3D(base_dict, layers_dict=None):
+    if layers_dict is None:
+        dictionary = [
+                base_dict(layers=2, max_conv_blocks=4, num_conv_blocks=2, conv_lambda=1, min_lr=1e-6, max_lr=1e-3)
+            ]
+    else:
+        dictionary = [
+                base_dict(layers=2, max_conv_blocks=4, num_conv_blocks=2, conv_lambda=1, min_lr=1e-6, max_lr=1e-3)
+            ]
+    return dictionary
+
+
 def return_dictionary_dense(base_dict, run_best=False, is_2D=False):
     if is_2D:
         dictionary = [
@@ -563,6 +575,13 @@ def return_base_dict_dense(step_size_factor=10, save_a_model=False):
                      'Save_Model':save_a_model,'min_lr':min_lr,
                      'max_lr':max_lr, 'step_size_factor': step_size_factor
                      })
+    return base_dict
+
+
+def return_base_dict_dense3D():
+    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda: \
+        OrderedDict({'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':9999,
+                     'conv_lambda':conv_lambda, 'min_lr':min_lr, 'max_lr':max_lr})
     return base_dict
 
 
