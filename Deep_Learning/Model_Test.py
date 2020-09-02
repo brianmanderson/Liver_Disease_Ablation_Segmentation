@@ -20,17 +20,23 @@ import numpy as np
 # from HDenseUNet.denseunet import DenseUNet
 # from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
 
-add = ''
+add = '_16'
+path_desc='TF_LR_2D_Dense_1mm_new'
+model_name = 'DenseNet'
 cache_add = ''
 # x,y = next(iter(train_generator.data_set))
 # x1,y1 = next(iter(validation_generator.data_set))
-# predictions = os.listdir(r'H:\Liver_Disease_Ablation\Predictions_np')
-# for file in predictions:
-#     pred = np.load(os.path.join(r'H:\Liver_Disease_Ablation\Predictions_np', file))
+# path = r'H:\Liver_Disease_Ablation\Predictions_np'
+# images = [i for i in os.listdir(path) if i.startswith('Image')]
+# for file in images:
+#     x = np.load(os.path.join(path, file))
+#     pred = np.load(os.path.join(path, file.replace('Image', 'Prediction')))
+#     truth = np.load(os.path.join(path, file.replace('Image', 'Truth')))
 #     xxx = 1
-base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-    batch_size=0, add='_16', threshold_val=10, change_background=False,
-    cache_add=cache_add, path_lead='Records', validation_name='_64', cache=False)
+base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,cache_add=cache_add,
+                                                                                    flip=True, change_background=False,
+                                                                                    threshold=True, threshold_val=10,
+                                                                                    path_lead='Records', validation_name='_64')
 layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=4, conv_lambda=2)
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_21', 'final_model.h5')
 model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=model_path)
