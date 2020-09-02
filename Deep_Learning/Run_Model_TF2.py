@@ -7,9 +7,9 @@ from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStoppi
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
-from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, return_base_dict,\
-    return_hparams, return_dictionary, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary,\
-    get_layers_dict_dense_new, return_dictionary_dense, return_model
+from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, return_base_dict_dense3D,\
+    return_hparams, return_dictionary_densenet3D, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary,\
+    get_layers_dict_dense_new, return_dictionary_dense, return_model, get_layers_dict_dense_HNet
 from tensorboard.plugins.hparams.keras import Callback
 
 
@@ -191,7 +191,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                         run_data['max_lr'] = 2e-2
                     elif layers_dict is not None:
                         run_data['min_lr'] = 4e-7
-                        run_data['max_lr'] = 1e-4
+                        run_data['max_lr'] = 3e-4
                     else:
                         run_data['min_lr'] = 1e-8
                         run_data['max_lr'] = 1e-4
@@ -246,6 +246,80 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                               base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
                     return None # break out!
 
+
+
+def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
+                     run_best=False, add='', cache_add='_1mm', batch_size=0,
+                     change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
+                     all_trainable=False, path_lead='', validation_name='', weights_path=None, layers_dict=None):
+    optimizers = ['Adam']
+    concat = True
+    if run_best:
+        save_a_model = True
+    threshold = True
+    for iteration in [14, 15]:
+        for flip in [True]:
+            for threshold_val in [10]:
+                for optimizer in optimizers:
+                    base_path, morfeus_drive = return_paths()
+                    base_dict = return_base_dict_dense3D()
+                    overall_dictionary = return_dictionary_densenet3D(base_dict, layers_dict=layers_dict)
+                    overall_dictionary = np.asarray(overall_dictionary)
+                    perm = np.arange(len(overall_dictionary))
+                    np.random.shuffle(perm)
+                    overall_dictionary = overall_dictionary[perm]
+                    for run_data in overall_dictionary:
+                        run_data['percentile_normed'] = True
+                        run_data['sampling'] = 1
+                        run_data['mirror_max'] = False
+                        run_data['Model_Style'] = 'DenseNet3D3layer'
+                        run_data['concat'] = concat
+                        run_data['all_trainable'] = all_trainable
+                        run_data['flipped'] = flip
+                        run_data['change_background'] = change_background
+                        run_data['threshold'] = threshold
+                        run_data['threshold_val'] = threshold_val
+                        tf.random.set_seed(iteration)
+                        run_data['batch_size'] = batch_size
+                        run_data['densenet'] = True
+                        excel_path = os.path.join(morfeus_drive, excel_file_name)
+                        layers_dict = get_layers_dict_dense_HNet(**run_data)
+                        print(base_path)
+                        run_data['Iteration'] = iteration
+                        run_data['Trial_ID'] = 0
+                        data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
+                        trial_id = 0
+                        while trial_id in data_frame['Trial_ID'].values:
+                            trial_id += 1
+                        run_data['Trial_ID'] = trial_id
+                        current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
+                        if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
+                            print('Already done')
+                            continue
+                        print(current_run_df)
+                        data_frame = data_frame.append(current_run_df, ignore_index=True)
+                        data_frame.to_excel(excel_path, index=0)
+                        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
+                                                                                        flip=flip, change_background=change_background,
+                                                                                        threshold=threshold, threshold_val=threshold_val,
+                                                                                        path_lead=path_lead, validation_name=validation_name)
+                        step_size = len(train_generator)
+                        hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
+
+                        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                                                        is_keras_model=False)
+                        paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
+                        tensorboard_output = paths_class.tensorboard_path_out
+                        print(tensorboard_output)
+                        if os.listdir(tensorboard_output):
+                            print('already done')
+                            continue
+                        run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
+                                  step_size=step_size, optimizer=optimizer,
+                                  validation_generator=validation_generator, run_best=run_best,
+                                  paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
+                                  base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
+                        return None # break out!
 
 if __name__ == '__main__':
     pass
