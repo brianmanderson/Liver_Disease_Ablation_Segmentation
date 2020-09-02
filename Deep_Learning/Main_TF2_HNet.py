@@ -13,27 +13,22 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 os.environ['TF_GPU_THREAD_MODE'] = 'gpu_private'
 
 cube_size = (16, 120, 120)
-add = '_16'
-path_desc='TF_LR_2D_Dense_1mm_new'
-model_name = 'DenseNet'
-cache_add = ''
 from Return_Train_Validation_Generators_TF2 import return_paths, get_layers_dict_dense_HNet
 layers_dict = get_layers_dict_dense_HNet(layers=3, filters=32, num_conv_blocks=4, conv_lambda=2, max_conv_blocks=8)
 base_path, morfeus_drive = return_paths()
 kernel = (3, 3)
 squeeze_kernel = (1, 1)
-find_dense_lr_dense = False
-if find_dense_lr_dense:
-    from Optimization.Find_Best_LR_TF2_Dense import find_best_lr
-    find_best_lr(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, kernel=kernel,
-                 squeeze_kernel=squeeze_kernel, image_size=(None, None, 1))
 
-find_dense_lr_densenet121 = False
+add = '_16'
+path_desc='TF_LR_2D_Dense_1mm_new'
+model_name = 'DenseNet'
+cache_add = ''
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
-if find_dense_lr_densenet121:
+find_dense_lr_densenet121_pretrained = True
+if find_dense_lr_densenet121_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
-                          all_trainable=False, weights_path=model_path, layers_dict=layers_dict)
+                          all_trainable=False, weights_path=None, layers_dict=None)
 
 '''
 Plot the LR, get the min and max from the images
@@ -48,7 +43,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200 = True
+run_200 = False
 if run_200:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
