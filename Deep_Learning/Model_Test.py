@@ -1,13 +1,6 @@
 __author__ = 'Brian M Anderson'
 # Created on 5/29/2020
 
-from Return_Train_Validation_Generators_TF2 import get_layers_dict_dense_less_decode, my_UNet, return_generators, get_layers_dict_dense_HNet, return_model, plot_scroll_Image, os
-# from Run_Model_TF2 import SparseCategoricalMeanDSC
-import numpy as np
-# from tensorflow.keras.callbacks import TensorBoard
-# import tensorflow.keras as tfk
-# from HDenseUNet.denseunet import DenseUNet
-# from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
 import sys, os
 
 if len(sys.argv) > 1:
@@ -18,6 +11,15 @@ print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 os.environ['TF_GPU_THREAD_MODE'] = 'gpu_private'
+
+from Return_Train_Validation_Generators_TF2 import get_layers_dict_dense_less_decode, my_UNet, return_generators, get_layers_dict_dense_HNet, return_model, plot_scroll_Image, os
+# from Run_Model_TF2 import SparseCategoricalMeanDSC
+import numpy as np
+# from tensorflow.keras.callbacks import TensorBoard
+# import tensorflow.keras as tfk
+# from HDenseUNet.denseunet import DenseUNet
+# from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
+
 add = ''
 cache_add = ''
 # x,y = next(iter(train_generator.data_set))
