@@ -42,7 +42,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200_pretrained = True
+run_200_pretrained = False
 if run_200_pretrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
@@ -55,8 +55,8 @@ if run_200_pretrained:
 Now, turn on all weights and retrain
 '''
 all_trainable=True
-weights_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
-find_dense_lr_densenet121_retrained = False
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_25', 'final_model.h5')
+find_dense_lr_densenet121_retrained = True
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
@@ -75,7 +75,7 @@ if run_200_retrained:
 Now slap on 3D and turn off trainable on 2D
 '''
 all_trainable=False
-weights_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_19', 'final_model.h5')
 find_dense_lr_densenet121_3D_pretrained = False
 if find_dense_lr_densenet121_3D_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
