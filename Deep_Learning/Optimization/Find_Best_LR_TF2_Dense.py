@@ -94,7 +94,7 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                           all_trainable=False, weights_path=None):
     min_lr = 1e-7
     max_lr = 1
-    for iteration in [0, 1, 2]:
+    for iteration in [0]:
         for layers in [2, 3]:
             for num_conv_blocks in [4]:
                 for conv_lambda in [2, 4]:
