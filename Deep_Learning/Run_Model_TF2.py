@@ -180,7 +180,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [10, 11]:
+    for iteration in [10, 11, 12, 13]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
