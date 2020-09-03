@@ -61,8 +61,8 @@ def main():
         for i in range(len(validation_generator)):
             print(i)
             x, y = next(generator)
-            x = x[:-1]
             file_name = os.path.split(x[-1].decode())[-1]
+            x = x[:-1]
             pred = model.predict(x)
             np.save(os.path.join(base_path, 'Predictions_np', 'Prediction_{}.npy'.format(file_name)), pred)
             np.save(os.path.join(base_path, 'Predictions_np', 'Image_{}.npy'.format(file_name)), np.squeeze(x[0].numpy()))
