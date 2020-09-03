@@ -100,19 +100,24 @@ def return_dictionary(base_dict):
     return dictionary
 
 
-def return_dictionary_densenet3D(base_dict):
-    dictionary = [
-        base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=3e-3),
-        base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=1e-2),
+def return_dictionary_densenet3D(base_dict, all_trainable=False):
+    if all_trainable:
+        dictionary = [
+            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=1e-7, max_lr=1e-6),
+            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=1e-8, max_lr=1e-5)
+            ]
+    else:
+        dictionary = [
+            base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=3e-3),
+            base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=1e-2),
 
-        base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=3e-6, max_lr=1e-3),
+            base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=3e-6, max_lr=1e-3),
 
-        base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=1e-6, max_lr=1e-2),
-        base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-4),
-        base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-3),
-        base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-2)
-
-        ]
+            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=1e-6, max_lr=1e-2),
+            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-4),
+            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-3),
+            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-2)
+            ]
     return dictionary
 
 
