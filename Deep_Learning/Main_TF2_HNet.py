@@ -56,6 +56,8 @@ Turn on the weights, and find a good learning rate
 '''
 all_trainable=True
 weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_25', 'final_model.h5')
+
+
 find_dense_lr_densenet121_retrained = False
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
@@ -88,19 +90,30 @@ Now slap on 3D and turn off trainable on 2D
 '''
 all_trainable=False
 weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_27', 'final_model.h5')
-find_dense_lr_densenet121_3D_pretrained = True
+
+
+find_dense_lr_densenet121_3D_pretrained = False
 if find_dense_lr_densenet121_3D_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
     find_best_lr_DenseNet3D(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
                             all_trainable=all_trainable, weights_path=weights_path)
 
-run_200_retrained = False
+'''
+Plot the LR, get the min and max from the images
+'''
+plot_lr = False
+if plot_lr:
+    from Optimization.Plot_Best_LR import make_plots
+    path = os.path.join(morfeus_drive,path_desc, 'DenseNet121')
+    make_plots(path)
+
+run_200_retrained = True
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet3D
     run_best = False
     train_DenseNet3D(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=0,
-                   change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
-                   weights_path=weights_path, layers_dict=1)
+                     change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
+                     weights_path=weights_path)
 make_opt_excel = False
 if make_opt_excel:
     '''
