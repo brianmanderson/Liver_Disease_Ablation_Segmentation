@@ -26,7 +26,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
         print('base wrong')
         return None
 
-
+    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet, weights_path=weights_path)
     model_path_out = paths_class.model_path_out
     tensorboard_output = paths_class.tensorboard_path_out
     if optimizer == 'SGD':
@@ -65,7 +65,6 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     callbacks += [checkpoint]
     if not run_best:
         callbacks += [EarlyStopping(patience=15, verbose=1)]
-    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet, weights_path=weights_path)
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
