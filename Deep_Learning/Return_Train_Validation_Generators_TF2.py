@@ -110,15 +110,15 @@ def return_dictionary_densenet3D(base_dict, all_trainable=False):
             ]
     else:
         dictionary = [
-            base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=3e-3),
-            base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=1e-2),
+            base_dict(layers=2, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=3e-3),
+            base_dict(layers=2, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=3e-6, max_lr=1e-2),
 
-            base_dict(layers=2, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=3e-6, max_lr=1e-3),
+            base_dict(layers=2, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=3e-6, max_lr=1e-3),
 
-            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=1e-6, max_lr=1e-2),
-            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-4),
-            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-3),
-            base_dict(layers=3, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-2)
+            base_dict(layers=3, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=2, min_lr=1e-6, max_lr=1e-2),
+            base_dict(layers=3, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-4),
+            base_dict(layers=3, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-3),
+            base_dict(layers=3, filters=32, max_conv_blocks=12, num_conv_blocks=4, conv_lambda=4, min_lr=5e-6, max_lr=1e-2)
             ]
     return dictionary
 
@@ -359,7 +359,6 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     layers_dict['Final_Steps'] = final_steps
     return layers_dict
 
-
 def get_layers_dict_dense_HNet(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4,
                                pool=(2, 2, 2), kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
                                max_filters=np.inf, **kwargs):
@@ -439,7 +438,6 @@ def get_layers_dict_dense_HNet(layers=1, filters=12, growth_rate=6, conv_lambda=
                    lc.convolution_layer(filters, activation='relu', batch_norm=True, out_name='Upsampling_Final_Steps')]
     layers_dict['Final_Steps'] = final_steps
     return layers_dict
-
 
 def get_layers_dict_dense_less_decode(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2,
                                       max_conv_blocks=4, num_classes=2, pool=(2, 2, 2), kernel=(3, 3, 3),
@@ -590,9 +588,9 @@ def return_base_dict_dense(step_size_factor=10, save_a_model=False):
 
 
 def return_base_dict_dense3D():
-    base_dict = lambda min_lr, max_lr, layers, num_conv_blocks, max_conv_blocks, conv_lambda: \
+    base_dict = lambda min_lr, max_lr, filters, layers, num_conv_blocks, max_conv_blocks, conv_lambda: \
         OrderedDict({'layers': layers,'num_conv_blocks':num_conv_blocks, 'max_conv_blocks':9999,
-                     'conv_lambda':conv_lambda, 'min_lr':min_lr, 'max_lr':max_lr})
+                     'conv_lambda':conv_lambda, 'filters':filters, 'min_lr':min_lr, 'max_lr':max_lr})
     return base_dict
 
 
