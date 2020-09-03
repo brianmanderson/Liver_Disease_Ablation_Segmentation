@@ -258,7 +258,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [0]:
+    for iteration in [0, 1]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
