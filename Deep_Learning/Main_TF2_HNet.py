@@ -107,7 +107,7 @@ if plot_lr:
     path = os.path.join(morfeus_drive,path_desc, 'DenseNet121')
     make_plots(path)
 
-run_200_retrained = False
+run_200_retrained = True
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet3D
     run_best = True
@@ -122,7 +122,7 @@ one last ablation work to train all of the layers
 all_trainable = True
 weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_4', 'final_model.h5')
 
-run_200_retrained = True
+run_200_retrained = False
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet3D
     run_best = True
