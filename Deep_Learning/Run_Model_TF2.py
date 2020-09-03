@@ -251,7 +251,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
 def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                      run_best=False, add='', cache_add='_1mm', batch_size=0,
                      change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
-                     all_trainable=False, path_lead='', validation_name='', weights_path=None, layers_dict=None):
+                     all_trainable=False, path_lead='', validation_name='', weights_path=None):
     optimizers = ['Adam']
     concat = True
     if run_best:
@@ -263,7 +263,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                 for optimizer in optimizers:
                     base_path, morfeus_drive = return_paths()
                     base_dict = return_base_dict_dense3D()
-                    overall_dictionary = return_dictionary_densenet3D(base_dict, layers_dict=layers_dict)
+                    overall_dictionary = return_dictionary_densenet3D(base_dict)
                     overall_dictionary = np.asarray(overall_dictionary)
                     perm = np.arange(len(overall_dictionary))
                     np.random.shuffle(perm)
