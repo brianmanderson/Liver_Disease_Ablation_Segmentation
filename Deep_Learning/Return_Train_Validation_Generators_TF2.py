@@ -354,7 +354,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
 
 
 def get_layers_dict_dense_HNet(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4,
-                               num_classes=2, pool=(2, 2, 2), kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
+                               pool=(2, 2, 2), kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
                                max_filters=np.inf, **kwargs):
     lc = Return_Layer_Functions(kernel=kernel, strides=squeeze_kernel, padding='same', batch_norm=True,
                                 pooling_type='Max', pool_size=pool, bn_before_activation=False)
