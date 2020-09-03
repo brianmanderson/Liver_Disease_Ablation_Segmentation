@@ -65,8 +65,8 @@ def main():
             x = x[:-1]
             pred = model.predict(x)
             np.save(os.path.join(base_path, 'Predictions_np', 'Prediction_{}.npy'.format(file_name)), pred)
-            np.save(os.path.join(base_path, 'Predictions_np', 'Image_{}.npy'.format(file_name)), np.squeeze(x[0].numpy()))
-            np.save(os.path.join(base_path, 'Predictions_np', 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0].numpy()))
+            np.save(os.path.join(base_path, 'Predictions_np', 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
+            np.save(os.path.join(base_path, 'Predictions_np', 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
 
     out_path = os.path.join(base_path, 'Predictions_HNet_1', '{}')
     create_prediction = False
