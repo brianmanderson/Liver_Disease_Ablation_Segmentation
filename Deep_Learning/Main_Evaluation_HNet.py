@@ -51,8 +51,8 @@ def main():
                                                                                             validation_name='',
                                                                                             cache=False, wanted_keys={
                 'inputs': ['image', 'mask', 'image_path'], 'outputs': ['annotation']})
-        layers_dict = get_layers_dict_dense_HNet(layers=3, filters=32, num_conv_blocks=4, conv_lambda=4, max_conv_blocks=12)
-        model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_1', 'final_model.h5')
+        layers_dict = get_layers_dict_dense_HNet(layers=3, max_conv_blocks=12, filters=32, num_conv_blocks=4, conv_lambda=4)
+        model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_4', 'final_model.h5')
         model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=model_path)
         model.save(os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_1', 'Model'))
         generator = validation_generator.data_set.as_numpy_iterator()
