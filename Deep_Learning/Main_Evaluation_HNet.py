@@ -23,35 +23,8 @@ def main():
     add = '_16'
     cache_add = ''
     model_name = 'DenseNetNew'
-    create_validation_nifti_files = False
-    if create_validation_nifti_files:
-        validation_path = r'H:\Liver_Disease_Ablation\Validation'
-        out_path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
-        reader = sitk.ImageFileReader()
-        reader.LoadPrivateTagsOn()
-        path = os.path.join(base_path, 'Predictions_np')
-        images = [i for i in os.listdir(path) if i.startswith('Image')]
-        for file in images:
-            iteration_number = file.split('LiTs_')[-1].split('.nii.')[0]
-            if os.path.exists(os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number))):
-                continue
-            print(file)
-            x = np.load(os.path.join(path, file))
-            pred = np.load(os.path.join(path, file.replace('Image', 'Prediction')))
-            truth = np.load(os.path.join(path, file.replace('Image', 'Truth')))
-            reader.SetFileName(os.path.join(validation_path, 'Overall_Data_LiTs_{}.nii.gz'.format(iteration_number)))
-            reader.Execute()
-            image_handle = sitk.GetImageFromArray(x)
-            pred_handle = sitk.GetImageFromArray(pred[..., -1])
-            truth_handle = sitk.GetImageFromArray(truth.astype('int'))
-            for handle in [image_handle, pred_handle, truth_handle]:
-                handle.SetOrigin(reader.GetOrigin())
-                handle.SetSpacing(reader.GetSpacing())
-                handle.SetDirection(reader.GetDirection())
-            sitk.WriteImage(image_handle, os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number)))
-            sitk.WriteImage(pred_handle, os.path.join(out_path, '{}_Prediction.nii.gz'.format(iteration_number)))
-            sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
-    make_pred = True
+
+    make_pred = False
     if make_pred:
         model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'Model')
         if not os.path.exists(model_path):
@@ -91,13 +64,46 @@ def main():
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
 
-    evaluate_prediction = False
+    create_nifti_files = True
+    if create_nifti_files:
+        reader = sitk.ImageFileReader()
+        reader.LoadPrivateTagsOn()
+        for ext in ['Validation', 'Test']:
+            input_path = r'H:\Liver_Disease_Ablation\{}'.format(ext)
+            out_path = r'H:\Liver_Disease_Ablation\Predictions_HNet\{}'.format(ext)
+            if not os.path.exists(out_path):
+                os.makedirs(out_path)
+            path = os.path.join(base_path, 'Predictions_np', ext)
+            images = [i for i in os.listdir(path) if i.startswith('Image')]
+            for file in images:
+                iteration_number = file.split('LiTs_')[-1].split('.nii.')[0]
+                if os.path.exists(os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number))):
+                    continue
+                print(file)
+                x = np.load(os.path.join(path, file))
+                pred = np.load(os.path.join(path, file.replace('Image', 'Prediction')))
+                truth = np.load(os.path.join(path, file.replace('Image', 'Truth')))
+                reader.SetFileName(os.path.join(input_path, 'Overall_Data_LiTs_{}.nii.gz'.format(iteration_number)))
+                reader.Execute()
+                image_handle = sitk.GetImageFromArray(x)
+                pred_handle = sitk.GetImageFromArray(pred[..., -1])
+                truth_handle = sitk.GetImageFromArray(truth.astype('int'))
+                for handle in [image_handle, pred_handle, truth_handle]:
+                    handle.SetOrigin(reader.GetOrigin())
+                    handle.SetSpacing(reader.GetSpacing())
+                    handle.SetDirection(reader.GetDirection())
+                sitk.WriteImage(image_handle, os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number)))
+                sitk.WriteImage(pred_handle, os.path.join(out_path, '{}_Prediction.nii.gz'.format(iteration_number)))
+                sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
+
+
+    evaluate_prediction = True
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
         path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
         create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_HNet'),
-                            seed_range=np.arange(0.3, 1.0, 0.01),
-                            threshold_range=np.arange(0.05, .96, 0.01), re_write=False, thread_count=int(cpu_count()*.9-1))
+                            seed_range=np.arange(0.3, 1.0, 0.05),
+                            threshold_range=np.arange(0.25, 1.0, 0.05), re_write=False, thread_count=int(cpu_count()*.9-1))
 
     evaluate_test = False
     if evaluate_test:
