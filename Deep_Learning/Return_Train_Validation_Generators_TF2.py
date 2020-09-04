@@ -607,6 +607,8 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     ext = 'Validation'
     if evaluation:
         ext += '_whole'
+    if is_test:
+        validation_path = [os.path.join(base_path, path_lead, 'Test_Records{}'.format(validation_name))]
 
     train_generator = Data_Generator_Class(record_paths=train_path)
     validation_generator = Data_Generator_Class(record_paths=validation_path, in_parallel=True)
