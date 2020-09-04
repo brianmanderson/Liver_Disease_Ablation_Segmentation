@@ -23,24 +23,35 @@ def main():
     add = '_16'
     cache_add = ''
     model_name = 'DenseNetNew'
-    evaluate = False
-    if evaluate:
+    create_validation_nifti_files = False
+    if create_validation_nifti_files:
+        validation_path = r'H:\Liver_Disease_Ablation\Validation'
+        out_path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
+        reader = sitk.ImageFileReader()
+        reader.LoadPrivateTagsOn()
         path = os.path.join(base_path, 'Predictions_np')
         images = [i for i in os.listdir(path) if i.startswith('Image')]
-        compare = sitk.LabelOverlapMeasuresImageFilter()
-        total = []
         for file in images:
+            iteration_number = file.split('LiTs_')[-1].split('.nii.')[0]
+            if os.path.exists(os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number))):
+                continue
             print(file)
             x = np.load(os.path.join(path, file))
             pred = np.load(os.path.join(path, file.replace('Image', 'Prediction')))
             truth = np.load(os.path.join(path, file.replace('Image', 'Truth')))
-            compare.Execute(sitk.GetImageFromArray((pred[..., -1] >= 0.5).astype('int')),
-                            sitk.GetImageFromArray(truth.astype('int')))
-            total.append(compare.GetDiceCoefficient())
-            print(total)
-        print(np.mean(total))
-        print(np.std(total))
-    make_pred = True
+            reader.SetFileName(os.path.join(validation_path, 'Overall_Data_LiTs_{}.nii.gz'.format(iteration_number)))
+            reader.Execute()
+            image_handle = sitk.GetImageFromArray(x)
+            pred_handle = sitk.GetImageFromArray(pred[..., -1])
+            truth_handle = sitk.GetImageFromArray(truth.astype('int'))
+            for handle in [image_handle, pred_handle, truth_handle]:
+                handle.SetOrigin(reader.GetOrigin())
+                handle.SetSpacing(reader.GetSpacing())
+                handle.SetDirection(reader.GetDirection())
+            sitk.WriteImage(image_handle, os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number)))
+            sitk.WriteImage(pred_handle, os.path.join(out_path, '{}_Prediction.nii.gz'.format(iteration_number)))
+            sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
+    make_pred = False
     if make_pred:
         base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,
                                                                                             cache_add=cache_add,
@@ -73,34 +84,23 @@ def main():
             np.save(os.path.join(base_path, 'Predictions_np', 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
             np.save(os.path.join(base_path, 'Predictions_np', 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
 
-    out_path = os.path.join(base_path, 'Predictions_HNet_1', '{}')
-    create_prediction = False
-    if create_prediction:
-        from Deep_Learning.Evaluate_Model.Write_Predictions import create_prediction_files
-        validation_path = [r'H:\Liver_Disease_Ablation\Records\Validation_whole_Records']
-        create_prediction_files(is_test=False, desc=desc, model_path=model_path, path_ext=path_ext,
-                                out_path=out_path, validation_path=validation_path)
-        validation_path = [r'H:\Liver_Disease_Ablation\Records\Test_Records']
-        create_prediction_files(is_test=True, desc=desc, model_path=model_path, path_ext=path_ext,
-                                out_path=out_path, validation_path=validation_path)
-
-    evaluate_prediction = False
+    evaluate_prediction = True
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
-        path = os.path.join(out_path.format(path_ext), 'Validation{}'.format(desc))
-        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_93'),
+        path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
+        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_HNet'),
                             seed_range=np.arange(0.3, 1.0, 0.01),
-                            threshold_range=np.arange(0.05, .76, 0.01), re_write=False, thread_count=int(cpu_count()*.9-1))
+                            threshold_range=np.arange(0.05, .96, 0.01), re_write=False, thread_count=int(cpu_count()*.9-1))
 
     evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
-        path = os.path.join(out_path.format(path_ext), 'Test{}'.format(desc))
+        path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
         # create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_93'),
         #                     seed_range=[.67], write_final_prediction=True, single_disease=True,
         #                     threshold_range=[.3], re_write=False, thread_count=12)
-        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_New_Whole_Patient_93'),
-                            seed_range=[.67], write_final_prediction=True, single_disease=False,
+        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Validation_HNet'),
+                            seed_range=[0.4, 0.45, 0.5, 0.], write_final_prediction=True, single_disease=False,
                             threshold_range=[.3], re_write=False, thread_count=12)
 
     write_sensitivity_specificity = False
