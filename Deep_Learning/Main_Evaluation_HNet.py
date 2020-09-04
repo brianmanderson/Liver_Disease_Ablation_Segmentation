@@ -53,6 +53,14 @@ def main():
             sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
     make_pred = True
     if make_pred:
+        model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'Model')
+        if not os.path.exists(model_path):
+            layers_dict = get_layers_dict_dense_HNet(layers=3, max_conv_blocks=12, filters=32, num_conv_blocks=4,
+                                                     conv_lambda=4)
+            weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'final_model.h5')
+            model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
+            model.save(model_path)
+            return None
         for is_test in [False, True]:
             if is_test:
                 ext = 'Test'
@@ -69,13 +77,6 @@ def main():
                                                                                                 is_test=is_test,
                                                                                                 cache=False,
                                                                                                 wanted_keys={'inputs': ['image', 'mask', 'image_path'], 'outputs': ['annotation']})
-            model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'Model')
-            if not os.path.exists(model_path):
-                layers_dict = get_layers_dict_dense_HNet(layers=3, max_conv_blocks=12, filters=32, num_conv_blocks=4, conv_lambda=4)
-                weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'final_model.h5')
-                model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
-                model.save(model_path)
-                return None
             model = tf.keras.models.load_model(model_path)
             generator = validation_generator.data_set.as_numpy_iterator()
             if not os.path.exists(os.path.join(base_path, 'Predictions_np', ext)):
