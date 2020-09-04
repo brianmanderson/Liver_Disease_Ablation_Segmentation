@@ -51,40 +51,46 @@ def main():
             sitk.WriteImage(image_handle, os.path.join(out_path, '{}_Image.nii.gz'.format(iteration_number)))
             sitk.WriteImage(pred_handle, os.path.join(out_path, '{}_Prediction.nii.gz'.format(iteration_number)))
             sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
-    make_pred = False
+    make_pred = True
     if make_pred:
-        base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,
-                                                                                            cache_add=cache_add,
-                                                                                            flip=True,
-                                                                                            change_background=False,
-                                                                                            threshold=True,
-                                                                                            threshold_val=10,
-                                                                                            path_lead='Records',
-                                                                                            validation_name='',
-                                                                                            cache=False, wanted_keys={
-                'inputs': ['image', 'mask', 'image_path'], 'outputs': ['annotation']})
-        model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'Model')
-        if not os.path.exists(model_path):
-            layers_dict = get_layers_dict_dense_HNet(layers=3, max_conv_blocks=12, filters=32, num_conv_blocks=4, conv_lambda=4)
-            weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'final_model.h5')
-            model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
-            model.save(model_path)
-            return None
-        model = tf.keras.models.load_model(model_path)
-        generator = validation_generator.data_set.as_numpy_iterator()
-        if not os.path.exists(os.path.join(base_path, 'Predictions_np')):
-            os.makedirs(os.path.join(base_path, 'Predictions_np'))
-        for i in range(len(validation_generator)):
-            print(i)
-            x, y = next(generator)
-            file_name = os.path.split(x[-1].decode())[-1]
-            x = x[:-1]
-            pred = model.predict(x)
-            np.save(os.path.join(base_path, 'Predictions_np', 'Prediction_{}.npy'.format(file_name)), pred)
-            np.save(os.path.join(base_path, 'Predictions_np', 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
-            np.save(os.path.join(base_path, 'Predictions_np', 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
+        for is_test in [False, True]:
+            if is_test:
+                ext = 'Test'
+            else:
+                ext = 'Validation'
+            base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,
+                                                                                                cache_add=cache_add,
+                                                                                                flip=True,
+                                                                                                change_background=False,
+                                                                                                threshold=True,
+                                                                                                threshold_val=10,
+                                                                                                path_lead='Records',
+                                                                                                validation_name='',
+                                                                                                is_test=is_test,
+                                                                                                cache=False,
+                                                                                                wanted_keys={'inputs': ['image', 'mask', 'image_path'], 'outputs': ['annotation']})
+            model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'Model')
+            if not os.path.exists(model_path):
+                layers_dict = get_layers_dict_dense_HNet(layers=3, max_conv_blocks=12, filters=32, num_conv_blocks=4, conv_lambda=4)
+                weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'final_model.h5')
+                model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
+                model.save(model_path)
+                return None
+            model = tf.keras.models.load_model(model_path)
+            generator = validation_generator.data_set.as_numpy_iterator()
+            if not os.path.exists(os.path.join(base_path, 'Predictions_np', ext)):
+                os.makedirs(os.path.join(base_path, 'Predictions_np', ext))
+            for i in range(len(validation_generator)):
+                print(i)
+                x, y = next(generator)
+                file_name = os.path.split(x[-1].decode())[-1]
+                x = x[:-1]
+                pred = model.predict(x)
+                np.save(os.path.join(base_path, 'Predictions_np', ext, 'Prediction_{}.npy'.format(file_name)), pred)
+                np.save(os.path.join(base_path, 'Predictions_np', ext, 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
+                np.save(os.path.join(base_path, 'Predictions_np', ext, 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
 
-    evaluate_prediction = True
+    evaluate_prediction = False
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
         path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
