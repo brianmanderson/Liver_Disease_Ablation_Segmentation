@@ -61,6 +61,7 @@ def main():
             model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
             model.save(model_path)
             return None
+        model = tf.keras.models.load_model(model_path)
         for is_test in [False, True]:
             if is_test:
                 ext = 'Test'
@@ -77,7 +78,6 @@ def main():
                                                                                                 is_test=is_test,
                                                                                                 cache=False,
                                                                                                 wanted_keys={'inputs': ['image', 'mask', 'image_path'], 'outputs': ['annotation']})
-            model = tf.keras.models.load_model(model_path)
             generator = validation_generator.data_set.as_numpy_iterator()
             if not os.path.exists(os.path.join(base_path, 'Predictions_np', ext)):
                 os.makedirs(os.path.join(base_path, 'Predictions_np', ext))
