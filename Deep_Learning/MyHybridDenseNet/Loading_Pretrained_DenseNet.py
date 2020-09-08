@@ -105,6 +105,20 @@ def conv_block(x, growth_rate, name):
   return x
 
 
+def squeeze_first2axes_operator(x5d) :
+    shape = tf.keras.backend.shape(x5d) # get dynamic tensor shape
+    x5d = tf.keras.backend.reshape(x5d, [shape[0] * shape[1], shape[2], shape[3], 1])
+    return x5d
+
+
+def return_og_shape(og):
+    def break_up_operator(x4d):
+        shape = tf.keras.backend.shape(og) # get dynamic tensor shape
+        x5d = tf.keras.backend.reshape(x4d, [shape[0], shape[1], shape[2], shape[3], x4d.shape[-1]])
+        return x5d
+    return break_up_operator
+
+
 def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None,
              model_name='unique', classes=1000, layers_dict=None):
     """Instantiates the DenseNet architecture.
@@ -186,6 +200,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
 
     bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
     mask = layers.Input(shape=input_shape[:-1] + (1,), name='mask', dtype='int32')
+    # x = layers.Lambda(squeeze_first2axes_operator, output_shape=(None, None, None, 1))(img_input)
     x = layers.Concatenate(name='InputConcat')([img_input, img_input, img_input])
     inputs = [img_input, mask]
 
@@ -217,13 +232,16 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
         index += 1
         x = layers.UpSampling2D(name='Upsampling_Base_{}'.format(index))(x)
         across = encoding.pop()
-        x = layers.Conv2D(filters=int(backend.int_shape(across)[bn_axis]), kernel_size=(3, 3),
+        filters = int(backend.int_shape(across)[bn_axis])
+        x = layers.Conv2D(filters=filters, kernel_size=(3, 3),
                           name='Convolution_{}'.format(index), padding='same')(x)
         x = layers.BatchNormalization(name="BN_{}".format(index))(x)
         x = layers.Activation('relu', name='activation_{}'.format(index))(x)
         x = layers.Add()([x, across])
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
+    # x = layers.Lambda(return_og_shape(img_input), output_shape=(None, None, None, None, 2))(x)
     if layers_dict is not None:
+        # x = layers.Lambda(return_og_shape(img_input), output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
         myunet = base_UNet(layers_dict=layers_dict, is_2D=False, explictly_defined=True)
         features_2D = ExpandDimension(axis=0)(x)
         combined_input = layers.Concatenate()([img_input, tf.cast(mask, 'float32')])
@@ -248,7 +266,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
         x = layers.Activation('softmax', name='Final_Conv/softmax')(x)
         x = SqueezeDimension(axis=0)(x)
     else:
-        x = layers.Conv2D(filters=classes, kernel_size=(1, 1), activation='softmax', padding='same')(x)
+        x = layers.Conv2D(classes, 1, activation='softmax', padding='same')(x)
     sum_vals_base = tf.where(mask > 0, 0, 1)
     zeros = tf.where(mask > 0, 0, 0)
     zeros = tf.repeat(zeros, repeats=classes-1, axis=-1)
