@@ -243,7 +243,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
     if layers_dict is not None:
         # x = layers.Lambda(return_og_shape(img_input), output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
         myunet = base_UNet(layers_dict=layers_dict, is_2D=False, explictly_defined=True)
-        features_2D = ExpandDimension(axis=0)(x)
+        features_2D = layers.Lambda(ExpandDimension(axis=0))(x)
         combined_input = layers.Concatenate()([img_input, tf.cast(mask, 'float32')])
         x = layers.Conv3D(32, 5, strides=1, use_bias=False, name='3DConv1', padding='Same')(ExpandDimension(axis=0)(combined_input))
         x = layers.BatchNormalization(axis=4, epsilon=1.001e-5, name='3DConv1/bn')(x)
@@ -264,7 +264,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
         x = layers.Activation('relu', name='3DDecode1/relu')(x)
         x = layers.Conv3D(classes, 1, strides=1, use_bias=False, name='Final_Conv', padding='Same')(x)
         x = layers.Activation('softmax', name='Final_Conv/softmax')(x)
-        x = SqueezeDimension(axis=0)(x)
+        x = layers.Lambda(SqueezeDimension(axis=0))(x)
     else:
         x = layers.Conv2D(classes, 1, activation='softmax', padding='same')(x)
     sum_vals_base = tf.where(mask > 0, 0, 1)
