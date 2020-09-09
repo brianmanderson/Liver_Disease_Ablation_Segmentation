@@ -59,7 +59,7 @@ if run_200_pretrained:
 Turn on the weights, and find a good learning rate
 '''
 all_trainable = True
-weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_7', 'cp-0014.cpkt')
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_7', 'cp-0016.h5')
 
 
 find_dense_lr_densenet121_retrained = True
