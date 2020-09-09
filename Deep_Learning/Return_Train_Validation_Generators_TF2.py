@@ -551,9 +551,9 @@ def return_model(layers_dict=None, is_2D=False, densenet=False, all_trainable=Fa
             print('Loading weights from {}'.format(weights_path))
             if not os.path.exists(weights_path) and weights_path.endswith('.cpkt'):
                 model.load_weights(weights_path)
-                model.save_weights(weights_path.replace('.h5', '.ckpt'))
+                model.save_weights(weights_path.replace('.ckpt', '.h5'))
             else:
-                model.load_weights(weights_path.replace('.h5', '.ckpt'), by_name=True)
+                model.load_weights(weights_path.replace('.cpkt', '.h5'), by_name=True)
         if not all_trainable:
             freeze_name = 'Upsampling'
             if layers_dict is not None:
