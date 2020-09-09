@@ -66,7 +66,7 @@ find_dense_lr_densenet121_retrained = True
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
-                          all_trainable=all_trainable, weights_path=weights_path, layers_dict=None)
+                          all_trainable=all_trainable, weights_path=weights_path, layers_dict=None, model_name=model_name)
 
 '''
 Plot the LR, get the min and max from the images
