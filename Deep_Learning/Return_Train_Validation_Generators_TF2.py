@@ -553,7 +553,7 @@ def return_model(layers_dict=None, is_2D=False, densenet=False, all_trainable=Fa
                 model.load_weights(weights_path)
                 model.save_weights(weights_path.replace('.h5', '.ckpt'))
             else:
-                model.load_weights(weights_path, by_name=True)
+                model.load_weights(weights_path.replace('.h5', '.ckpt'), by_name=True)
         if not all_trainable:
             freeze_name = 'Upsampling'
             if layers_dict is not None:
