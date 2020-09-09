@@ -25,9 +25,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
                                                                     threshold=threshold, threshold_val=threshold_val,
                                                                     path_lead=path_lead,
                                                                     validation_name=validation_name)
-    step_size = len(train_generator)
-    if step_size is None:
-        step_size = len(train_generator)
+    step_size = len(train_generator)//3
     if not os.path.exists(morfeus_drive):
         print('Morf wrong')
         return None
