@@ -18,6 +18,8 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
               paths_class=None, step_size_factor=5, morfeus_drive='',base_path='', run_best=False,
               skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
               all_trainable=False, densenet=False, weights_path=None, include_images=True, **kwargs):
+    tf.keras.backend.clear_session()
+    tf.compat.v1.disable_eager_execution()
     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add, cache_add=cache_add,
                                                                     flip=flip, change_background=change_background,
                                                                     threshold=threshold, threshold_val=threshold_val,
@@ -40,7 +42,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
         optimizer = tf.keras.optimizers.SGD()
     elif optimizer == 'Adam':
         optimizer = tf.keras.optimizers.Adam()
-    optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(optimizer)
+    # optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(optimizer)
     print('Learning rate is {}'.format(min_lr))
 
     if os.listdir(tensorboard_output):
@@ -58,7 +60,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
-    tensorboard = TensorBoard(log_dir=tensorboard_output, histogram_freq=5, write_graph=False, profile_batch=0)  #profile_batch='300,401',
+    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_output, profile_batch=0, write_graph=True)  #profile_batch='300,401',
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=10, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + 2, reduction_factor=10)
@@ -80,9 +82,10 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
-    Model_val.fit(train_generator.data_set, epochs=epochs, callbacks=callbacks, steps_per_epoch=step_size,
-                  validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-                  validation_freq=val_frequency)
+    Model_val.fit(train_generator.data_set, epochs=epochs, steps_per_epoch=len(train_generator),
+              validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
+              validation_freq=1,
+              callbacks=callbacks)
     Model_val.save(os.path.join(model_path_out,'final_model.h5'))
     tf.keras.backend.clear_session()
     return None
@@ -235,6 +238,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     data_frame = data_frame.append(current_run_df, ignore_index=True)
                     data_frame.to_excel(excel_path, index=0)
                     hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
+                    hparams = None
 
                     paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
                                                     is_keras_model=False)
