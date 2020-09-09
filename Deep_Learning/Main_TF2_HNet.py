@@ -85,7 +85,7 @@ if run_200_retrained:
     run_best = False
     train_DenseNet(epochs=101, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=batch_size,
                    change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
-                   weights_path=None, layers_dict=None, excel_file_name=excel_file_name)
+                   weights_path=weights_path, layers_dict=None, excel_file_name=excel_file_name)
 
 
 '''
