@@ -174,22 +174,22 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
 
 def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                    run_best=False, add='', cache_add='_1mm', batch_size=0,
-                   change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet.xlsx',
+                   change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNetMultibatch.xlsx',
                    all_trainable=False, path_lead='', validation_name='', weights_path=None, layers_dict=None):
     optimizers = ['Adam']
     concat = True
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [14, 15]:
+    for iteration in [0, 1]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
                     base_path, morfeus_drive = return_paths()
                     run_data = {}
                     if not all_trainable and layers_dict is None:
-                        run_data['min_lr'] = 5e-6
-                        run_data['max_lr'] = 2e-2
+                        run_data['min_lr'] = 2e-6
+                        run_data['max_lr'] = 2e-1
                     elif layers_dict is not None:
                         run_data['min_lr'] = 4e-7
                         run_data['max_lr'] = 3e-4
