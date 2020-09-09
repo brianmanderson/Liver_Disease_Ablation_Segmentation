@@ -48,7 +48,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     if os.listdir(tensorboard_output):
         print('already done')
         return None
-    checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
+    # checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
     image_frequency = 10
     val_frequency = 1
     patience = 15
@@ -56,7 +56,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
         image_frequency = 10
         val_frequency = 1
         patience = 30
-        checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.ckpt')
+    checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.ckpt')
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
@@ -78,7 +78,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
         callbacks += [lrate]
     callbacks += [checkpoint]
     # if not run_best:
-    callbacks += [EarlyStopping(patience=patience, verbose=1)]
+    # callbacks += [EarlyStopping(patience=patience, verbose=1)]
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
