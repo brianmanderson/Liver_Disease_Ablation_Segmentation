@@ -549,7 +549,7 @@ def return_model(layers_dict=None, is_2D=False, densenet=False, all_trainable=Fa
         model = DenseNet121(include_top=False, classes=2, layers_dict=layers_dict)
         if weights_path is not None:
             print('Loading weights from {}'.format(weights_path))
-            if not os.path.exists(weights_path) and os.path.exists(weights_path.replace('.h5', '.ckpt')):
+            if not os.path.exists(weights_path):
                 model.load_weights(weights_path.replace('.h5', '.ckpt'))
                 model.save_weights(weights_path)
             else:
