@@ -46,7 +46,7 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200_pretrained = True
+run_200_pretrained = False
 if run_200_pretrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
@@ -59,7 +59,7 @@ if run_200_pretrained:
 Turn on the weights, and find a good learning rate
 '''
 all_trainable = True
-weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_8', 'cp-0055.h5')
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_7', 'cp-0015.h5')
 
 
 find_dense_lr_densenet121_retrained = False
