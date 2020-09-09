@@ -22,6 +22,7 @@ squeeze_kernel = (1, 1)
 
 add = '_16'
 path_desc='TF_LR_2D_DenseNetMultiBatch'
+excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch.xlsx'
 model_name = 'DenseNetNewMultiBatch'
 cache_add = ''
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
@@ -52,7 +53,7 @@ if run_200_pretrained:
     all_trainable = False
     train_DenseNet(epochs=201, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=15,
                    change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
-                   weights_path=None, layers_dict=None)
+                   weights_path=None, layers_dict=None, excel_file_name=excel_file_name)
 
 '''
 Turn on the weights, and find a good learning rate
