@@ -25,7 +25,6 @@ path_desc='TF_LR_2D_DenseNetMultiBatch'
 excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch.xlsx'
 model_name = 'DenseNetNewMultiBatch'
 cache_add = ''
-model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
 
 find_dense_lr_densenet121_pretrained = False
 if find_dense_lr_densenet121_pretrained:
@@ -62,7 +61,7 @@ all_trainable = True
 weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_7', 'cp-0016.h5')
 
 
-find_dense_lr_densenet121_retrained = True
+find_dense_lr_densenet121_retrained = False
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
@@ -71,10 +70,10 @@ if find_dense_lr_densenet121_retrained:
 '''
 Plot the LR, get the min and max from the images
 '''
-plot_lr = False
+plot_lr = True
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
-    path = os.path.join(morfeus_drive,path_desc, 'DenseNet121')
+    path = os.path.join(morfeus_drive, path_desc, model_name)
     make_plots(path)
 
 '''
