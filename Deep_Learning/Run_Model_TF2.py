@@ -54,7 +54,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
         image_frequency = 10
         val_frequency = 1
         patience = 30
-    checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.ckpt')
+    checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.h5')
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
