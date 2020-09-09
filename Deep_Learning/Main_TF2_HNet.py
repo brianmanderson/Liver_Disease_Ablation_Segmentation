@@ -46,26 +46,26 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200_pretrained = True
+run_200_pretrained = False
 if run_200_pretrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
     all_trainable = False
-    train_DenseNet(epochs=101, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=15,
+    train_DenseNet(epochs=101, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=batch_size,
                    change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
                    weights_path=None, layers_dict=None, excel_file_name=excel_file_name)
 
 '''
 Turn on the weights, and find a good learning rate
 '''
-all_trainable=True
-weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_25', 'final_model.h5')
+all_trainable = True
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_8', 'cp-0040.ckpt')
 
 
-find_dense_lr_densenet121_retrained = False
+find_dense_lr_densenet121_retrained = True
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
-    find_best_lr_DenseNet(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+    find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
                           all_trainable=all_trainable, weights_path=weights_path, layers_dict=None)
 
 '''
