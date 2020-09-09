@@ -75,10 +75,8 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
         if os.path.exists(out_path):
             print('already done')
             continue
+        os.makedirs(out_path)
         model = return_model(layers_dict, weights_path=weights_path, densenet=True, all_trainable=all_trainable)
-        if os.path.exists(out_path):
-            print('already done')
-            continue
         k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
         k.set_model(model)
         k.on_train_begin()
