@@ -25,11 +25,12 @@ path_desc='TF_LR_2D_DenseNetMultiBatch'
 model_name = 'DenseNetNewMultiBatch'
 cache_add = ''
 model_path = os.path.join(base_path, 'Keras', 'DenseNet', 'Models', 'Trial_ID_19', 'final_model.h5')
-find_dense_lr_densenet121_pretrained = True
+
+find_dense_lr_densenet121_pretrained = False
 if find_dense_lr_densenet121_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
-                          all_trainable=False, weights_path=None, layers_dict=None)
+                          all_trainable=False, weights_path=None, layers_dict=None, model_name=model_name)
 
 '''
 Plot the LR, get the min and max from the images
@@ -37,14 +38,14 @@ Plot the LR, get the min and max from the images
 plot_lr = False
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
-    path = os.path.join(morfeus_drive,path_desc, 'DenseNet121')
+    path = os.path.join(morfeus_drive,path_desc, model_name)
     make_plots(path)
 
 '''
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200_pretrained = False
+run_200_pretrained = True
 if run_200_pretrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
