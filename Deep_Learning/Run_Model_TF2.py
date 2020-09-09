@@ -25,7 +25,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
                                                                     threshold=threshold, threshold_val=threshold_val,
                                                                     path_lead=path_lead,
                                                                     validation_name=validation_name)
-    step_size = len(train_generator)//3
+    step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
         print('Morf wrong')
         return None
@@ -60,8 +60,8 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
                                  verbose=1)
     tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_output, profile_batch=0, write_graph=True)  #profile_batch='300,401',
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
-                     mode='triangular2', pre_cycle=0, base_reduce_factor=10, scale_mode=scale_mode,
-                     step_size_factor_scale=lambda x: x + 2, reduction_factor=10)
+                     mode='triangular2', pre_cycle=0, base_reduce_factor=100, scale_mode=scale_mode,
+                     step_size_factor_scale=lambda x: x + 2, reduction_factor=100)
     callbacks = [tensorboard]
     if include_images:
         add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
@@ -192,7 +192,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [4, 5]:
+    for iteration in [6, 7]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
