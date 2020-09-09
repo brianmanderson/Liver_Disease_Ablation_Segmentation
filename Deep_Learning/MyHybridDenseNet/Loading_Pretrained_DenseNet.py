@@ -5,7 +5,8 @@ import tensorflow as tf
 from tensorflow.keras.applications import imagenet_utils
 import sys
 sys.path.append('..')
-from Base_Deeplearning_Code.Models.TF_Keras_Models import base_UNet, ExpandDimension, SqueezeDimension, SqueezeAxes
+from Base_Deeplearning_Code.Models.TF_Keras_Models import base_UNet, ExpandDimension, SqueezeDimension, SqueezeAxes,\
+    BreakUpSqueezeDimensions
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
 from tensorflow.python.keras.utils import data_utils
@@ -229,8 +230,9 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
         x = layers.Concatenate()([x, across])
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
     if collapse_axis:
-        x = layers.Lambda(return_og_shape(img_input),
-                          output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
+        x = BreakUpSqueezeDimensions(img_input)(x)
+        # x = layers.Lambda(return_og_shape(img_input),
+        #                   output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
     if layers_dict is not None:
         myunet = base_UNet(layers_dict=layers_dict, is_2D=False, explictly_defined=True)
         features_2D = ExpandDimension(axis=0)(x)
