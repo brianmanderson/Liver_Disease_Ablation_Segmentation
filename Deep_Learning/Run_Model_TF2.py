@@ -16,7 +16,7 @@ from tensorboard.plugins.hparams.keras import Callback
 def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
               paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', run_best=False,
               skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
-              all_trainable=False, densenet=False, weights_path=None, **kwargs):
+              all_trainable=False, densenet=False, weights_path=None, include_images=True, **kwargs):
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -55,10 +55,13 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=10, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + 2, reduction_factor=10)
-    add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
-                                   number_of_images=len(validation_generator), add_images=True, image_frequency=image_frequency,
-                                   threshold_x=True)
-    callbacks = [tensorboard, add_images]
+    callbacks = [tensorboard]
+    if include_images:
+        add_images = Add_Images_and_LR(log_dir=tensorboard_output, validation_data=validation_generator.data_set,
+                                       number_of_images=len(validation_generator), add_images=True,
+                                       image_frequency=image_frequency,
+                                       threshold_x=True)
+        callbacks += [add_images]
     if hparams is not None:
         hp_callback = Callback(tensorboard_output, hparams=hparams, trial_id='Trial_ID:{}'.format(trial_id))
         callbacks += [hp_callback]
@@ -241,7 +244,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                         print('already done')
                         continue
                     run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                              step_size=step_size, optimizer=optimizer,
+                              step_size=step_size, optimizer=optimizer, include_images=False,
                               validation_generator=validation_generator, run_best=run_best,
                               paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                               base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
@@ -316,7 +319,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                             print('already done')
                             continue
                         run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                                  step_size=step_size, optimizer=optimizer,
+                                  step_size=step_size, optimizer=optimizer, include_images=False,
                                   validation_generator=validation_generator, run_best=run_best,
                                   paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
