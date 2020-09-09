@@ -227,7 +227,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
                           name='Convolution_{}'.format(index), padding='same')(x)
         x = layers.BatchNormalization(name="BN_{}".format(index))(x)
         x = layers.Activation('relu', name='activation_{}'.format(index))(x)
-        x = layers.Concatenate()([x, across])
+        x = layers.Add()([x, across])
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
     if collapse_axis:
         x = BreakUpSqueezeDimensions(img_input)(x)
