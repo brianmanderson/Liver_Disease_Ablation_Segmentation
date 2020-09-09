@@ -252,7 +252,6 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     return None # break out!
 
 
-
 def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                      run_best=False, add='', cache_add='_1mm', batch_size=0,
                      change_background=False, excel_file_name='parameters_list_by_trial_id_DenseNet3D.xlsx',
@@ -325,6 +324,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                                   paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
                         return None # break out!
+
 
 if __name__ == '__main__':
     pass
