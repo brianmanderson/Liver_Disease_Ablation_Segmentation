@@ -675,6 +675,13 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # return_generators(add='_32', threshold=True, change_background=False, cache_add='2DTest',
-    #                   threshold_val=10, batch_size=0, cache=False)
+    # base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=15, add='_16',
+    #                                                                                     cache_add='',
+    #                                                                                     flip=True,
+    #                                                                                     change_background=False,
+    #                                                                                     threshold=True,
+    #                                                                                     threshold_val=10,
+    #                                                                                     path_lead='Records',
+    #                                                                                     validation_name='',
+    #                                                                                     cache=False, is_2D=True)
     pass
