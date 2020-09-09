@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import imagenet_utils
 import sys
 sys.path.append('..')
-from Base_Deeplearning_Code.Models.TF_Keras_Models import base_UNet, ExpandDimension, SqueezeDimension
+from Base_Deeplearning_Code.Models.TF_Keras_Models import base_UNet, ExpandDimension, SqueezeDimension, SqueezeAxes
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
 from tensorflow.python.keras.utils import data_utils
@@ -50,62 +50,49 @@ def dense_block(x, blocks, name):
 
 
 def transition_block(x, reduction, name):
-  """A transition block.
+    """A transition block.
 
-  Arguments:
+    Arguments:
     x: input tensor.
     reduction: float, compression rate at transition layers.
     name: string, block label.
 
-  Returns:
+    Returns:
     output tensor for the block.
-  """
-  bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-  x = layers.BatchNormalization(
-      axis=bn_axis, epsilon=1.001e-5, name=name + '_bn')(
-          x)
-  x = layers.Activation('relu', name=name + '_relu')(x)
-  x = layers.Conv2D(int(backend.int_shape(x)[bn_axis] * reduction),
-      1,
-      use_bias=False, padding='same',
-      name=name + '_conv')(
-          x)
-  just_before = x
-  x = layers.AveragePooling2D(2, strides=2, name=name + '_pool')(x)
-  return x, just_before
+    """
+    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
+    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + '_bn')(x)
+    x = layers.Activation('relu', name=name + '_relu')(x)
+    x = layers.Conv2D(int(backend.int_shape(x)[bn_axis] * reduction), 1,
+                      use_bias=False, padding='same', name=name + '_conv')(x)
+    just_before = x
+    x = layers.AveragePooling2D(2, strides=2, name=name + '_pool')(x)
+    return x, just_before
 
 
 def conv_block(x, growth_rate, name):
-  """A building block for a dense block.
+    """A building block for a dense block.
 
-  Arguments:
+    Arguments:
     x: input tensor.
     growth_rate: float, growth rate at dense layers.
     name: string, block label.
 
-  Returns:
+    Returns:
     Output tensor for the block.
-  """
-  bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-  x1 = layers.BatchNormalization(
-      axis=bn_axis, epsilon=1.001e-5, name=name + '_0_bn')(
-          x)
-  x1 = layers.Activation('relu', name=name + '_0_relu')(x1)
-  x1 = layers.Conv2D(
-      4 * growth_rate, 1, use_bias=False, name=name + '_1_conv', padding='same')(
-          x1)
-  x1 = layers.BatchNormalization(
-      axis=bn_axis, epsilon=1.001e-5, name=name + '_1_bn')(
-          x1)
-  x1 = layers.Activation('relu', name=name + '_1_relu')(x1)
-  x1 = layers.Conv2D(
-      growth_rate, 3, padding='same', use_bias=False, name=name + '_2_conv')(
-          x1)
-  x = layers.Concatenate(axis=bn_axis, name=name + '_concat')([x, x1])
-  return x
+    """
+    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
+    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + '_0_bn')(x)
+    x1 = layers.Activation('relu', name=name + '_0_relu')(x1)
+    x1 = layers.Conv2D(4 * growth_rate, 1, use_bias=False, name=name + '_1_conv', padding='same')(x1)
+    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + '_1_bn')(x1)
+    x1 = layers.Activation('relu', name=name + '_1_relu')(x1)
+    x1 = layers.Conv2D(growth_rate, 3, padding='same', use_bias=False, name=name + '_2_conv')(x1)
+    x = layers.Concatenate(axis=bn_axis, name=name + '_concat')([x, x1])
+    return x
 
 
-def squeeze_first2axes_operator(x5d) :
+def squeeze_first2axes_operator(x5d):
     shape = tf.keras.backend.shape(x5d) # get dynamic tensor shape
     x5d = tf.keras.backend.reshape(x5d, [shape[0] * shape[1], shape[2], shape[3], 1])
     return x5d
@@ -119,7 +106,7 @@ def return_og_shape(og):
     return break_up_operator
 
 
-def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None,
+def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, collapse_axis=True,
              model_name='unique', classes=1000, layers_dict=None):
     """Instantiates the DenseNet architecture.
     
@@ -187,7 +174,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
     if weights == 'imagenet' and include_top and classes != 1000:
         raise ValueError('If using `weights` as `"imagenet"` with `include_top`'
                          ' as true, `classes` should be 1000')
-    input_shape = (None, None, 1)
+    input_shape = (None, None, None, 1)
     # Determine proper input shape
 
     if input_tensor is None:
@@ -197,11 +184,13 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
             img_input = layers.Input(tensor=input_tensor, shape=input_shape)
         else:
             img_input = input_tensor
-
+    x = img_input
     bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
     mask = layers.Input(shape=input_shape[:-1] + (1,), name='mask', dtype='int32')
-    # x = layers.Lambda(squeeze_first2axes_operator, output_shape=(None, None, None, 1))(img_input)
-    x = layers.Concatenate(name='InputConcat')([img_input, img_input, img_input])
+    # x = layers.Lambda(squeeze_first2axes_operator, output_shape=(None, None, None, 1))(x)
+    if collapse_axis:
+        x = SqueezeAxes()(x)
+    x = layers.Concatenate(name='InputConcat')([x, x, x])
     inputs = [img_input, mask]
 
     encoding = []
@@ -237,13 +226,14 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
                           name='Convolution_{}'.format(index), padding='same')(x)
         x = layers.BatchNormalization(name="BN_{}".format(index))(x)
         x = layers.Activation('relu', name='activation_{}'.format(index))(x)
-        x = layers.Add()([x, across])
+        x = layers.Concatenate()([x, across])
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
-    # x = layers.Lambda(return_og_shape(img_input), output_shape=(None, None, None, None, 2))(x)
+    if collapse_axis:
+        x = layers.Lambda(return_og_shape(img_input),
+                          output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
     if layers_dict is not None:
-        # x = layers.Lambda(return_og_shape(img_input), output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
         myunet = base_UNet(layers_dict=layers_dict, is_2D=False, explictly_defined=True)
-        features_2D = layers.Lambda(ExpandDimension(axis=0))(x)
+        features_2D = ExpandDimension(axis=0)(x)
         combined_input = layers.Concatenate()([img_input, tf.cast(mask, 'float32')])
         x = layers.Conv3D(32, 5, strides=1, use_bias=False, name='3DConv1', padding='Same')(ExpandDimension(axis=0)(combined_input))
         x = layers.BatchNormalization(axis=4, epsilon=1.001e-5, name='3DConv1/bn')(x)
@@ -264,7 +254,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
         x = layers.Activation('relu', name='3DDecode1/relu')(x)
         x = layers.Conv3D(classes, 1, strides=1, use_bias=False, name='Final_Conv', padding='Same')(x)
         x = layers.Activation('softmax', name='Final_Conv/softmax')(x)
-        x = layers.Lambda(SqueezeDimension(axis=0))(x)
+        x = SqueezeDimension(axis=0)(x)
     else:
         x = layers.Conv2D(classes, 1, activation='softmax', padding='same')(x)
     sum_vals_base = tf.where(mask > 0, 0, 1)
@@ -330,9 +320,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, in
 def DenseNet121(include_top=True,
                 weights='imagenet',
                 input_tensor=None,
-                input_shape=None,
-                pooling=None,
                 classes=1000, layers_dict=None):
     """Instantiates the Densenet121 architecture."""
     return DenseNet(blocks=[6, 12, 24, 16], include_top=include_top, weights=weights, input_tensor=input_tensor,
-                    input_shape=input_shape, pooling=pooling, classes=classes, layers_dict=layers_dict)
+                    classes=classes, layers_dict=layers_dict)
