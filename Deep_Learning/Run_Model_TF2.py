@@ -13,10 +13,17 @@ from Return_Train_Validation_Generators_TF2 import return_generators, return_bas
 from tensorboard.plugins.hparams.keras import Callback
 
 
-def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,validation_generator=None,step_size=None,
-              paths_class=None, step_size_factor=5, train_generator=None, morfeus_drive='',base_path='', run_best=False,
+def run_model(batch_size, add, cache_add, flip, change_background, threshold, threshold_val, path_lead, validation_name,
+              trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
+              paths_class=None, step_size_factor=5, morfeus_drive='',base_path='', run_best=False,
               skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
               all_trainable=False, densenet=False, weights_path=None, include_images=True, **kwargs):
+    _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add, cache_add=cache_add,
+                                                                    flip=flip, change_background=change_background,
+                                                                    threshold=threshold, threshold_val=threshold_val,
+                                                                    path_lead=path_lead,
+                                                                    validation_name=validation_name)
+    step_size = len(train_generator)
     if step_size is None:
         step_size = len(train_generator)
     if not os.path.exists(morfeus_drive):
@@ -51,7 +58,7 @@ def run_model(trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000,
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
-    tensorboard = TensorBoard(log_dir=tensorboard_output, histogram_freq=5, write_graph=True)  #profile_batch='300,401',
+    tensorboard = TensorBoard(log_dir=tensorboard_output, histogram_freq=5, write_graph=False, profile_batch=0)  #profile_batch='300,401',
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=10, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + 2, reduction_factor=10)
@@ -184,7 +191,7 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
     if run_best:
         save_a_model = True
     threshold = True
-    for iteration in [0, 1]:
+    for iteration in [np.random.randint(9999)]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
@@ -205,11 +212,10 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     run_data['Model_Style'] = 'DenseNet3D3layer'
                     run_data['concat'] = concat
                     run_data['all_trainable'] = all_trainable
-                    run_data['flipped'] = flip
+                    run_data['flip'] = flip
                     run_data['change_background'] = change_background
                     run_data['threshold'] = threshold
                     run_data['threshold_val'] = threshold_val
-                    tf.random.set_seed(iteration)
                     run_data['batch_size'] = batch_size
                     run_data['densenet'] = True
                     excel_path = os.path.join(morfeus_drive, excel_file_name)
@@ -228,11 +234,6 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     print(current_run_df)
                     data_frame = data_frame.append(current_run_df, ignore_index=True)
                     data_frame.to_excel(excel_path, index=0)
-                    _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
-                                                                                    flip=flip, change_background=change_background,
-                                                                                    threshold=threshold, threshold_val=threshold_val,
-                                                                                    path_lead=path_lead, validation_name=validation_name)
-                    step_size = len(train_generator)
                     hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
                     paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
@@ -243,9 +244,9 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                     if os.listdir(tensorboard_output):
                         print('already done')
                         continue
-                    run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                              step_size=step_size, optimizer=optimizer, include_images=False,
-                              validation_generator=validation_generator, run_best=run_best,
+                    run_model(validation_name=validation_name, add=add, cache_add=cache_add, trial_id=str(trial_id),
+                              layers_dict=layers_dict, optimizer=optimizer, include_images=False,
+                              run_best=run_best, path_lead=path_lead,
                               paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                               base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
                     return None # break out!
