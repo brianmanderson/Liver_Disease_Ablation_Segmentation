@@ -551,7 +551,7 @@ def return_model(layers_dict=None, is_2D=False, densenet=False, all_trainable=Fa
             print('Loading weights from {}'.format(weights_path))
             if not os.path.exists(weights_path) and weights_path.endswith('.h5'):
                 model.load_weights(weights_path.replace('.h5', '.ckpt'))
-                model.save(weights_path)
+                model.save_weights(weights_path)
             else:
                 model.load_weights(weights_path, by_name=True)
         if not all_trainable:
