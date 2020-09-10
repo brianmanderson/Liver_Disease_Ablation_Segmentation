@@ -110,28 +110,19 @@ def return_dictionary_densenet3D(base_dict, all_trainable=False):
     else:
         dictionary = [
             base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=1e-2),
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=4.5e-2),
-
+                      max_lr=1.6e-3),
             base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
+                      max_lr=4e-2),
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
+                      max_lr=1e-2),
+
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
+                      max_lr=2e-2),
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
+                      max_lr=2e-3),
+
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=4e-3),
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=1e-2),
-
-
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=5e-2),
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=2e-1),
-
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=1e-2),
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=1e-3),
-
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=3e-4),
 
             base_dict(layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-3),
@@ -140,9 +131,8 @@ def return_dictionary_densenet3D(base_dict, all_trainable=False):
             base_dict(layers=3, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-2),
 
-            base_dict(layers=3, num_conv_blocks=2, conv_lambda=8, filters=32, max_conv_blocks=12, min_lr=2e-6,
-                      max_lr=1e-3),
-
+            base_dict(layers=3, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
+                      max_lr=1e-1),
             base_dict(layers=3, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-3),
             base_dict(layers=3, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
