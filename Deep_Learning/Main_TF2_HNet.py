@@ -14,7 +14,7 @@ cube_size = (16, 120, 120)
 from Return_Train_Validation_Generators_TF2 import return_paths
 base_path, morfeus_drive = return_paths()
 kernel = (3, 3)
-batch_size = 16
+batch_size = 12
 squeeze_kernel = (1, 1)
 
 add = '_16'
