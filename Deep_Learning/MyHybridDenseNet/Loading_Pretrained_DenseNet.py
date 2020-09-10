@@ -230,7 +230,9 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
         x = layers.Add()([x, across])
     x = layers.UpSampling2D(name='Upsampling_Final'.format(index))(x)
     if collapse_axis:
-        x = BreakUpSqueezeDimensions(img_input)(x)
+        # x = BreakUpSqueezeDimensions(img_input)(x)
+        og_shape = tf.shape(img_input)
+        x = tf.reshape(x, [og_shape[0], og_shape[1], og_shape[2], og_shape[3], x.shape[-1]])
         # x = layers.Lambda(return_og_shape(img_input),
         #                   output_shape=(None, None, None, None, int(backend.int_shape(x)[bn_axis])))(x)
     if layers_dict is not None:
