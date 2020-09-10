@@ -1,4 +1,5 @@
 __author__ = 'Brian M Anderson'
+
 # Created on 1/18/2020
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import *
 import tensorflow as tf
@@ -7,16 +8,18 @@ from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStoppi
 from Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Base_Deeplearning_Code.Data_Generators.Return_Paths import Path_Return_Class
 from Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import CyclicLR
-from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, return_base_dict_dense3D,\
-    return_hparams, return_dictionary_densenet3D, return_pandas_df, return_current_df, np, return_paths, return_best_dictionary,\
+from Return_Train_Validation_Generators_TF2 import return_generators, return_base_dict_dense, return_base_dict_dense3D, \
+    return_hparams, return_dictionary_densenet3D, return_pandas_df, return_current_df, np, return_paths, \
+    return_best_dictionary, \
     get_layers_dict_dense_new, return_dictionary_dense, return_model, get_layers_dict_dense_HNet
 from tensorboard.plugins.hparams.keras import Callback
 
 
 def run_model(batch_size, add, cache_add, flip, change_background, threshold, threshold_val, path_lead, validation_name,
-              trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000, base_reduce_factor=100, reduction_factor=100,
-              paths_class=None, step_size_factor=5, morfeus_drive='',base_path='', run_best=False,
-              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
+              trial_id, min_lr=1e-4, max_lr=1e-2, layers_dict=None, epochs=1000, base_reduce_factor=100,
+              reduction_factor=100,
+              paths_class=None, step_size_factor=5, morfeus_drive='', base_path='', run_best=False,
+              skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None, kernel=(3, 3, 3),
               all_trainable=False, densenet=False, weights_path=None, include_images=True, **kwargs):
     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add, cache_add=cache_add,
                                                                     flip=flip, change_background=change_background,
@@ -31,7 +34,8 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
         print('base wrong')
         return None
 
-    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet, weights_path=weights_path)
+    Model_val = return_model(layers_dict, is_2D=kernel == (3, 3), all_trainable=all_trainable, densenet=densenet,
+                             weights_path=weights_path)
     model_path_out = paths_class.model_path_out
     tensorboard_output = paths_class.tensorboard_path_out
     if optimizer == 'SGD':
@@ -47,11 +51,12 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     # checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
     image_frequency = 10
     patience = 30
-    checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.cpkt')
+    checkpoint_path = os.path.join(model_path_out, 'cp-{epoch:04d}.cpkt')
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
                                  verbose=1)
-    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_output, profile_batch=0, write_graph=True)  #profile_batch='300,401',
+    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_output, profile_batch=0,
+                                                 write_graph=True)  # profile_batch='300,401',
     lrate = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, step_size_factor=step_size_factor,
                      mode='triangular2', pre_cycle=0, base_reduce_factor=base_reduce_factor, scale_mode=scale_mode,
                      step_size_factor_scale=lambda x: x + 2, reduction_factor=reduction_factor)
@@ -76,7 +81,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     Model_val.fit(train_generator.data_set, epochs=epochs, steps_per_epoch=len(train_generator),
                   validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
                   validation_freq=1, callbacks=callbacks)
-    Model_val.save(os.path.join(model_path_out,'final_model.h5'))
+    Model_val.save(os.path.join(model_path_out, 'final_model.h5'))
     tf.keras.backend.clear_session()
     return None
 
@@ -92,7 +97,7 @@ def compare_base_current(data_frame, current_run_df, features_list):
 def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                 run_best=False, debug=False, add='', dense=False, cache_add='_1mm', kernel=(3, 3, 3),
                 squeeze_kernel=(1, 1, 1), is_2D=False, batch_size=8, change_background=True,
-                excel_file_name = 'parameters_list_by_trial_id_Dense.xlsx'):
+                excel_file_name='parameters_list_by_trial_id_Dense.xlsx'):
     optimizers = ['Adam']
     pool = (2, 2, 2)
     if is_2D:
@@ -144,21 +149,26 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             trial_id += 1
                         run_data['Trial_ID'] = trial_id
                         current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
-                        if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
+                        if compare_base_current(data_frame=data_frame, current_run_df=current_run_df,
+                                                features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
                             print('Already done')
                             continue
                         print(current_run_df)
                         data_frame = data_frame.append(current_run_df, ignore_index=True)
                         data_frame.to_excel(excel_path, index=0)
-                        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
-                                                                                        flip=flip, change_background=change_background,
-                                                                                        threshold=threshold, threshold_val=threshold_val)
+                        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,
+                                                                                        cache_add=cache_add,
+                                                                                        flip=flip,
+                                                                                        change_background=change_background,
+                                                                                        threshold=threshold,
+                                                                                        threshold_val=threshold_val)
                         step_size = len(train_generator)
                         hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
 
                         layers_dict = get_layers_dict_dense_new(**run_data, kernel=kernel,
                                                                 squeeze_kernel=squeeze_kernel, pool=pool)
-                        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive,
+                                                        save_model=save_a_model,
                                                         is_keras_model=False)
                         paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
                         tensorboard_output = paths_class.tensorboard_path_out
@@ -168,11 +178,11 @@ def train_model(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
                             continue
                         run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
                                   step_size=step_size, optimizer=optimizer,
-                                  validation_generator=validation_generator,run_best=run_best, kernel=kernel,
+                                  validation_generator=validation_generator, run_best=run_best, kernel=kernel,
                                   squeeze_kernel=squeeze_kernel,
-                                  paths_class=paths_class,morfeus_drive=morfeus_drive, hparams=hparams,
+                                  paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, **run_data)
-                        return None # break out!
+                        return None  # break out!
 
 
 def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
@@ -224,8 +234,10 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                             while trial_id in data_frame['Trial_ID'].values:
                                 trial_id += 1
                             run_data['Trial_ID'] = trial_id
-                            current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
-                            if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
+                            current_run_df, features_list = return_current_df(run_data,
+                                                                              features_list=data_frame.columns)
+                            if compare_base_current(data_frame=data_frame, current_run_df=current_run_df,
+                                                    features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
                                 print('Already done')
                                 continue
                             print(current_run_df)
@@ -234,7 +246,8 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                             hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
                             hparams = None
 
-                            paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
+                            paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive,
+                                                            save_model=save_a_model,
                                                             is_keras_model=False)
                             paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
                             tensorboard_output = paths_class.tensorboard_path_out
@@ -242,12 +255,13 @@ def train_DenseNet(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous'
                             if os.listdir(tensorboard_output):
                                 print('already done')
                                 continue
-                            run_model(validation_name=validation_name, add=add, cache_add=cache_add, trial_id=str(trial_id),
+                            run_model(validation_name=validation_name, add=add, cache_add=cache_add,
+                                      trial_id=str(trial_id),
                                       layers_dict=layers_dict, optimizer=optimizer, include_images=False,
                                       run_best=run_best, path_lead=path_lead,
                                       paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                       base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
-                            return None # break out!
+                            return None  # break out!
 
 
 def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrous',
@@ -299,7 +313,8 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                             trial_id += 1
                         run_data['Trial_ID'] = trial_id
                         current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
-                        if compare_base_current(data_frame=data_frame, current_run_df=current_run_df, features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
+                        if compare_base_current(data_frame=data_frame, current_run_df=current_run_df,
+                                                features_list=[i for i in data_frame.columns if i != 'Trial_ID']):
                             print('Already done')
                             continue
                         print(current_run_df)
@@ -319,7 +334,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                                   run_best=run_best, path_lead=path_lead,
                                   paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
-                        return None # break out!
+                        return None  # break out!
 
 
 if __name__ == '__main__':
