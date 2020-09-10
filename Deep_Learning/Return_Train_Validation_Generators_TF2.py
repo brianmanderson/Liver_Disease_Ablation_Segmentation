@@ -151,6 +151,8 @@ def return_dictionary_densenet3D(base_dict, all_trainable=False):
             base_dict(layers=3, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
                       max_lr=4e-2),
             ]
+        dictionary = [base_dict(layers=3, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
+                      max_lr=4e-2)]
     return dictionary
 
 
