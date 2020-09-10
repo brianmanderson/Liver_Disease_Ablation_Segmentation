@@ -52,8 +52,8 @@ if make_TF2_images:
                                Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
                                                   min_z=cube_size[0])]
 
-    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records_1mm','Train_{}_Records'.format(cube_size[0])), image_processors=image_processors_train,
-                    is_3D=True, rewrite=False, thread_count=thread_count)
+    # write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records_1mm','Train_{}_Records'.format(cube_size[0])), image_processors=image_processors_train,
+    #                 is_3D=True, rewrite=False, thread_count=thread_count)
     image_processors_train = []
     image_processors_train += base_normalizer
     image_processors_train += [Cast_Data({'annotation': 'float16'}),
@@ -73,8 +73,8 @@ if make_TF2_images:
                                                power_val_c=power_val),
                                     Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False,
                                                        desired_val=2)]
-    write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records_1mm','Validation_Records_64'), thread_count=thread_count,
-                    image_processors=image_processors_validation, is_3D=True, rewrite=False)
+    # write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records_1mm','Validation_Records_64'), thread_count=thread_count,
+    #                 image_processors=image_processors_validation, is_3D=True, rewrite=False)
 
     image_processors_validation = []
     image_processors_validation += base_normalizer
@@ -102,11 +102,11 @@ if make_TF2_images:
     write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records','Train_Records_64'), image_processors=processors,
                     is_3D=True, rewrite=False, thread_count=thread_count)
 
-    image_processors_test = []
-    image_processors_test += base_normalizer
-    image_processors_test += [Cast_Data({'annotation': 'int8'}),
-                              Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=power_val, power_val_r=power_val,
-                                         power_val_c=power_val),
-                              Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    write_tf_record(os.path.join(path, 'Test'), out_path=os.path.join(path,'Records','Test_Records'), image_processors=image_processors_test,
-                    is_3D=True, rewrite=False, thread_count=thread_count)
+    # image_processors_test = []
+    # image_processors_test += base_normalizer
+    # image_processors_test += [Cast_Data({'annotation': 'int8'}),
+    #                           Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=power_val, power_val_r=power_val,
+    #                                      power_val_c=power_val),
+    #                           Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
+    # write_tf_record(os.path.join(path, 'Test'), out_path=os.path.join(path,'Records','Test_Records'), image_processors=image_processors_test,
+    #                 is_3D=True, rewrite=False, thread_count=thread_count)
