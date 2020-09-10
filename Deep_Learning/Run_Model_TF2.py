@@ -46,12 +46,7 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
         return None
     # checkpoint_path = os.path.join(model_path_out,'cp-best.ckpt')
     image_frequency = 10
-    val_frequency = 1
-    patience = 15
-    if run_best:
-        image_frequency = 10
-        val_frequency = 1
-        patience = 30
+    patience = 30
     checkpoint_path = os.path.join(model_path_out,'cp-{epoch:04d}.cpkt')
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
                                  save_freq='epoch', save_best_only=False, save_weights_only=True, mode='min',
@@ -73,15 +68,14 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     if not skip_cyclic_lr:
         callbacks += [lrate]
     callbacks += [checkpoint]
-    # if not run_best:
-    # callbacks += [EarlyStopping(patience=patience, verbose=1)]
+    if not run_best:
+        callbacks += [EarlyStopping(patience=patience, verbose=1)]
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
     Model_val.fit(train_generator.data_set, epochs=epochs, steps_per_epoch=len(train_generator),
-              validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-              validation_freq=1,
-              callbacks=callbacks)
+                  validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
+                  validation_freq=1, callbacks=callbacks)
     Model_val.save(os.path.join(model_path_out,'final_model.h5'))
     tf.keras.backend.clear_session()
     return None
@@ -265,6 +259,8 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
     if run_best:
         save_a_model = True
     threshold = True
+    base_reduce_factor = 100
+    reduction_factor = 100
     for iteration in [0, 1]:
         for flip in [True]:
             for threshold_val in [10]:
@@ -277,8 +273,11 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                     np.random.shuffle(perm)
                     overall_dictionary = overall_dictionary[perm]
                     for run_data in overall_dictionary:
+                        run_data['base_reduce_factor'] = base_reduce_factor
+                        run_data['reduction_factor'] = reduction_factor
                         run_data['percentile_normed'] = True
                         run_data['sampling'] = 1
+                        run_data['flip'] = flip
                         run_data['mirror_max'] = False
                         run_data['Model_Style'] = 'DenseNet3D3layer'
                         run_data['concat'] = concat
@@ -287,7 +286,6 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                         run_data['change_background'] = change_background
                         run_data['threshold'] = threshold
                         run_data['threshold_val'] = threshold_val
-                        tf.random.set_seed(iteration)
                         run_data['batch_size'] = batch_size
                         run_data['densenet'] = True
                         excel_path = os.path.join(morfeus_drive, excel_file_name)
@@ -307,24 +305,18 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                         print(current_run_df)
                         data_frame = data_frame.append(current_run_df, ignore_index=True)
                         data_frame.to_excel(excel_path, index=0)
-                        _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add,cache_add=cache_add,
-                                                                                        flip=flip, change_background=change_background,
-                                                                                        threshold=threshold, threshold_val=threshold_val,
-                                                                                        path_lead=path_lead, validation_name=validation_name)
-                        step_size = len(train_generator)
                         hparams = return_hparams(run_data, features_list=features_list, excluded_keys=[])
-
-                        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive, save_model=save_a_model,
-                                                        is_keras_model=False)
+                        paths_class = Path_Return_Class(base_path=base_path, morfeus_path=morfeus_drive,
+                                                        save_model=save_a_model, is_keras_model=False)
                         paths_class.define_model_things(model_name, 'Trial_ID_{}'.format(trial_id))
                         tensorboard_output = paths_class.tensorboard_path_out
                         print(tensorboard_output)
                         if os.listdir(tensorboard_output):
                             print('already done')
                             continue
-                        run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                                  step_size=step_size, optimizer=optimizer, include_images=True,
-                                  validation_generator=validation_generator, run_best=run_best,
+                        run_model(validation_name=validation_name, add=add, cache_add=cache_add, trial_id=str(trial_id),
+                                  layers_dict=layers_dict, optimizer=optimizer, include_images=True,
+                                  run_best=run_best, path_lead=path_lead,
                                   paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
                         return None # break out!
