@@ -114,9 +114,9 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                     out_path = os.path.join(morfeus_drive, path_desc, model_name)
                     for thing in things:
                         out_path = os.path.join(out_path, thing)
-                    # if os.path.exists(out_path):
-                    #     print('already done')
-                    #     continue
+                    if os.path.exists(out_path):
+                        print('already done')
+                        continue
                     _, _, train_generator, validation_generator = return_generators(
                         batch_size=batch_size, add=add, threshold_val=10, change_background=False,
                         cache_add=cache_add, path_lead=path_lead, validation_name='_64')
