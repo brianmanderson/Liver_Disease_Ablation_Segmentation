@@ -103,10 +103,10 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
     for iteration in [0]:
         for layers in [2, 3]:
             for num_conv_blocks in [2, 4]:
-                for conv_lambda in [2, 4, 8]:
+                for conv_lambda in [2, 4]:
                     layers_dict = get_layers_dict_dense_HNet(layers=layers, filters=32, num_conv_blocks=num_conv_blocks,
                                                              conv_lambda=conv_lambda,
-                                                             max_conv_blocks=16)
+                                                             max_conv_blocks=12)
                     things = ['all_trainable_{}'.format(all_trainable), '3D_Model_{}'.format(layers_dict is not None)]
                     things += ['layers_{}'.format(layers), 'conv_blocks_{}'.format(num_conv_blocks),
                                'lambda_{}'.format(conv_lambda)]
@@ -114,9 +114,9 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                     out_path = os.path.join(morfeus_drive, path_desc, model_name)
                     for thing in things:
                         out_path = os.path.join(out_path, thing)
-                    if os.path.exists(out_path):
-                        print('already done')
-                        continue
+                    # if os.path.exists(out_path):
+                    #     print('already done')
+                    #     continue
                     _, _, train_generator, validation_generator = return_generators(
                         batch_size=batch_size, add=add, threshold_val=10, change_background=False,
                         cache_add=cache_add, path_lead=path_lead, validation_name='_64')
