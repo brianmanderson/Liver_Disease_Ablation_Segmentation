@@ -18,8 +18,6 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
               paths_class=None, step_size_factor=5, morfeus_drive='',base_path='', run_best=False,
               skip_cyclic_lr=False, scale_mode='linear_cycle', optimizer='SGD', hparams=None,kernel=(3, 3, 3),
               all_trainable=False, densenet=False, weights_path=None, include_images=True, **kwargs):
-    tf.keras.backend.clear_session()
-    tf.compat.v1.disable_eager_execution()
     _, _, train_generator, validation_generator = return_generators(batch_size=batch_size, add=add, cache_add=cache_add,
                                                                     flip=flip, change_background=change_background,
                                                                     threshold=threshold, threshold_val=threshold_val,
@@ -325,7 +323,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                             print('already done')
                             continue
                         run_model(trial_id=str(trial_id), layers_dict=layers_dict, train_generator=train_generator,
-                                  step_size=step_size, optimizer=optimizer, include_images=False,
+                                  step_size=step_size, optimizer=optimizer, include_images=True,
                                   validation_generator=validation_generator, run_best=run_best,
                                   paths_class=paths_class, morfeus_drive=morfeus_drive, hparams=hparams,
                                   base_path=base_path, epochs=epochs, weights_path=weights_path, **run_data)
