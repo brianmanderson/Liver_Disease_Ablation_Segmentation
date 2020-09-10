@@ -86,7 +86,7 @@ if run_200_retrained:
                    change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
                    weights_path=weights_path, layers_dict=None, excel_file_name=excel_file_name)
 
-
+excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch3D.xlsx'
 '''
 Now slap on 3D and turn off trainable on 2D
 '''
