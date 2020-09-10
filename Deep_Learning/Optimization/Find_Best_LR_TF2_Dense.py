@@ -92,7 +92,7 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
 
 
 def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1mm', path_lead='Records',
-                          all_trainable=False, weights_path=None):
+                            all_trainable=False, weights_path=None, model_name=''):
     min_lr = 1e-7
     max_lr = 1
     for iteration in [0]:
@@ -108,12 +108,13 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                     base_path, morfeus_drive, train_generator, validation_generator = return_generators(
                         batch_size=batch_size, add=add, threshold_val=10, change_background=False,
                         cache_add=cache_add, path_lead=path_lead, validation_name='_64')
-                    out_path = os.path.join(morfeus_drive, path_desc, 'DenseNet121')
+                    out_path = os.path.join(morfeus_drive, path_desc, model_name)
                     for thing in things:
                         out_path = os.path.join(out_path, thing)
                     if os.path.exists(out_path):
                         print('already done')
                         continue
+                    os.makedirs(out_path)
                     model = return_model(layers_dict, weights_path=weights_path, densenet=True, all_trainable=all_trainable)
                     k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
                     k.set_model(model)
