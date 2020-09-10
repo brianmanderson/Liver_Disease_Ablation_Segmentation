@@ -61,10 +61,9 @@ def transition_block(x, reduction, name):
     Returns:
     output tensor for the block.
     """
-    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + '_bn')(x)
+    x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name=name + '_bn')(x)
     x = layers.Activation('relu', name=name + '_relu')(x)
-    x = layers.Conv2D(int(backend.int_shape(x)[bn_axis] * reduction), 1,
+    x = layers.Conv2D(int(backend.int_shape(x)[-1] * reduction), 1,
                       use_bias=False, padding='same', name=name + '_conv')(x)
     just_before = x
     x = layers.AveragePooling2D(2, strides=2, name=name + '_pool')(x)
@@ -82,14 +81,13 @@ def conv_block(x, growth_rate, name):
     Returns:
     Output tensor for the block.
     """
-    bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + '_0_bn')(x)
+    x1 = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name=name + '_0_bn')(x)
     x1 = layers.Activation('relu', name=name + '_0_relu')(x1)
     x1 = layers.Conv2D(4 * growth_rate, 1, use_bias=False, name=name + '_1_conv', padding='same')(x1)
-    x1 = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name=name + '_1_bn')(x1)
+    x1 = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name=name + '_1_bn')(x1)
     x1 = layers.Activation('relu', name=name + '_1_relu')(x1)
     x1 = layers.Conv2D(growth_rate, 3, padding='same', use_bias=False, name=name + '_2_conv')(x1)
-    x = layers.Concatenate(axis=bn_axis, name=name + '_concat')([x, x1])
+    x = layers.Concatenate(axis=-1, name=name + '_concat')([x, x1])
     return x
 
 
@@ -197,7 +195,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
     encoding = []
     # x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)))(x)
     x = layers.Conv2D(64, 7, strides=2, use_bias=False, name='conv1/conv', padding='Same')(x)
-    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name='conv1/bn')(x)
+    x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='conv1/bn')(x)
     x = layers.Activation('relu', name='conv1/relu')(x)
     encoding.append(x)
     x = layers.ZeroPadding2D(padding=((1, 1), (1, 1)))(x)
@@ -214,7 +212,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
     encoding.append(just_before)
     x = dense_block(x, blocks[3], name='conv5')
 
-    x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5, name='bn')(x)
+    x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='bn')(x)
     x = layers.Activation('relu', name='relu')(x)
 
     index = -1
@@ -240,21 +238,21 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
         features_2D = x
         combined_input = layers.Concatenate()([img_input, tf.cast(mask, 'float32')])
         x = layers.Conv3D(32, 5, strides=1, use_bias=False, name='3DConv1', padding='Same')(ExpandDimension(axis=0)(combined_input))
-        x = layers.BatchNormalization(axis=4, epsilon=1.001e-5, name='3DConv1/bn')(x)
+        x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='3DConv1/bn')(x)
         x = layers.Activation('relu', name='3DConv1/relu')(x)
         x = layers.Conv3D(32, 3, strides=1, use_bias=False, name='3DConv2', padding='Same')(x)
-        x = layers.BatchNormalization(axis=4, epsilon=1.001e-5, name='3DConv2/bn')(x)
+        x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='3DConv2/bn')(x)
         x = layers.Activation('relu', name='3DConv2/relu')(x)
         x = x0 = layers.Concatenate()([x, features_2D])
         x = layers.Conv3D(32, 3, strides=2, use_bias=False, name='3DConv3', padding='Same')(x)
-        x = layers.BatchNormalization(axis=4, epsilon=1.001e-5, name='3DConv3/bn')(x)
+        x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='3DConv3/bn')(x)
         x = layers.Activation('relu', name='3DConv3/relu')(x)
 
         x = myunet.run_unet(x)
 
         x = layers.Concatenate()([x, x0])
         x = layers.Conv3D(32, 3, strides=1, use_bias=False, name='3DDecode1', padding='Same')(x)
-        x = layers.BatchNormalization(axis=4, epsilon=1.001e-5, name='3DDecode1/bn')(x)
+        x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='3DDecode1/bn')(x)
         x = layers.Activation('relu', name='3DDecode1/relu')(x)
         x = layers.Conv3D(classes, 1, strides=1, use_bias=False, name='Final_Conv', padding='Same')(x)
         x = layers.Activation('softmax', name='Final_Conv/softmax')(x)
