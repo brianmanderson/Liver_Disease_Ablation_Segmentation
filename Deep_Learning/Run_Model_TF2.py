@@ -27,6 +27,10 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
                                                                     path_lead=path_lead,
                                                                     validation_name=validation_name)
     step_size = len(train_generator)
+    x, y = next(iter(train_generator.data_set))
+    xx, yy = next(iter(validation_generator.data_set))
+    print(x[0].shape)
+    print(xx[0].shape)
     if not os.path.exists(morfeus_drive):
         print('Morf wrong')
         return None
@@ -275,7 +279,7 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
     threshold = True
     base_reduce_factor = 100
     reduction_factor = 100
-    for iteration in [0, 1]:
+    for iteration in [4]:
         for flip in [True]:
             for threshold_val in [10]:
                 for optimizer in optimizers:
@@ -309,7 +313,8 @@ def train_DenseNet3D(epochs=None, save_a_model=False, model_name='3D_Fully_Atrou
                         run_data['Trial_ID'] = 0
                         data_frame = return_pandas_df(excel_path, features_list=list(run_data.keys()))
                         trial_id = 0
-                        while trial_id in data_frame['Trial_ID'].values:
+                        tensorboard_path = os.path.join(morfeus_drive, 'Keras', model_name, 'Tensorboard')
+                        while trial_id in data_frame['Trial_ID'].values or 'Trial_ID_{}'.format(trial_id) in os.listdir(tensorboard_path):
                             trial_id += 1
                         run_data['Trial_ID'] = trial_id
                         current_run_df, features_list = return_current_df(run_data, features_list=data_frame.columns)
