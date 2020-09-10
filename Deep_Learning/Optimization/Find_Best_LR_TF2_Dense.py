@@ -62,13 +62,11 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
                           all_trainable=False, weights_path=None, layers_dict=None, model_name='DenseNet121'):
     min_lr = 1e-7
     max_lr = 1
+    base_path, morfeus_drive = return_paths()
     for iteration in [0, 1, 2]:
         things = ['all_trainable_{}'.format(all_trainable)]
         things += ['3D_Model_{}'.format(layers_dict is not None)]
         things += ['{}_Iteration'.format(iteration)]
-        base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-            batch_size=batch_size, add=add, threshold_val=10, change_background=False,
-            cache_add=cache_add, path_lead=path_lead, validation_name='_64')
         out_path = os.path.join(morfeus_drive, path_desc, model_name)
         for thing in things:
             out_path = os.path.join(out_path, thing)
@@ -76,6 +74,9 @@ def find_best_lr_DenseNet(batch_size=0, path_desc='', add='_16', cache_add='_1mm
             print('already done')
             continue
         os.makedirs(out_path)
+        base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+            batch_size=batch_size, add=add, threshold_val=10, change_background=False,
+            cache_add=cache_add, path_lead=path_lead, validation_name='_64')
         model = return_model(layers_dict, weights_path=weights_path, densenet=True, all_trainable=all_trainable)
         k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
         k.set_model(model)
@@ -95,6 +96,7 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                             all_trainable=False, weights_path=None, model_name=''):
     min_lr = 1e-7
     max_lr = 1
+    base_path, morfeus_drive = return_paths()
     for iteration in [0]:
         for layers in [2, 3]:
             for num_conv_blocks in [2, 4]:
@@ -105,7 +107,6 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                     things += ['layers_{}'.format(layers), 'conv_blocks_{}'.format(num_conv_blocks),
                                'lambda_{}'.format(conv_lambda)]
                     things += ['{}_Iteration'.format(iteration)]
-                    base_path, morfeus_drive = return_paths()
                     out_path = os.path.join(morfeus_drive, path_desc, model_name)
                     for thing in things:
                         out_path = os.path.join(out_path, thing)
@@ -129,5 +130,7 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
                                        train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
                     tf.keras.backend.clear_session()
                     return None  # repeat!
+
+
 if __name__ == '__main__':
     pass
