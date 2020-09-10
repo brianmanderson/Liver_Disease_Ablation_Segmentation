@@ -12,7 +12,6 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 os.environ['TF_GPU_THREAD_MODE'] = 'gpu_private'
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 cube_size = (16, 120, 120)
 from Return_Train_Validation_Generators_TF2 import return_paths
 base_path, morfeus_drive = return_paths()
