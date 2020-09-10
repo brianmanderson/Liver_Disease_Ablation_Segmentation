@@ -78,7 +78,7 @@ if plot_lr:
 '''
 Run with all weights turned on
 '''
-run_200_retrained = True
+run_200_retrained = False
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet
     run_best = False
@@ -90,14 +90,14 @@ if run_200_retrained:
 '''
 Now slap on 3D and turn off trainable on 2D
 '''
-all_trainable=False
-weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_27', 'final_model.h5')
+all_trainable = False
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'cp-0101.h5')
 
 
-find_dense_lr_densenet121_3D_pretrained = False
+find_dense_lr_densenet121_3D_pretrained = True
 if find_dense_lr_densenet121_3D_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
-    find_best_lr_DenseNet3D(batch_size=0, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+    find_best_lr_DenseNet3D(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
                             all_trainable=all_trainable, weights_path=weights_path)
 
 '''
