@@ -100,7 +100,7 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
             for num_conv_blocks in [4]:
                 for conv_lambda in [2, 4, 8]:
                     layers_dict = get_layers_dict_dense_HNet(layers=layers, filters=32, num_conv_blocks=num_conv_blocks, conv_lambda=conv_lambda,
-                                                             max_conv_blocks=20)
+                                                             max_conv_blocks=16)
                     things = ['all_trainable_{}'.format(all_trainable), '3D_Model_{}'.format(layers_dict is not None)]
                     things += ['layers_{}'.format(layers), 'conv_blocks_{}'.format(num_conv_blocks),
                                'lambda_{}'.format(conv_lambda)]
