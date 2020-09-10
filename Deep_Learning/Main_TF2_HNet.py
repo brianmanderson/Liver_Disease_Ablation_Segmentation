@@ -112,7 +112,7 @@ run_200_retrained = True
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet3D
     run_best = False
-    train_DenseNet3D(epochs=101, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=batch_size,
+    train_DenseNet3D(epochs=31, model_name=model_name, run_best=run_best, add=add,  cache_add=cache_add, batch_size=batch_size,
                      change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
                      weights_path=weights_path, excel_file_name=excel_file_name)
 
