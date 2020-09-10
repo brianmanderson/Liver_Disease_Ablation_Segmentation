@@ -237,7 +237,7 @@ def DenseNet(blocks, include_top=True, weights='imagenet', input_tensor=None, co
         myunet = base_UNet(layers_dict=layers_dict, is_2D=False, explictly_defined=True)
         features_2D = x
         combined_input = layers.Concatenate()([img_input, tf.cast(mask, 'float32')])
-        x = layers.Conv3D(32, 5, strides=1, use_bias=False, name='3DConv1', padding='Same')(ExpandDimension(axis=0)(combined_input))
+        x = layers.Conv3D(32, 5, strides=1, use_bias=False, name='3DConv1', padding='Same')(combined_input)
         x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='3DConv1/bn')(x)
         x = layers.Activation('relu', name='3DConv1/relu')(x)
         x = layers.Conv3D(32, 3, strides=1, use_bias=False, name='3DConv2', padding='Same')(x)
