@@ -109,50 +109,45 @@ def return_dictionary_densenet3D(base_dict, all_trainable=False):
             ]
     else:
         dictionary = [
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=16, min_lr=2e-6, max_lr=1e-2),
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
+                      max_lr=1e-2),
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=4.5e-2),
 
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=4e-3),
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=1e-2),
 
-            base_dict(layers=2, num_conv_blocks=2, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
-                      max_lr=4.5e-2),
 
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=5e-2),
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-1),
 
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=1e-2),
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=1e-3),
 
-            base_dict(layers=2, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=2, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=3e-4),
 
-            base_dict(layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=3, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-3),
-            base_dict(layers=3, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=3, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-3),
-            base_dict(layers=3, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=3, num_conv_blocks=2, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-2),
 
-            base_dict(layers=3, num_conv_blocks=2, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=3, num_conv_blocks=2, conv_lambda=8, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=1e-3),
 
-            base_dict(layers=3, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=3, num_conv_blocks=4, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-3),
-            base_dict(layers=3, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=16, min_lr=2e-6,
+            base_dict(layers=3, num_conv_blocks=4, conv_lambda=4, filters=32, max_conv_blocks=12, min_lr=2e-6,
                       max_lr=2e-3),
-            base_dict(layers=3, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
-                      max_lr=4e-2),
             ]
-        dictionary = [base_dict(layers=3, num_conv_blocks=4, conv_lambda=8, filters=32, max_conv_blocks=16, min_lr=2e-6,
-                      max_lr=4e-2)]
     return dictionary
 
 
@@ -392,7 +387,7 @@ def get_layers_dict_dense_new(layers=1, filters=12, growth_rate=6, conv_lambda=0
     layers_dict['Final_Steps'] = final_steps
     return layers_dict
 
-def get_layers_dict_dense_HNet(layers=1, filters=12, growth_rate=6, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4,
+def get_layers_dict_dense_HNet(layers=1, filters=12, growth_rate=0, conv_lambda=0, num_conv_blocks=2, max_conv_blocks=4,
                                pool=(2, 2, 2), kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
                                max_filters=np.inf, **kwargs):
     lc = Return_Layer_Functions(kernel=kernel, strides=squeeze_kernel, padding='same', batch_norm=True,
@@ -466,7 +461,12 @@ def get_layers_dict_dense_HNet(layers=1, filters=12, growth_rate=6, conv_lambda=
             lc.upsampling_layer(pool_size=pool),
             lc.convolution_layer(filters, activation='relu', batch_norm=True, out_name=up_name)
         ]
-        layers_dict['Layer_' + str(layer)]['Decoding'] = []
+        encoding = []
+        names = [up_name, encoding_names[layer][-1]]
+        encoding += [lc.concat_layer(names),
+                     block(filters, kernel=squeeze_kernel, batch_norm=True, activation='elu')
+                     ]
+        layers_dict['Layer_' + str(layer)]['Decoding'] = encoding
     final_steps = [lc.upsampling_layer(pool_size=pool),
                    lc.convolution_layer(filters, activation='relu', batch_norm=True, out_name='Upsampling_Final_Steps')]
     layers_dict['Final_Steps'] = final_steps
