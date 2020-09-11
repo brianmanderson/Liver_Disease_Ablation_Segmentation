@@ -103,9 +103,10 @@ def return_dictionary(base_dict):
 def return_dictionary_densenet3D(base_dict, all_trainable=False):
     if all_trainable:
         dictionary = [
-            base_dict(layers=3, max_conv_blocks=9999, num_conv_blocks=4, conv_lambda=4, filters=32, min_lr=1e-10, max_lr=1e-6),
-            base_dict(layers=3, max_conv_blocks=9999, num_conv_blocks=4, conv_lambda=4, filters=32, min_lr=1e-10, max_lr=1e-5),
-            base_dict(layers=3, max_conv_blocks=9999, num_conv_blocks=4, conv_lambda=4, filters=32, min_lr=1e-10, max_lr=1e-7),
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=1e-7,
+                      max_lr=2e-4),
+            base_dict(layers=2, num_conv_blocks=2, conv_lambda=2, filters=32, max_conv_blocks=12, min_lr=1e-7,
+                      max_lr=7e-4),
             ]
     else:
         dictionary = [
