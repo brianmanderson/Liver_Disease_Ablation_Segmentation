@@ -35,7 +35,7 @@ def main():
             model.save(model_path)
             return None
         model = tf.keras.models.load_model(model_path)
-        for is_test in [False, True]:
+        for is_test in [False]:
             if is_test:
                 ext = 'Test'
             else:
