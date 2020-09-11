@@ -108,7 +108,7 @@ if plot_lr:
     path = os.path.join(morfeus_drive,path_desc, model_name)
     make_plots(path)
 
-run_200_retrained = True
+run_200_retrained = False
 if run_200_retrained:
     from Run_Model_TF2 import train_DenseNet3D
     run_best = False
@@ -121,7 +121,15 @@ if run_200_retrained:
 one last ablation work to train all of the layers
 '''
 all_trainable = True
-weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_4', 'final_model.h5')
+weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'cp-0031.h5')
+
+
+find_dense_lr_densenet121_3D_allrun = True
+if find_dense_lr_densenet121_3D_allrun:
+    from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
+    find_best_lr_DenseNet3D(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add,
+                            path_lead='Records', all_trainable=all_trainable, weights_path=weights_path,
+                            model_name=model_name)
 
 run_200_retrained = False
 if run_200_retrained:
