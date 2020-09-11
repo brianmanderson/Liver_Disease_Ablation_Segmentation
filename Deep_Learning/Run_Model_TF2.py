@@ -77,8 +77,8 @@ def run_model(batch_size, add, cache_add, flip, change_background, threshold, th
     if not skip_cyclic_lr:
         callbacks += [lrate]
     callbacks += [checkpoint]
-    if not run_best:
-        callbacks += [EarlyStopping(patience=patience, verbose=1)]
+    # if not run_best:
+    #     callbacks += [EarlyStopping(patience=patience, verbose=1)]
     print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_output))
     Model_val.compile(optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(), SparseCategoricalMeanDSC(num_classes=2)])
