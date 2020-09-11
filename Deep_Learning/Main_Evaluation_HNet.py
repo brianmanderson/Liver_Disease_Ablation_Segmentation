@@ -21,8 +21,8 @@ def main():
     import numpy as np
     import SimpleITK as sitk
     add = '_16'
+    model_name = 'DenseNetNewMultiBatch'
     cache_add = ''
-    model_name = 'DenseNetNew'
 
     make_pred = True
     if make_pred:
