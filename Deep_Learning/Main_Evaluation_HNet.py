@@ -58,7 +58,9 @@ def main():
                 print(i)
                 x, y = next(generator)
                 file_name = os.path.split(x[-1].decode())[-1]
+                print(file_name)
                 x = x[:-1]
+                print(x[0].shape)
                 pred = model.predict(x)
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Prediction_{}.npy'.format(file_name)), pred)
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
