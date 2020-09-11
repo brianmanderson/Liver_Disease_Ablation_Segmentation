@@ -89,7 +89,7 @@ if make_TF2_images:
     image_processors_validation = []
     image_processors_validation += base_normalizer
     image_processors_validation += [Cast_Data({'annotation': 'int8'}),
-                                    Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=8, power_val_r=power_val,
+                                    Box_Images(wanted_vals_for_bbox=[1, 2], power_val_z=16, power_val_r=power_val,
                                                power_val_c=power_val),
                                     Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
     write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records','Validation_Records'), thread_count=thread_count,
