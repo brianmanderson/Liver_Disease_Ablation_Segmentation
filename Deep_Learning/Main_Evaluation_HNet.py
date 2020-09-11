@@ -27,20 +27,20 @@ def main():
     make_pred = True
     if make_pred:
         model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'Model')
+        layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=2,
+                                                 conv_lambda=2, max_conv_blocks=12)
+        weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'cp-0031.h5')
+        model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
         if not os.path.exists(model_path):
-            layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=2,
-                                                     conv_lambda=2, max_conv_blocks=12)
-            weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'cp-0031.h5')
-            model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
             model.save(model_path)
             return None
-        model = tf.keras.models.load_model(model_path)
+        # model = tf.keras.models.load_model(model_path)
         for is_test in [False]:
             if is_test:
                 ext = 'Test'
             else:
                 ext = 'Validation'
-            base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=0, add=add,
+            base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=1, add=add,
                                                                                                 cache_add=cache_add,
                                                                                                 flip=True,
                                                                                                 change_background=False,
@@ -57,11 +57,44 @@ def main():
             for i in range(len(validation_generator)):
                 print(i)
                 x, y = next(generator)
-                file_name = os.path.split(x[-1].decode())[-1]
+                file_name = os.path.split(x[-1][0].decode())[-1]
                 print(file_name)
                 x = x[:-1]
                 print(x[0].shape)
-                pred = model.predict(x)
+                step = 96
+                shift = 120 // 2
+                gap = 20 // 2
+                if x[0].shape[1] > step:
+                    pred = np.zeros(x[0][0].shape[:-1] + (2,))
+                    start = 0
+                    while start < x[0].shape[1]:
+                        image_cube, mask_cube = x[0][:, start:start + step, ...], x[1][:, start:start + step, ...]
+                        difference = image_cube.shape[1] % 32
+                        if difference != 0:
+                            image_cube = np.pad(image_cube, [[0, 0], [difference, 0], [0, 0], [0, 0], [0, 0]])
+                            mask_cube = np.pad(mask_cube, [[0, 0], [difference, 0], [0, 0], [0, 0], [0, 0]])
+                        pred_cube = model.predict([image_cube, mask_cube])
+                        pred_cube = pred_cube[:, difference:, ...]
+                        start_gap = gap
+                        stop_gap = gap
+                        if start == 0:
+                            start_gap = 0
+                        elif start + step >= x[0].shape[1]:
+                            stop_gap = 0
+                        if stop_gap != 0:
+                            pred_cube = pred_cube[:, start_gap:-stop_gap, ...]
+                        else:
+                            pred_cube = pred_cube[:, start_gap:, ...]
+                        pred[start + start_gap:start + start_gap + pred_cube.shape[1], ...] = pred_cube[0, ...]
+                        start += shift
+                else:
+                    image_cube, mask_cube = x[0], x[1]
+                    difference = image_cube.shape[1] % 32
+                    if difference != 0:
+                        image_cube = np.pad(image_cube, [[0, 0], [difference, 0], [0, 0], [0, 0], [0, 0]])
+                        mask_cube = np.pad(mask_cube, [[0, 0], [difference, 0], [0, 0], [0, 0], [0, 0]])
+                    pred_cube = model.predict([image_cube, mask_cube])
+                    pred = pred_cube[:, difference:, ...]
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Prediction_{}.npy'.format(file_name)), pred)
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
