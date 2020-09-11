@@ -105,7 +105,7 @@ def main():
                             seed_range=np.arange(0.3, 1.0, 0.05),
                             threshold_range=np.arange(0.05, 0.7, 0.05), re_write=False, thread_count=int(cpu_count()*.9-1))
 
-    evaluate_test = True
+    evaluate_test = False
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
         path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Test'
