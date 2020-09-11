@@ -104,6 +104,10 @@ def find_best_lr_DenseNet3D(batch_size=0, path_desc='', add='_16', cache_add='_1
         for layers in [2, 3]:
             for num_conv_blocks in [2, 4]:
                 for conv_lambda in [2, 4]:
+                    if all_trainable:
+                        layers = 2
+                        num_conv_blocks = 2
+                        conv_lambda = 2
                     layers_dict = get_layers_dict_dense_HNet(layers=layers, filters=32, num_conv_blocks=num_conv_blocks,
                                                              conv_lambda=conv_lambda,
                                                              max_conv_blocks=12)
