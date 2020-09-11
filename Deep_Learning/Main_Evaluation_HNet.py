@@ -24,13 +24,13 @@ def main():
     cache_add = ''
     model_name = 'DenseNetNew'
 
-    make_pred = False
+    make_pred = True
     if make_pred:
-        model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'Model')
+        model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'Model')
         if not os.path.exists(model_path):
-            layers_dict = get_layers_dict_dense_HNet(layers=3, max_conv_blocks=12, filters=32, num_conv_blocks=4,
-                                                     conv_lambda=4)
-            weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_13', 'final_model.h5')
+            layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=2,
+                                                     conv_lambda=2, max_conv_blocks=12)
+            weights_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'cp-0031.h5')
             model = return_model(layers_dict=layers_dict, densenet=True, all_trainable=True, weights_path=weights_path)
             model.save(model_path)
             return None
@@ -64,7 +64,7 @@ def main():
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Image_{}.npy'.format(file_name)), np.squeeze(x[0]))
                 np.save(os.path.join(base_path, 'Predictions_np', ext, 'Truth_{}.npy'.format(file_name)), np.squeeze(y[0]))
 
-    create_nifti_files = True
+    create_nifti_files = False
     if create_nifti_files:
         reader = sitk.ImageFileReader()
         reader.LoadPrivateTagsOn()
@@ -97,24 +97,24 @@ def main():
                 sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
 
 
-    evaluate_prediction = True
+    evaluate_prediction = False
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
         path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
         create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_HNet'),
                             seed_range=np.arange(0.3, 1.0, 0.05),
-                            threshold_range=np.arange(0.25, 1.0, 0.05), re_write=False, thread_count=int(cpu_count()*.9-1))
+                            threshold_range=np.arange(0.05, 0.7, 0.05), re_write=False, thread_count=int(cpu_count()*.9-1))
 
-    evaluate_test = False
+    evaluate_test = True
     if evaluate_test:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np
-        path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
-        # create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_Output_93'),
-        #                     seed_range=[.67], write_final_prediction=True, single_disease=True,
-        #                     threshold_range=[.3], re_write=False, thread_count=12)
-        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Validation_HNet'),
-                            seed_range=[0.4, 0.45, 0.5, 0.], write_final_prediction=True, single_disease=False,
-                            threshold_range=[.3], re_write=False, thread_count=12)
+        path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Test'
+        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_HNet_Whole_Patient'),
+                            seed_range=[0.65], write_final_prediction=True, single_disease=False,
+                            threshold_range=[.25], re_write=False, thread_count=5)
+        create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Test_HNet'),
+                            seed_range=[0.65], write_final_prediction=True, single_disease=True,
+                            threshold_range=[.25], re_write=False, thread_count=5)
 
     write_sensitivity_specificity = False
     if write_sensitivity_specificity:
