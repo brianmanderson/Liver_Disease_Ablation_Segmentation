@@ -79,6 +79,8 @@ def create_dicom_RT():
             os.makedirs(out_dir)
         elif os.path.exists(os.path.join(out_dir, 'Completed.txt')):
             continue
+        else:
+            continue
         patient_path = os.path.join(path, patient)
         patient_dicom_path = os.path.join(patient_path, 'PATIENT_DICOM')
         copy_files = [i for i in os.listdir(patient_dicom_path) if i.endswith('.dcm') and i not in os.listdir(out_dir)]
@@ -101,20 +103,34 @@ def create_dicom_RT():
         liver_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', 'liver'))
         liver = liver_reader.ArrayDicom
         liver_tumor_folders = [i for i in os.listdir(os.path.join(patient_path, 'MASKS_DICOM'))
-                               if i.startswith('livertumor')]
+                               if i.startswith('livertumor') or i.startswith('metastasectomie')]
+        annotation_stack = [background]
         '''
         Combine all tumors into 'Disease'
         '''
-        tumor = np.zeros(liver.shape)
+        tumor = np.zeros(background.shape)
         for tumor_folder in liver_tumor_folders:
             tumor_reader = Dicom_to_Imagestack(get_images_mask=True)
             tumor_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', tumor_folder))
             tumor += tumor_reader.ArrayDicom
-        background = np.stack([background > 0, liver > 0, tumor > 0], axis=-1)
+        site_names = ['Disease', 'Liver']
+        annotation_stack.append(tumor > 0)
+        annotation_stack.append(liver + tumor > 0)
+        for label in os.listdir(os.path.join(patient_path, 'MASKS_DICOM')):
+            print(label)
+            if label.startswith('liver'):
+                continue
+            site_names.append(label)
+            site = np.zeros(image_reader.ArrayDicom.shape)
+            site_reader = Dicom_to_Imagestack(get_images_mask=True)
+            site_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', label))
+            site += site_reader.ArrayDicom
+            annotation_stack.append(site > 0)
         '''
         Write out the RT structure
         '''
-        image_reader.with_annotations(background, output_dir=out_dir, ROI_Names=['Liver', 'Disease'])
+        background = np.stack(annotation_stack, axis=-1)
+        image_reader.with_annotations(background, output_dir=out_dir, ROI_Names=site_names)
 
 
 def compare_predictions():
@@ -138,16 +154,17 @@ def compare_predictions():
         print('DSC was {} for {}'.format(dsc, patient))
         out_dict['DSC'].append(dsc)
         out_dict['Patient_ID'].append(patient)
+    print('Mean was {}'.format(np.mean(out_dict['DSC'])))
     df = pd.DataFrame(out_dict)
     df.to_excel(os.path.join('.', 'Dice_Results.xlsx'), index=0)
     return None
 
 
 if __name__ == '__main__':
-    # create_dicom_RT()
+    create_dicom_RT()
     # create_predictions()
     # copy_predictions()
-    compare_predictions()
+    # compare_predictions()
     '''
     Load into Raystation for viewing
     '''
