@@ -4,7 +4,7 @@ __author__ = 'Brian M Anderson'
 
 from Pre_Processing.Nifti_To_Dicom.Conversion_Definition import convert_niftii_to_dicom
 import os
-from Pre_Processing.Nifti_To_Dicom.Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack, sitk
+from Pre_Processing.Nifti_To_Dicom.Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack, sitk, plot_scroll_Image
 from threading import Thread
 from multiprocessing import cpu_count
 from queue import *
@@ -53,7 +53,7 @@ for i in range(thread_count):
     q.put(None)
 for t in threads:
     t.join()
-files = [i for i in os.listdir(base_path) if i.endswith('.nii.gz')]
+files = [i for i in os.listdir(base_path) if i.endswith('.nii') and not i.endswith('.nii.gz')]
 for file in files:
     print(file)
     pat_id = file.split('-')[-1].split('.nii')[0]
