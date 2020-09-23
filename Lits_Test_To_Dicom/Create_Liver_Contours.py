@@ -40,46 +40,60 @@ class create_RT_Structure():
             return None
         self.import_data(exam)
 
-    def export(self, exam):
-        roi_name = self.roi_name
-        actual_roi_name = roi_name + self.version_name
-        set_progress('Checking to see if {} already has contours'.format(actual_roi_name))
-        roi_name += '_Auto_Contour'
-        self.MRN = self.patient.PatientID
-        self.base_path = '\\\\mymdafiles\\ou-radonc\\Raystation\\Clinical\\Auto_Contour_Sites\\'
-        #if not check_any_contours(case,exam): Doesn't work the way I want it to
-        self.path = os.path.join(self.base_path,roi_name,'Input_3',self.MRN)
+    def get_rois_in_case(self):
         self.rois_in_case = []
         for roi in self.case.PatientModel.RegionsOfInterest:
             self.rois_in_case.append(roi.Name)
+
+    def check_has_contours(self, exam):
+        roi_name = self.roi_name
+        set_progress('Checking to see if {} already has contours'.format(self.roi_name + self.version_name))
+        roi_name += '_Auto_Contour'
+        self.MRN = self.patient.PatientID
+        self.base_path = '\\\\mymdafiles\\ou-radonc\\Raystation\\Clinical\\Auto_Contour_Sites\\'
+        try:
+            os.listdir(self.base_path)
+        except:
+            self.base_path = '\\\\mymdafiles\\ou-radonc\\Raystation\\Research\\Auto_Contour_Sites\\'
+        #if not check_any_contours(case,exam): Doesn't work the way I want it to
+        self.path = os.path.join(self.base_path, self.roi_name + '_Auto_Contour', 'Input_3', self.MRN)
+        self.get_rois_in_case()
         self.patient.Save()
         self.has_contours = False
-        if actual_roi_name in self.rois_in_case:
-            if self.case.PatientModel.StructureSets[exam.Name].RoiGeometries[actual_roi_name].HasContours():
-                self.has_contours = True
-                return None # Already have the contours for this patient
-        self.patient.Save()
-        print(self.path)
-        self.Export_Dicom(exam,self.path)
+        if self.roi_name + self.version_name in self.rois_in_case:
+            if self.case.PatientModel.StructureSets[exam.Name].RoiGeometries[self.roi_name + self.version_name].HasContours():
+                self.case.PatientModel.RegionsOfInterest[self.roi_name + self.version_name].DeleteRoi()
+                self.patient.Save()
+                self.get_rois_in_case()
+                # self.has_contours = True
+                # return True # Already have the contours for this patient
+        return False
+
+    def export(self, exam):
+        if not self.check_has_contours(exam):
+            self.patient.Save()
+            print(self.path)
+            self.Export_Dicom(exam, self.path)
 
     def import_data(self, exam):
         roi_name = self.roi_name
         actual_roi_name = roi_name + self.version_name
         roi_name += '_Auto_Contour'
+        self.get_rois_in_case()
         if actual_roi_name in self.rois_in_case:
             if self.case.PatientModel.StructureSets[exam.Name].RoiGeometries[actual_roi_name].HasContours():
                 return None # Already have the contours for this patient
         data = exam.GetAcquisitionDataFromDicom()
         SeriesUID = data['SeriesModule']['SeriesInstanceUID']
         output_path = os.path.join(self.base_path,roi_name,'Output',self.MRN,SeriesUID)
-        self.cleanout_folder(output_path)
+        # self.cleanout_folder(output_path)
         print('Now waiting for RS to be made')
         self.import_RT = False
         self.check_folder(output_path)
         print('Import RT structure!')
         if self.import_RT:
             self.importRT(output_path)
-        self.cleanout_folder(output_path)
+        # self.cleanout_folder(output_path)
         return None
 
     def Export_Dicom(self,exam, path):
@@ -146,14 +160,17 @@ class create_RT_Structure():
 if __name__ == "__main__":
     status_path = r'H:\Liver_Disease_Ablation\LiTs_Test\Dicom'
     class_struct = create_RT_Structure(roi_name='Liver')
-    class_struct.create_RT_Liver(class_struct.exam)
     for export in [True, False]:
-        for pat_id in range(70):
+        for pat_id in range(49, 70):
             MRN = 'Lits_Test_{}'.format(pat_id)
-            if export and os.path.exists(os.path.join(status_path, MRN, 'Exported.txt')):
+            print(MRN)
+            if not os.path.exists(os.path.join(status_path, MRN)):
+                print('{} does not exist...'.format(MRN))
                 continue
-            elif not export and os.path.exists(os.path.join(status_path, MRN, 'Imported.txt')):
-                continue
+            # if export and os.path.exists(os.path.join(status_path, MRN, 'Exported_Images.txt')):
+            #     continue
+            # elif not export and os.path.exists(os.path.join(status_path, MRN, 'Imported_Predictions.txt')):
+            #     continue
             try:
                 class_struct.ChangePatient(MRN)
             except:
@@ -163,10 +180,11 @@ if __name__ == "__main__":
                 for exam in case.Examinations:
                     if export:
                         class_struct.export(exam)
-                        fid = open(os.path.join(status_path, MRN, 'Exported.txt'), 'w+')
+                        fid = open(os.path.join(status_path, MRN, 'Exported_Images.txt'), 'w+')
                         fid.close()
                     else:
-                        class_struct.import_data(exam)
-                        class_struct.patient.Save()
-                        fid = open(os.path.join(status_path, MRN, 'Imported.txt'), 'w+')
+                        if not class_struct.check_has_contours(exam):
+                            class_struct.import_data(exam)
+                            class_struct.patient.Save()
+                        fid = open(os.path.join(status_path, MRN, 'Imported_Predictions.txt'), 'w+')
                         fid.close()
