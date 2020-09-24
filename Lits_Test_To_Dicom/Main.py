@@ -43,3 +43,10 @@ Export predictions as .mhd files
 '''
 #  Run Export_Predictions_as_mhd
 
+'''
+Convert Prediction .mhd files to .nii files for submission
+'''
+convert_mhd_to_nii = True
+if convert_mhd_to_nii:
+    from Convert_mhd_to_nii import mhd_to_nii
+    mhd_to_nii()
