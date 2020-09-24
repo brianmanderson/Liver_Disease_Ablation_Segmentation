@@ -27,7 +27,8 @@ out_path_base = r'H:\Liver_Disease_Ablation\LiTs_Test\Dicom'
 for pat_id in range(70):
     MRN = 'Lits_Test_{}'.format(pat_id)
     out_path = os.path.join(out_path_base, MRN)
-    if os.path.exists(os.path.join(out_path, 'Exported_RS.txt')):
+    RS_files = [i for i in os.listdir(out_path) if i.startswith('RS')]
+    if RS_files:
         continue
     try:
         patient = patient_holder.process(MRN)
@@ -60,9 +61,6 @@ for pat_id in range(70):
             ReduceMaxNumberOfPointsInContours=False, MaxNumberOfPoints=None,
             CreateCopyOfRoi=False, ResolveOverlappingContours=True)
     patient.Save()
-    rs_files = [i for i in os.listdir(out_path) if i.startswith('RS')]
-    for file in rs_files:
-        os.remove(os.path.join(out_path, file))
     case.ScriptableDicomExport(ExportFolderPath=out_path, Examinations=[],
                                RtStructureSetsForExaminations=[exam.Name])
     fid = open(os.path.join(out_path, 'Exported_RS.txt'), 'w+')
