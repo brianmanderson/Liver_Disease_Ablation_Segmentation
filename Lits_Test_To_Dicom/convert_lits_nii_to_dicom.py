@@ -36,25 +36,6 @@ def convert_nii_to_dicom():
     base_path = r'H:\Liver_Disease_Ablation\LiTs_Test\Nifti'
     out_path_base = r'H:\Liver_Disease_Ablation\LiTs_Test\Dicom'
 
-    files = [i for i in os.listdir(base_path) if i.endswith('.nii')]
-
-    thread_count = int(cpu_count() * .5)
-    q = Queue(maxsize=thread_count)
-    A = [q]
-    threads = []
-    for worker in range(thread_count):
-        t = Thread(target=worker_def, args=(A,))
-        t.start()
-        threads.append(t)
-    for file in files:
-        out_file = os.path.join(base_path, file)
-        if not os.path.exists(out_file + '.gz'):
-            item = {'file': out_file}
-            q.put(item)
-    for i in range(thread_count):
-        q.put(None)
-    for t in threads:
-        t.join()
     files = [i for i in os.listdir(base_path) if i.endswith('.nii') and not i.endswith('.nii.gz')]
     for file in files:
         print(file)
