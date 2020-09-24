@@ -78,13 +78,13 @@ class create_RT_Structure():
                 return None
             self.patient.Save()
             self.Export_Dicom(exam)
+            self.cleanout_folder(exam)
 
     def import_data(self, exam):
         if self.roi_name + self.version_name in self.rois_in_case:
             if self.case.PatientModel.StructureSets[exam.Name].RoiGeometries[self.roi_name +
                                                                              self.version_name].HasContours():
                 return None  # Already have the contours for this patient
-        self.cleanout_folder(exam)
         print('Now waiting for RS to be made')
         self.import_RT = False
         self.check_folder(exam)
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     status_path = r'\\mymdafiles\di_data1\Morfeus\BMAnderson\Lits_Test_Status_Path'
     class_struct = create_RT_Structure(roi_name='Liver_Disease_Ablation')
     for export in [True, False]:
-        for pat_id in range(70):
+        for pat_id in range(55,70):
             MRN = 'Lits_Test_{}'.format(pat_id)
             print(MRN)
             if export and os.path.exists(os.path.join(status_path, 'Exported_Images_Disease_{}.txt'.format(pat_id))):
