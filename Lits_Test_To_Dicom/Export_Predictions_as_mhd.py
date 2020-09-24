@@ -37,8 +37,17 @@ for pat_id in range(70):
     for case in patient.Cases:
         for exam in case.Examinations:
             continue #  Just take the last case and last exam
-    has_liver = case.PatientModel.StructureSets[exam.Name].RoiGeometries['Liver_BMA_Program_4'].HasContours()
-    has_disease = case.PatientModel.StructureSets[exam.Name].RoiGeometries['Liver_Disease_Ablation_BMA_Program_0'].HasContours()
+    rois_in_case = []
+    for roi in case.PatientModel.RegionsOfInterest:
+        rois_in_case.append(roi.Name)
+    if 'Liver_BMA_Program_4' not in rois_in_case:
+        has_liver = False
+    else:
+        has_liver = case.PatientModel.StructureSets[exam.Name].RoiGeometries['Liver_BMA_Program_4'].HasContours()
+    if 'Liver_Disease_Ablation_BMA_Program_0' not in rois_in_case:
+        has_disease = False
+    else:
+        has_disease = case.PatientModel.StructureSets[exam.Name].RoiGeometries['Liver_Disease_Ablation_BMA_Program_0'].HasContours()
     if has_liver:
         case.PatientModel.StructureSets[exam.Name].SimplifyContours(
             RoiNames=['Liver_BMA_Program_4'], RemoveHoles3D=False, RemoveSmallContours=False,
