@@ -34,3 +34,6 @@
 [submodule "Deep_Learning/H-DenseUNet"]
 	path = Deep_Learning/H-DenseUNet
 	url = https://github.com/brianmanderson/H-DenseUNet.git
+[submodule "Lits_Test_To_Dicom/Prediction_Model_Class"]
+	path = Lits_Test_To_Dicom/Prediction_Model_Class
+	url = https://github.com/brianmanderson/Prediction_Model_Class.git
