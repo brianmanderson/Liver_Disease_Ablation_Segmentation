@@ -34,6 +34,8 @@ for pat_id in range(70):
         patient = patient_holder.process(MRN)
     except:
         continue
+    if patient is None:
+        continue
     for case in patient.Cases:
         for exam in case.Examinations:
             continue #  Just take the last case and last exam
