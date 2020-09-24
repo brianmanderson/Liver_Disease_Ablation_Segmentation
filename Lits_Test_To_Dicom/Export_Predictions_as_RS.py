@@ -63,5 +63,3 @@ for pat_id in range(70):
     patient.Save()
     case.ScriptableDicomExport(ExportFolderPath=out_path, Examinations=[],
                                RtStructureSetsForExaminations=[exam.Name])
-    fid = open(os.path.join(out_path, 'Exported_RS.txt'), 'w+')
-    fid.close()
