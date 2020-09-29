@@ -50,11 +50,12 @@ def copy_predictions(prediction_out_path, image_path):
 def create_predictions(prediction_path, image_path):
     for patient in os.listdir(image_path):
         print(patient)
-        if os.path.exists(os.path.join(image_path.replace('Input_3', 'Output'), patient, 'Copied_Files.txt')):
-            for file in os.listdir(os.path.join(image_path.replace('Input_3', 'Output'))):
-                os.remove(os.path.join(image_path.replace('Input_3', 'Output'), file))
         if os.path.exists(os.path.join(image_path, patient, 'Copied_Files.txt')):
             continue
+        out_path = os.path.join(prediction_path.replace('Input_3', 'Output'), '3DCIR_{}'.format(patient))
+        if os.path.exists(out_path):
+            for file in os.listdir(out_path):
+                os.remove(os.path.join(out_path, file))
         if not os.path.exists(os.path.join(prediction_path, patient)):
             os.makedirs(os.path.join(prediction_path, patient))
         for file in os.listdir(os.path.join(image_path, patient)):
