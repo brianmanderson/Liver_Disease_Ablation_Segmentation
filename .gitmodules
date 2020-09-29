@@ -37,3 +37,6 @@
 [submodule "Lits_Test_To_Dicom/Prediction_Model_Class"]
 	path = Lits_Test_To_Dicom/Prediction_Model_Class
 	url = https://github.com/brianmanderson/Prediction_Model_Class.git
+[submodule "French_3DCIR_Data/Unzip_Tool"]
+	path = French_3DCIR_Data/Unzip_Tool
+	url = https://github.com/brianmanderson/Unzip_Tool.git
