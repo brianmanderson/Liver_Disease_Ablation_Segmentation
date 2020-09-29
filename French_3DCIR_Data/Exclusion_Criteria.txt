@@ -1,0 +1,9 @@
+exclude patient 5, no disease
+exclude patient 11, no disease
+exclude patient 12, massive cystic lesion on base
+exclude 18, enhancing disease
+exclude patient 20, no disease
+
+
+patient 3 has a large section of non-enhancing vasulature, caused over segmentation
+patient 4 has multiple small disease sites

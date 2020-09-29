@@ -37,13 +37,15 @@ def add_FrameOfReferenceUID_patid(path, patient_id):
 def copy_predictions(prediction_out_path, image_path):
     for folder in os.listdir(prediction_out_path):
         if folder.startswith('3DCIR'):
+            print(folder)
             patient_folder = os.path.join(image_path, 'Patient_{}'.format(folder.split('_')[-1]))
             down_folder = os.listdir(os.path.join(prediction_out_path, folder))[0]
             files = os.listdir(os.path.join(prediction_out_path, folder, down_folder))
             for file in files:
+                print(file)
                 if file.endswith('.dcm'):
                     shutil.copyfile(os.path.join(prediction_out_path, folder, down_folder, file),
-                                    os.path.join(patient_folder, file))
+                                    os.path.join(patient_folder, 'Prediction_RS.dcm'))
     return None
 
 
@@ -101,7 +103,8 @@ def create_dicom_RT(path, out_path):
         liver_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', 'liver'))
         liver = liver_reader.ArrayDicom
         liver_tumor_folders = [i for i in os.listdir(os.path.join(patient_path, 'MASKS_DICOM'))
-                               if i.startswith('livertumor') or i.startswith('metastasectomie')]
+                               if i.startswith('livertumor') or i.startswith('metastasectomie')
+                               or i.find('tumor') != -1]
         annotation_stack = [background]
         '''
         Combine all tumors into 'Disease'
@@ -131,29 +134,51 @@ def create_dicom_RT(path, out_path):
         image_reader.with_annotations(background, output_dir=out_dir, ROI_Names=site_names)
 
 
-def compare_predictions(path):
+def compare_predictions(path, out_path):
     out_dict = {'Patient_ID':[], 'DSC': []}
     overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
+    pred_stack = []
+    truth_stack = []
     for patient in os.listdir(path):
+        if patient in ['Patient_5', 'Patient_11', 'Patient_12', 'Patient_18', 'Patient_20']:  # Exclusion criteria
+            continue
         print(patient)
-        patient_path = os.path.join(path, patient)
-        dicom_reader = DicomReaderWriter(get_images_mask=True, arg_max=False,
-                                         Contour_Names=['Disease', 'Liver_Disease_Ablation_BMA_Program_0'])
-        dicom_reader.Make_Contour_From_directory(patient_path)
-        truth = sitk.GetImageFromArray(dicom_reader.mask[..., 1])
-        prediction = sitk.GetImageFromArray(dicom_reader.mask[..., -1])
-        for handle in [truth, prediction]:
-            handle.SetSpacing(dicom_reader.dicom_handle.GetSpacing())
-            handle.SetDirection(dicom_reader.dicom_handle.GetDirection())
-            handle.SetOrigin(dicom_reader.dicom_handle.GetOrigin())
-        overlap_measures_filter.Execute(truth, prediction)
+        if os.path.exists(os.path.join(out_path, '{}_Image.nii'.format(patient))):
+            prediction_handle = sitk.ReadImage(os.path.join(out_path, '{}_Pred.nii'.format(patient)))
+            truth_handle = sitk.ReadImage(os.path.join(out_path, '{}_Truth.nii'.format(patient)))
+        else:
+            patient_path = os.path.join(path, patient)
+            dicom_reader = DicomReaderWriter(get_images_mask=True, arg_max=False,
+                                             Contour_Names=['Disease', 'Liver_Disease_Ablation_BMA_Program_0'])
+            dicom_reader.Make_Contour_From_directory(patient_path)
+            truth_handle = sitk.GetImageFromArray(dicom_reader.mask[..., 1])
+            prediction_handle = sitk.GetImageFromArray(dicom_reader.mask[..., -1])
+            for handle in [truth_handle, prediction_handle]:
+                handle.SetSpacing(dicom_reader.dicom_handle.GetSpacing())
+                handle.SetDirection(dicom_reader.dicom_handle.GetDirection())
+                handle.SetOrigin(dicom_reader.dicom_handle.GetOrigin())
+            sitk.WriteImage(dicom_reader.dicom_handle, os.path.join(out_path, '{}_Image.nii'.format(patient)))
+            sitk.WriteImage(prediction_handle, os.path.join(out_path, '{}_Pred.nii'.format(patient)))
+            sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii'.format(patient)))
+        pred_stack.append(sitk.GetArrayFromImage(prediction_handle))
+        truth_stack.append(sitk.GetArrayFromImage(truth_handle))
+        overlap_measures_filter.Execute(truth_handle, prediction_handle)
         dsc = overlap_measures_filter.GetDiceCoefficient()
         print('DSC was {} for {}'.format(dsc, patient))
         out_dict['DSC'].append(dsc)
         out_dict['Patient_ID'].append(patient)
     print('Mean was {}'.format(np.mean(out_dict['DSC'])))
+    combined_pred = np.concatenate(pred_stack, axis=0)
+    combined_truth = np.concatenate(truth_stack, axis=0)
+    combined_pred_handle = sitk.GetImageFromArray(combined_pred)
+    combined_truth_handle = sitk.GetImageFromArray(combined_truth)
+    overlap_measures_filter.Execute(combined_truth_handle, combined_pred_handle)
+    dsc = overlap_measures_filter.GetDiceCoefficient()
+    print('Combined DSC was {}'.format(dsc))
+    out_dict['DSC'].append(dsc)
+    out_dict['Patient_ID'].append('Combined')
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join('.', 'Dice_Results3.xlsx'), index=0)
+    df.to_excel(os.path.join('.', 'Dice_Results4.xlsx'), index=0)
     return None
 
 
