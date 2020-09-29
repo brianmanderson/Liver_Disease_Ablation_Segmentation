@@ -15,9 +15,10 @@ This gets broken down into a couple of steps...
 '''
 unzip = True
 if unzip:
-    from Unzip_Tool.Unzip_Tool import Unzip_class
+    from Unzip_Tool.Unzip_Tool import Unzip_class, os
     path = r'H:\Liver_Disease_Ablation\3Dircadb1\Downloaded_Patients'
-    Unzip_class(path=path, file='3Dircadb1.zip')
+    if not os.path.exists(os.path.join(path, 'Unzipped')):
+        Unzip_class(path=path, file='3Dircadb1.zip')
 
 '''
 2) Turn dicom masks into actual RT structures
@@ -32,7 +33,7 @@ if turn_dicom_to_RS:
 '''
 3) Create disease predictions
 '''
-make_disease_predictions = True
+make_disease_predictions = False
 if make_disease_predictions:
     from Create_Ground_Truth import create_predictions
     prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
@@ -41,7 +42,7 @@ if make_disease_predictions:
 '''
 4) Copy the outcoming RS structure locally
 '''
-copy_predictions_locally = True
+copy_predictions_locally = False
 if copy_predictions_locally:
     from Create_Ground_Truth import copy_predictions
     prediction_out_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Output'
@@ -50,7 +51,7 @@ if copy_predictions_locally:
 '''
 5) Compare predictions with the ground truth
 '''
-compare_with_gt = True
+compare_with_gt = False
 if compare_with_gt:
     from Create_Ground_Truth import compare_predictions
     compare_predictions(path=dicom_path)
