@@ -33,7 +33,7 @@ if turn_dicom_to_RS:
 '''
 3) Create disease predictions
 '''
-make_disease_predictions = False
+make_disease_predictions = True
 if make_disease_predictions:
     from Create_Ground_Truth import create_predictions
     prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
@@ -42,7 +42,7 @@ if make_disease_predictions:
 '''
 4) Copy the outcoming RS structure locally
 '''
-copy_predictions_locally = False
+copy_predictions_locally = True
 if copy_predictions_locally:
     from Create_Ground_Truth import copy_predictions
     prediction_out_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Output'
