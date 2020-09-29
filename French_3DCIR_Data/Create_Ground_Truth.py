@@ -3,7 +3,7 @@ __author__ = 'Brian M Anderson'
 
 import os, pydicom, shutil
 import SimpleITK as sitk
-from Dicom_RT_and_Images_to_Mask.Image_Array_And_Mask_From_Dicom_RT import Dicom_to_Imagestack
+from Dicom_RT_and_Images_to_Mask.src.DicomRTTool import DicomReaderWriter
 from Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 import numpy as np
 import pandas as pd
@@ -13,10 +13,10 @@ def add_dicom_tag(path):
     for file in os.listdir(path):
         if not file.endswith('.dcm') and not file.endswith('.txt'):
             os.rename(os.path.join(path, file), os.path.join(path, file + '.dcm'))
-        elif '.txt' in file:
-            os.rename(os.path.join(path, file), os.path.join(path, file.split('.')[0] + '.txt'))
-        else:
-            os.rename(os.path.join(path, file), os.path.join(path, file.split('.')[0] + '.' + file.split('.')[-1]))
+        # elif '.txt' in file:
+        #     os.rename(os.path.join(path, file), os.path.join(path, file.split('.')[0] + '.txt'))
+        # else:
+        #     os.rename(os.path.join(path, file), os.path.join(path, file.split('.')[0] + '.' + file.split('.')[-1]))
     return None
 
 
@@ -34,9 +34,7 @@ def add_FrameOfReferenceUID_patid(path, patient_id):
     return None
 
 
-def copy_predictions():
-    prediction_out_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Output'
-    image_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+def copy_predictions(prediction_out_path, image_path):
     for folder in os.listdir(prediction_out_path):
         if folder.startswith('3DCIR'):
             patient_folder = os.path.join(image_path, 'Patient_{}'.format(folder.split('_')[-1]))
@@ -49,11 +47,12 @@ def copy_predictions():
     return None
 
 
-def create_predictions():
-    prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
-    image_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+def create_predictions(prediction_path, image_path):
     for patient in os.listdir(image_path):
         print(patient)
+        if os.path.exists(os.path.join(image_path.replace('Input_3', 'Output'), patient, 'Copied_Files.txt')):
+            for file in os.listdir(os.path.join(image_path.replace('Input_3', 'Output'))):
+                os.remove(os.path.join(image_path.replace('Input_3', 'Output'), file))
         if os.path.exists(os.path.join(image_path, patient, 'Copied_Files.txt')):
             continue
         if not os.path.exists(os.path.join(prediction_path, patient)):
@@ -68,9 +67,7 @@ def create_predictions():
     return None
 
 
-def create_dicom_RT():
-    path = r'C:\Users\bmanderson\Downloads\Unzipped\3Dircadb1'
-    out_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+def create_dicom_RT(path, out_path):
     for patient in os.listdir(path):
         print(patient)
         patient_id = patient.split('.')[-1]
@@ -83,23 +80,23 @@ def create_dicom_RT():
             continue
         patient_path = os.path.join(path, patient)
         patient_dicom_path = os.path.join(patient_path, 'PATIENT_DICOM')
+        add_dicom_tag(patient_dicom_path)
+        add_FrameOfReferenceUID_patid(patient_dicom_path, patient_id)
         copy_files = [i for i in os.listdir(patient_dicom_path) if i.endswith('.dcm') and i not in os.listdir(out_dir)]
         for file in copy_files:
             shutil.copyfile(os.path.join(patient_dicom_path, file), os.path.join(out_dir, file))
-        # add_dicom_tag(patient_dicom_path)
-        add_FrameOfReferenceUID_patid(patient_dicom_path, patient_id)
         for folder in os.listdir(os.path.join(patient_path, 'MASKS_DICOM')):
             print(folder)
-            # add_dicom_tag(os.path.join(patient_path, 'MASKS_DICOM', folder))
+            add_dicom_tag(os.path.join(patient_path, 'MASKS_DICOM', folder))
             add_FrameOfReferenceUID_patid(os.path.join(patient_path, 'MASKS_DICOM', folder), patient_id)
 
         '''
         Now use the dicom readers to create the ground truth masks
         '''
-        image_reader = Dicom_to_Imagestack(get_images_mask=True)
+        image_reader = DicomReaderWriter(get_images_mask=True)
         image_reader.Make_Contour_From_directory(patient_dicom_path)
         background = np.zeros(image_reader.ArrayDicom.shape)
-        liver_reader = Dicom_to_Imagestack(get_images_mask=True)
+        liver_reader = DicomReaderWriter(get_images_mask=True)
         liver_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', 'liver'))
         liver = liver_reader.ArrayDicom
         liver_tumor_folders = [i for i in os.listdir(os.path.join(patient_path, 'MASKS_DICOM'))
@@ -110,7 +107,7 @@ def create_dicom_RT():
         '''
         tumor = np.zeros(background.shape)
         for tumor_folder in liver_tumor_folders:
-            tumor_reader = Dicom_to_Imagestack(get_images_mask=True)
+            tumor_reader = DicomReaderWriter(get_images_mask=True)
             tumor_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', tumor_folder))
             tumor += tumor_reader.ArrayDicom
         site_names = ['Disease', 'Liver']
@@ -122,7 +119,7 @@ def create_dicom_RT():
                 continue
             site_names.append(label)
             site = np.zeros(image_reader.ArrayDicom.shape)
-            site_reader = Dicom_to_Imagestack(get_images_mask=True)
+            site_reader = DicomReaderWriter(get_images_mask=True)
             site_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', label))
             site += site_reader.ArrayDicom
             annotation_stack.append(site > 0)
@@ -133,15 +130,14 @@ def create_dicom_RT():
         image_reader.with_annotations(background, output_dir=out_dir, ROI_Names=site_names)
 
 
-def compare_predictions():
-    path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
+def compare_predictions(path):
     out_dict = {'Patient_ID':[], 'DSC': []}
     overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
     for patient in os.listdir(path):
         print(patient)
         patient_path = os.path.join(path, patient)
-        dicom_reader = Dicom_to_Imagestack(get_images_mask=True, arg_max=False,
-                                           Contour_Names=['Disease', 'Liver_Disease_Ablation_BMA_Program_0'])
+        dicom_reader = DicomReaderWriter(get_images_mask=True, arg_max=False,
+                                         Contour_Names=['Disease', 'Liver_Disease_Ablation_BMA_Program_0'])
         dicom_reader.Make_Contour_From_directory(patient_path)
         truth = sitk.GetImageFromArray(dicom_reader.mask[..., 1])
         prediction = sitk.GetImageFromArray(dicom_reader.mask[..., -1])
@@ -156,15 +152,9 @@ def compare_predictions():
         out_dict['Patient_ID'].append(patient)
     print('Mean was {}'.format(np.mean(out_dict['DSC'])))
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join('.', 'Dice_Results.xlsx'), index=0)
+    df.to_excel(os.path.join('.', 'Dice_Results3.xlsx'), index=0)
     return None
 
 
 if __name__ == '__main__':
-    create_dicom_RT()
-    # create_predictions()
-    # copy_predictions()
-    # compare_predictions()
-    '''
-    Load into Raystation for viewing
-    '''
+    pass
