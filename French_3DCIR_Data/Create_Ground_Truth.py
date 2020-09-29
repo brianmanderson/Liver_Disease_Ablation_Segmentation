@@ -76,7 +76,7 @@ def create_dicom_RT(path, out_path):
             os.makedirs(out_dir)
         elif os.path.exists(os.path.join(out_dir, 'Completed.txt')):
             continue
-        else:
+        elif [i for i in os.listdir(out_dir) if i.startswith('RS_MRN')]:
             continue
         patient_path = os.path.join(path, patient)
         patient_dicom_path = os.path.join(patient_path, 'PATIENT_DICOM')
