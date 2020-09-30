@@ -114,8 +114,11 @@ def create_dicom_RT(path, out_path):
             tumor_reader = DicomReaderWriter(get_images_mask=True)
             tumor_reader.Make_Contour_From_directory(os.path.join(patient_path, 'MASKS_DICOM', tumor_folder))
             tumor += tumor_reader.ArrayDicom
-        site_names = ['Disease', 'Liver']
-        annotation_stack.append(tumor > 0)
+        site_names = []
+        if np.max(tumor) > 0:
+            site_names.append('Disease')
+            annotation_stack.append(tumor > 0)
+        site_names.append('Liver')
         annotation_stack.append(liver + tumor > 0)
         for label in os.listdir(os.path.join(patient_path, 'MASKS_DICOM')):
             print(label)
@@ -144,7 +147,7 @@ def compare_predictions(path, out_path):
             continue
         print(patient)
         if os.path.exists(os.path.join(out_path, '{}_Image.nii'.format(patient))):
-            prediction_handle = sitk.ReadImage(os.path.join(out_path, '{}_Pred.nii'.format(patient)))
+            prediction_handle = sitk.ReadImage(os.path.join(out_path, '{}_Prediction.nii'.format(patient)))
             truth_handle = sitk.ReadImage(os.path.join(out_path, '{}_Truth.nii'.format(patient)))
         else:
             patient_path = os.path.join(path, patient)
@@ -158,7 +161,7 @@ def compare_predictions(path, out_path):
                 handle.SetDirection(dicom_reader.dicom_handle.GetDirection())
                 handle.SetOrigin(dicom_reader.dicom_handle.GetOrigin())
             sitk.WriteImage(dicom_reader.dicom_handle, os.path.join(out_path, '{}_Image.nii'.format(patient)))
-            sitk.WriteImage(prediction_handle, os.path.join(out_path, '{}_Pred.nii'.format(patient)))
+            sitk.WriteImage(prediction_handle, os.path.join(out_path, '{}_Prediction.nii'.format(patient)))
             sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii'.format(patient)))
         pred_stack.append(sitk.GetArrayFromImage(prediction_handle))
         truth_stack.append(sitk.GetArrayFromImage(truth_handle))
