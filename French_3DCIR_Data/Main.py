@@ -13,7 +13,7 @@ This gets broken down into a couple of steps...
 '''
 1) Unzip Data
 '''
-unzip = True
+unzip = False
 if unzip:
     from Unzip_Tool.Unzip_Tool import Unzip_class, os
     path = r'H:\Liver_Disease_Ablation\3Dircadb1\Downloaded_Patients'
@@ -33,7 +33,7 @@ if turn_dicom_to_RS:
 '''
 3) Create disease predictions
 '''
-make_disease_predictions = True
+make_disease_predictions = False
 if make_disease_predictions:
     from Create_Ground_Truth import create_predictions
     prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
@@ -42,7 +42,7 @@ if make_disease_predictions:
 '''
 4) Copy the outcoming RS structure locally
 '''
-copy_predictions_locally = True
+copy_predictions_locally = False
 if copy_predictions_locally:
     from Create_Ground_Truth import copy_predictions
     prediction_out_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Output'
@@ -54,4 +54,22 @@ if copy_predictions_locally:
 compare_with_gt = False
 if compare_with_gt:
     from Create_Ground_Truth import compare_predictions
-    compare_predictions(path=dicom_path)
+    compare_predictions(path=dicom_path, out_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')
+
+
+evaluate_test = False
+if evaluate_test:
+    from Evaluate_On_Data_TF2 import create_metric_chart, os
+    path = r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files'
+    create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Whole_Patient'),
+                        seed_range=[1.], write_final_prediction=True, single_disease=False,
+                        threshold_range=[.5], re_write=False, thread_count=15, excel_name='Whole_patient.xlsx')
+    create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Single_Disease'),
+                        seed_range=[1.], write_final_prediction=True, single_disease=True,
+                        threshold_range=[.5], re_write=False, thread_count=15, excel_name='Single_Site.xlsx')
+
+write_sensitivity_specificity = False
+if write_sensitivity_specificity:
+    from Sensitivity_and_Specificity_Measures import write_sensitivity_specificity
+    write_sensitivity_specificity(excel_path=os.path.join('.', 'Evaluate_Model', 'Sensitivity_and_FP.xlsx'),
+                                  nifti_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')
