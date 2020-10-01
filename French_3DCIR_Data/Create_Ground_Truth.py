@@ -7,6 +7,7 @@ from Dicom_RT_and_Images_to_Mask.src.DicomRTTool import DicomReaderWriter
 from Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 import numpy as np
 import pandas as pd
+from Segmentation_Evaluation_Tools.src.SegmentationEvaluationTools import identify_overlap_metrics
 
 
 def add_dicom_tag(path):
@@ -122,6 +123,7 @@ def create_dicom_RT(path, out_path):
         annotation_stack.append(liver + tumor > 0)
         for label in os.listdir(os.path.join(patient_path, 'MASKS_DICOM')):
             print(label)
+            continue
             if label.startswith('liver'):
                 continue
             site_names.append(label)
@@ -138,8 +140,7 @@ def create_dicom_RT(path, out_path):
 
 
 def compare_predictions(path, out_path):
-    out_dict = {'Patient_ID':[], 'DSC': []}
-    overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
+    out_dict = {'Patient_ID':[]}
     pred_stack = []
     truth_stack = []
     for patient in os.listdir(path):
@@ -165,23 +166,30 @@ def compare_predictions(path, out_path):
             sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii'.format(patient)))
         pred_stack.append(sitk.GetArrayFromImage(prediction_handle))
         truth_stack.append(sitk.GetArrayFromImage(truth_handle))
-        overlap_measures_filter.Execute(truth_handle, prediction_handle)
-        dsc = overlap_measures_filter.GetDiceCoefficient()
-        print('DSC was {} for {}'.format(dsc, patient))
-        out_dict['DSC'].append(dsc)
+        pat_data = identify_overlap_metrics(prediction_handle=prediction_handle, truth_handle=truth_handle,
+                                            perform_distance_measures=True)
+        for key in pat_data.keys():
+            if key not in out_dict:
+                out_dict[key] = []
+            out_dict[key].append(pat_data[key])
         out_dict['Patient_ID'].append(patient)
-    print('Mean was {}'.format(np.mean(out_dict['DSC'])))
+    print('Mean was {}'.format(np.mean(out_dict['dice'])))
     combined_pred = np.concatenate(pred_stack, axis=0)
     combined_truth = np.concatenate(truth_stack, axis=0)
     combined_pred_handle = sitk.GetImageFromArray(combined_pred)
     combined_truth_handle = sitk.GetImageFromArray(combined_truth)
-    overlap_measures_filter.Execute(combined_truth_handle, combined_pred_handle)
-    dsc = overlap_measures_filter.GetDiceCoefficient()
-    print('Combined DSC was {}'.format(dsc))
-    out_dict['DSC'].append(dsc)
+    combined_data = identify_overlap_metrics(prediction_handle=combined_pred_handle, truth_handle=combined_truth_handle,
+                                             perform_distance_measures=False)
+    for key in combined_data.keys():
+        if key not in out_dict:
+            out_dict[key] = []
+        out_dict[key].append(combined_data[key])
     out_dict['Patient_ID'].append('Combined')
+    for key in out_dict.keys():
+        if len(out_dict[key]) < len(out_dict['dice']):
+            out_dict[key].append('-')
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join('.', 'Dice_Results4.xlsx'), index=0)
+    df.to_excel(os.path.join('.', 'PatientResults.xlsx'), index=0)
     return None
 
 
