@@ -40,3 +40,6 @@
 [submodule "French_3DCIR_Data/Unzip_Tool"]
 	path = French_3DCIR_Data/Unzip_Tool
 	url = https://github.com/brianmanderson/Unzip_Tool.git
+[submodule "French_3DCIR_Data/Segmentation_Evaluation_Tools"]
+	path = French_3DCIR_Data/Segmentation_Evaluation_Tools
+	url = https://github.com/brianmanderson/Segmentation_Evaluation_Tools.git
