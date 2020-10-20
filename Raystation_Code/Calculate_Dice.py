@@ -113,7 +113,7 @@ def calculate_dsc(base_export_path, excel_path='.', thread_count=int(cpu_count()
                 reordered[base_key]['Site'].append(label)
         combined_dict[ext] = reordered
     for ext in ['GTV', 'Ablation']:
-        with pd.ExcelWriter(os.path.join('.',
+        with pd.ExcelWriter(os.path.join(excel_path,
                                          'Raystation_Clincal_Quantitative_Results_{}.xlsx'.format(ext))) as writer:
             for key in ['Sensitivity', 'FP', 'Overlap']:
                 df = pd.DataFrame(combined_dict[ext][key])
