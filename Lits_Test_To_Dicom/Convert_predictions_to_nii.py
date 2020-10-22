@@ -59,20 +59,13 @@ def RS_to_nii():
         liver = mask[..., 1]
         if np.max(liver) > 0:
             prediction[liver == 0] = 0
-            prediction[prediction > 0] = 2
+            prediction[prediction > 0] = 1
             prediction[liver == 1] += 1
             out_handle = sitk.GetImageFromArray(prediction)
             out_handle.SetOrigin(image_handle.GetOrigin())
             out_handle.SetDirection(image_handle.GetDirection())
             out_handle.SetSpacing(image_handle.GetSpacing())
             sitk.WriteImage(out_handle, pred_out_path)
-            prediction[liver == 1] -= 1
-            out_handle = sitk.GetImageFromArray(prediction)
-            out_handle.SetOrigin(image_handle.GetOrigin())
-            out_handle.SetDirection(image_handle.GetDirection())
-            out_handle.SetSpacing(image_handle.GetSpacing())
-            sitk.WriteImage(out_handle, pred_out_path)
-            xxx = 1
     return None
 
 
