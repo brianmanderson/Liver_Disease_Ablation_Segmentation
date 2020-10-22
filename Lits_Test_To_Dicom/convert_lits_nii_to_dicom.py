@@ -38,13 +38,13 @@ def convert_nii_to_dicom():
 
     files = [i for i in os.listdir(base_path) if i.endswith('.nii') and not i.endswith('.nii.gz')]
     for file in files:
-        print(file)
         pat_id = file.split('-')[-1].split('.nii')[0]
         desc = 'Lits_Test_{}'.format(pat_id)
         out_path = os.path.join(out_path_base, desc)
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         if not os.listdir(out_path):
+            print(file)
             convert_niftii_to_dicom(os.path.join(base_path, file), out_path, patient_name=desc,
                                     patient_id=desc, is_structure=False)
     return None
