@@ -81,24 +81,21 @@ class run_index_single_disease(object):
     def process(self, base_index, seed_value, threshold_value, prediction, connected_truth, out_dict, percentage,
                 tumor_labels, write_final_prediction=False):
         # start = time.time()
-        prediction = sitk.GetImageFromArray(prediction)
-        prediction.SetSpacing(connected_truth.GetSpacing())
-        prediction.SetOrigin(connected_truth.GetOrigin())
-        prediction.SetDirection(connected_truth.GetDirection())
+        prediction_handle = sitk.GetImageFromArray(prediction)
+        prediction_handle.SetSpacing(connected_truth.GetSpacing())
+        prediction_handle.SetOrigin(connected_truth.GetOrigin())
+        prediction_handle.SetDirection(connected_truth.GetDirection())
         Connected_Component_Filter = sitk.ConnectedComponentImageFilter()
         Connected_Threshold = sitk.ConnectedThresholdImageFilter()
         Connected_Threshold.SetUpper(2)
 
-        Connected_Threshold_for_pred = sitk.ConnectedThresholdImageFilter()
-        Connected_Threshold_for_pred.SetUpper(2)
-        Connected_Threshold_for_pred.SetLower(1)
         overlap_measures_filter = sitk.LabelOverlapMeasuresImageFilter()
 
-        stats = sitk.LabelShapeStatisticsImageFilter()
-        thresholded_image = sitk.BinaryThreshold(prediction, lowerThreshold=seed_value)
+        pred_stats = sitk.LabelShapeStatisticsImageFilter()
+        thresholded_image = sitk.BinaryThreshold(prediction_handle, lowerThreshold=seed_value)
         connected_image = Connected_Component_Filter.Execute(thresholded_image)
-        stats.Execute(connected_image)
-        pred_seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
+        pred_stats.Execute(connected_image)
+        pred_seeds = [pred_stats.GetCentroid(l) for l in pred_stats.GetLabels()]
         pred_seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in pred_seeds]
         Connected_Threshold.SetSeedList(pred_seeds)
         Connected_Threshold_for_pred = sitk.ConnectedThresholdImageFilter()
@@ -106,21 +103,23 @@ class run_index_single_disease(object):
         Connected_Threshold_for_pred.SetLower(1)
 
         Connected_Threshold.SetLower(threshold_value)
-        threshold_pred_base = Connected_Threshold.Execute(prediction)
+        threshold_pred_base = Connected_Threshold.Execute(prediction_handle)
+        truth_stats = sitk.LabelShapeStatisticsImageFilter()
 
-        Connected_Threshold_for_pred.SetSeedList(pred_seeds)
         for tumor_index, tumor_label in enumerate(tumor_labels):
             index = tuple(base_index + [tumor_index])
             truth = connected_truth == tumor_label
-            stats.Execute(truth)
-            if not stats.GetLabels():
-                continue
-            seeds = [stats.GetCentroid(l) for l in stats.GetLabels()]
-            seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
-            new_seeds = pred_seeds[np.argmin(np.sum(np.abs(np.subtract(pred_seeds, seeds[0])),axis=-1))]
-            Connected_Threshold_for_pred.SetSeedList([new_seeds])
+            truth_stats.Execute(truth)
+            overlap = sitk.GetArrayFromImage(truth) * prediction
+            if np.max(overlap) == 0:  # If there is no overlap, take the closest one
+                seeds = [truth_stats.GetCentroid(l) for l in truth_stats.GetLabels()]
+                seeds = [thresholded_image.TransformPhysicalPointToIndex(i) for i in seeds]
+                seeds = [pred_seeds[np.argmin(np.sqrt(np.sum(np.subtract(pred_seeds, seeds[0])**2, axis=-1)), axis=-1)]]
+            else:
+                seeds = np.transpose(np.asarray(np.where(overlap > 0)))[..., ::-1]
+                seeds = [[int(i) for i in j] for j in seeds]
+            Connected_Threshold_for_pred.SetSeedList(seeds)
             threshold_pred = Connected_Threshold_for_pred.Execute(threshold_pred_base)
-
             overlap_measures_filter.Execute(truth, threshold_pred)
             out_dict[OverlapMeasures.jaccard.name][index] = overlap_measures_filter.GetJaccardCoefficient()
             out_dict[OverlapMeasures.dice.name][index] = overlap_measures_filter.GetDiceCoefficient()
@@ -132,7 +131,6 @@ class run_index_single_disease(object):
                 reference_surface = sitk.LabelContour(truth)
                 reference_distance_map = sitk.Abs(sitk.SignedMaurerDistanceMap(truth, squaredDistance=False,
                                                                                useImageSpacing=True))
-
                 statistics_image_filter.Execute(reference_surface)
                 num_reference_surface_pixels = int(statistics_image_filter.GetSum())
                 segmented_distance_map = sitk.Abs(

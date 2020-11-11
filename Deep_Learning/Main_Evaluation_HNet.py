@@ -13,7 +13,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 
 def main():
-    import tensorflow as tf
     from Return_Train_Validation_Generators_TF2 import return_paths
     base_path, morfeus_drive = return_paths()
     from Return_Train_Validation_Generators_TF2 import get_layers_dict_dense_less_decode, my_UNet, return_generators, \
@@ -24,7 +23,7 @@ def main():
     model_name = 'DenseNetNewMultiBatch'
     cache_add = ''
 
-    make_pred = True
+    make_pred = False
     if make_pred:
         model_path = os.path.join(base_path, 'Keras', model_name, 'Models', 'Trial_ID_42', 'Model')
         layers_dict = get_layers_dict_dense_HNet(layers=2, filters=32, num_conv_blocks=2,
@@ -103,7 +102,7 @@ def main():
     if create_nifti_files:
         reader = sitk.ImageFileReader()
         reader.LoadPrivateTagsOn()
-        for ext in ['Validation', 'Test']:
+        for ext in ['Validation']:
             input_path = r'H:\Liver_Disease_Ablation\{}'.format(ext)
             out_path = r'H:\Liver_Disease_Ablation\Predictions_HNet\{}'.format(ext)
             if not os.path.exists(out_path):
@@ -121,7 +120,7 @@ def main():
                 reader.SetFileName(os.path.join(input_path, 'Overall_Data_LiTs_{}.nii.gz'.format(iteration_number)))
                 reader.Execute()
                 image_handle = sitk.GetImageFromArray(x)
-                pred_handle = sitk.GetImageFromArray(pred[..., -1])
+                pred_handle = sitk.GetImageFromArray(np.squeeze(pred[..., -1]))
                 truth_handle = sitk.GetImageFromArray(truth.astype('int'))
                 for handle in [image_handle, pred_handle, truth_handle]:
                     handle.SetOrigin(reader.GetOrigin())
@@ -132,13 +131,13 @@ def main():
                 sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii.gz'.format(iteration_number)))
 
 
-    evaluate_prediction = False
+    evaluate_prediction = True
     if evaluate_prediction:
         from Deep_Learning.Evaluate_Model.Evaluate_On_Data_TF2 import create_metric_chart, np, cpu_count
         path = r'H:\Liver_Disease_Ablation\Predictions_HNet\Validation'
         create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Threshold_Seed_Pickles_HNet'),
-                            seed_range=np.arange(0.3, 1.0, 0.05),
-                            threshold_range=np.arange(0.05, 0.7, 0.05), re_write=False, thread_count=int(cpu_count()*.9-1))
+                            seed_range=np.arange(.05, .4, 0.05),
+                            threshold_range=np.arange(0.05, 0.5, 0.05), re_write=False, thread_count=20)
 
     evaluate_test = False
     if evaluate_test:

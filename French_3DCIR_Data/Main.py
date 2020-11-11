@@ -23,7 +23,7 @@ if unzip:
 '''
 2) Turn dicom masks into actual RT structures
 '''
-turn_dicom_to_RS = True
+turn_dicom_to_RS = False
 data_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Downloaded_Patients\Unzipped\3Dircadb1'
 dicom_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Fixed_Patients'
 if turn_dicom_to_RS:
@@ -53,23 +53,22 @@ if copy_predictions_locally:
 '''
 compare_with_gt = False
 if compare_with_gt:
-    from Create_Ground_Truth import compare_predictions
-    compare_predictions(path=dicom_path, out_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')
+    from Create_Ground_Truth import compare_predictions, os
+    compare_predictions(path=dicom_path, out_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files',
+                        excel_path=os.path.join('.', 'Patient_Results.xlsx'))
 
 
-evaluate_test = False
-if evaluate_test:
-    from Evaluate_On_Data_TF2 import create_metric_chart, os
-    path = r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files'
-    create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Whole_Patient'),
-                        seed_range=[1.], write_final_prediction=True, single_disease=False,
-                        threshold_range=[.5], re_write=False, thread_count=15, excel_name='Whole_patient.xlsx')
-    create_metric_chart(path=path, out_path=os.path.join('.', 'Evaluate_Model', 'Single_Disease'),
-                        seed_range=[1.], write_final_prediction=True, single_disease=True,
-                        threshold_range=[.5], re_write=False, thread_count=15, excel_name='Single_Site.xlsx')
+single_site = True
+if single_site:
+    from Sensitivity_and_Specificity_Measures import single_site_comparison, pd, os
+    out_dict = single_site_comparison(path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')
+    df = pd.DataFrame(out_dict)
+    df.to_excel(os.path.join('.', 'Single_Site_Results.xlsx'), index=0)
+
+
 
 write_sensitivity_specificity = False
 if write_sensitivity_specificity:
-    from Sensitivity_and_Specificity_Measures import write_sensitivity_specificity
-    write_sensitivity_specificity(excel_path=os.path.join('.', 'Evaluate_Model', 'Sensitivity_and_FP.xlsx'),
+    from Sensitivity_and_Specificity_Measures import write_sensitivity_specificity, os
+    write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP.xlsx'),
                                   nifti_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')

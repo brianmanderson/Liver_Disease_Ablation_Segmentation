@@ -139,7 +139,7 @@ def create_dicom_RT(path, out_path):
         image_reader.with_annotations(background, output_dir=out_dir, ROI_Names=site_names)
 
 
-def compare_predictions(path, out_path):
+def compare_predictions(path, out_path, excel_path):
     out_dict = {'Patient_ID':[]}
     pred_stack = []
     truth_stack = []
@@ -189,7 +189,7 @@ def compare_predictions(path, out_path):
         if len(out_dict[key]) < len(out_dict['dice']):
             out_dict[key].append('-')
     df = pd.DataFrame(out_dict)
-    df.to_excel(os.path.join('.', 'PatientResults.xlsx'), index=0)
+    df.to_excel(excel_path, index=0)
     return None
 
 

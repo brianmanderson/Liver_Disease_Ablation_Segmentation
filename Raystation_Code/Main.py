@@ -11,7 +11,7 @@ if fix_excel:
     from Raystation_Code.Fix_Excel import fix_excel
     fix_excel()
 
-write_csv = True
+write_csv = False
 if write_csv:
     df = pd.read_excel(os.path.join('.','MRNs_All_Primary_Secondary_exam.xlsx'))
     df.to_csv(os.path.join('.','MRNs_All_Primary_Secondary_exam.csv'), index=0)
@@ -20,14 +20,14 @@ if write_csv:
 Now, run Predict_Disease_Ablation_From_CSV in Raystation and export to path
 '''
 
-export_path = r'H:\Liver_Disease_Ablation\Disease_Ablation_From_Raystation_Test'
+export_path = r'H:\Single_Site'
 
-calculate_dsc = False
+calculate_dsc = True
 if calculate_dsc:
     from Raystation_Code.Calculate_Dice import calculate_dsc
-    calculate_dsc(export_path=export_path, excel_path='.')
+    calculate_dsc(base_export_path=export_path, excel_path='.')
 
-make_box_plots = True
+make_box_plots = False
 if make_box_plots:
     import pandas as pd
     import matplotlib.pyplot as plt
