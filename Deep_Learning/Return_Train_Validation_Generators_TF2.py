@@ -635,7 +635,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if is_test:
         validation_path = [os.path.join(base_path, path_lead, 'Test_Records{}'.format(validation_name))]
 
-    train_generator = Data_Generator_Class(record_paths=train_path)
+    train_generator = Data_Generator_Class(record_paths=train_path, debug=False)
     validation_generator = Data_Generator_Class(record_paths=validation_path, in_parallel=True)
     train_processors, validation_processors = [], []
     base_processors = [
@@ -700,13 +700,17 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
 
 
 if __name__ == '__main__':
-    # base_path, morfeus_drive, train_generator, validation_generator = return_generators(batch_size=15, add='_16',
-    #                                                                                     cache_add='',
-    #                                                                                     flip=True,
-    #                                                                                     change_background=False,
-    #                                                                                     threshold=True,
-    #                                                                                     threshold_val=10,
-    #                                                                                     path_lead='Records',
-    #                                                                                     validation_name='',
-    #                                                                                     cache=False, is_2D=True)
+    kernel = (3, 3)
+    batch_size = 12
+    squeeze_kernel = (1, 1)
+
+    add = '_16'
+    path_desc = 'TF_LR_2D_DenseNetMultiBatch'
+    excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch.xlsx'
+    model_name = 'DenseNetNewMultiBatch'
+    cache_add = ''
+    path_lead = 'Records'
+    # base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+    #     batch_size=batch_size, add=add, threshold_val=10, change_background=False,
+    #     cache_add=cache_add, path_lead=path_lead, validation_name='_64')
     pass
