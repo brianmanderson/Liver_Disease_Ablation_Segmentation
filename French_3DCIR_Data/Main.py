@@ -37,6 +37,7 @@ make_disease_predictions = False
 if make_disease_predictions:
     from Create_Ground_Truth import create_predictions
     prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
+    prediction_path = r'H:\AutoModels\Liver_Disease\Input_5'
     create_predictions(prediction_path=prediction_path, image_path=dicom_path)
 
 '''

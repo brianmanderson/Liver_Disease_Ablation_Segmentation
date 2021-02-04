@@ -53,7 +53,8 @@ def copy_predictions(prediction_out_path, image_path):
 def create_predictions(prediction_path, image_path):
     for patient in os.listdir(image_path):
         print(patient)
-        if os.path.exists(os.path.join(image_path, patient, 'Copied_Files.txt')):
+        copied_file = os.path.join(image_path, patient, 'Copied_Locally.txt')
+        if os.path.exists(copied_file):
             continue
         out_path = os.path.join(prediction_path.replace('Input_3', 'Output'), '3DCIR_{}'.format(patient))
         if os.path.exists(out_path):
@@ -62,11 +63,11 @@ def create_predictions(prediction_path, image_path):
         if not os.path.exists(os.path.join(prediction_path, patient)):
             os.makedirs(os.path.join(prediction_path, patient))
         for file in os.listdir(os.path.join(image_path, patient)):
-            if file.endswith('.dcm'):
+            if file.endswith('.dcm') and not file.startswith('Prediction'):
                 shutil.copyfile(os.path.join(image_path, patient, file), os.path.join(prediction_path, patient, file))
         fid = open(os.path.join(prediction_path, patient, 'Completed.txt'), 'w+')
         fid.close()
-        fid = open(os.path.join(image_path, patient, 'Copied_Files.txt'), 'w+')
+        fid = open(copied_file, 'w+')
         fid.close()
     return None
 
