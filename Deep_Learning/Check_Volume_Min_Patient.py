@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 path = os.path.join('.','Sphericity.xlsx')
 
-df = pd.read_excel(path)
+df = pd.read_excel(path, engine='openpyxl')
 df = df.to_dict()
 
 out_dict = {}

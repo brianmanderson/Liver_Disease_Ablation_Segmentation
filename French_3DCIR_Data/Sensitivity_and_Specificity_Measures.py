@@ -6,8 +6,8 @@ import numpy as np
 from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 import os
 import pandas as pd
-from Segmentation_Evaluation_Tools.src.SegmentationEvaluationTools import determine_sensitivity,\
-    determine_false_positive_rate_and_false_volume, identify_overlap_metrics
+from Segmentation_Evaluation_Tools.src.SegmentationEvaluationTools.SIKOverlapTools import determine_sensitivity,\
+    determine_false_positive_rate_and_false_volume, __overlap_measures__
 
 
 def single_site_comparison(path):
@@ -59,8 +59,8 @@ def single_site_comparison(path):
             Connected_Threshold.SetSeedList(seeds)
             grown_prediction = Connected_Threshold.Execute(prediction_handle_base)
             volume = np.sum(truth) * np.prod(spacing) / 1000
-            tumor_data = identify_overlap_metrics(prediction_handle=grown_prediction, truth_handle=truth_site,
-                                                  perform_distance_measures=True)
+            tumor_data = __overlap_measures__(prediction_handle=grown_prediction, truth_handle=truth_site,
+                                              perform_distance_measures=True)
             out_dict['Patient_Name'].append(patient_name)
             out_dict['Volume (cc)'].append(volume)
             for key in tumor_data.keys():
@@ -70,15 +70,15 @@ def single_site_comparison(path):
     return out_dict
 
 
-def compile_sensitivity(path):
-    prediction_files = [i for i in os.listdir(path) if i.endswith('_Prediction.nii') and
-                        i.split('_Prediction')[0] not in ['Patient_5', 'Patient_11',
+def compile_sensitivity(path,  pred_part='_Prediction'):
+    prediction_files = [i for i in os.listdir(path) if i.endswith('{}.nii'.format(pred_part)) and
+                        i.split('{}'.format(pred_part))[0] not in ['Patient_5', 'Patient_11',
                                                           'Patient_12', 'Patient_18', 'Patient_20']]
     out_dict = {'Patient_Name': []}
     for prediction_file in prediction_files:
-        patient_name = prediction_file.split('_Prediction')[0]
+        patient_name = prediction_file.split('{}'.format(pred_part))[0]
         print(patient_name)
-        truth_file = prediction_file.replace('_Prediction', '_Truth')
+        truth_file = prediction_file.replace('{}'.format(pred_part), '_Truth')
         prediction_handle = sitk.ReadImage(os.path.join(path, prediction_file))
         truth_handle = sitk.ReadImage(os.path.join(path, truth_file), sitk.sitkUInt8)
         patient_sensitivity = determine_sensitivity(prediction_handle=prediction_handle, truth_handle=truth_handle)
@@ -90,18 +90,19 @@ def compile_sensitivity(path):
     return out_dict
 
 
-def determine_false_positive_rate(path=r'H:\Liver_Disease_Ablation\Predictions_93\TestTF2_Multi_Cube_1mm'):
-    prediction_files = [i for i in os.listdir(path) if i.endswith('_Prediction.nii') and
-                        i.split('_Prediction')[0] not in ['Patient_5', 'Patient_11',
-                                                          'Patient_12', 'Patient_18', 'Patient_20']]
+def determine_false_positive_rate(path=r'H:\Liver_Disease_Ablation\Predictions_93\TestTF2_Multi_Cube_1mm',
+                                  pred_part='_Prediction'):
+    prediction_files = [i for i in os.listdir(path) if i.endswith('{}.nii'.format(pred_part)) and
+                        i.split('{}'.format(pred_part))[0] not in ['Patient_5', 'Patient_11',
+                                                                   'Patient_12', 'Patient_18', 'Patient_20']]
     out_dict = {'Patient_Name': []}
     for prediction_file in prediction_files:
-        patient_name = prediction_file.split('_Prediction')[0]
+        patient_name = prediction_file.split('{}'.format(pred_part))[0]
         print(patient_name)
         '''
         First, load up the truth and prediction
         '''
-        truth_file = prediction_file.replace('_Prediction', '_Truth')
+        truth_file = prediction_file.replace('{}'.format(pred_part), '_Truth')
         prediction_handle = sitk.ReadImage(os.path.join(path, prediction_file))
         truth_handle = sitk.ReadImage(os.path.join(path, truth_file), sitk.sitkUInt8)
         patient_data = determine_false_positive_rate_and_false_volume(prediction_handle=prediction_handle,
@@ -115,8 +116,9 @@ def determine_false_positive_rate(path=r'H:\Liver_Disease_Ablation\Predictions_9
 
 
 def write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP2.xlsx'), nifti_path=r'.'):
-    out_dict_false_postive = determine_false_positive_rate(path=nifti_path)
-    out_dict_sensitivity = compile_sensitivity(path=nifti_path)
+    pred_part = '_NewPrediction_0.01'
+    out_dict_false_postive = determine_false_positive_rate(path=nifti_path, pred_part=pred_part)
+    out_dict_sensitivity = compile_sensitivity(path=nifti_path, pred_part=pred_part)
     with pd.ExcelWriter(excel_path) as writer:
         df = pd.DataFrame(out_dict_false_postive)
         df.to_excel(writer, sheet_name='False Positive Rate', index=0)

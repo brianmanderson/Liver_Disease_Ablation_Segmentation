@@ -7,7 +7,7 @@ from Dicom_RT_and_Images_to_Mask.src.DicomRTTool import DicomReaderWriter
 from Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 import numpy as np
 import pandas as pd
-from Segmentation_Evaluation_Tools.src.SegmentationEvaluationTools import identify_overlap_metrics
+from Segmentation_Evaluation_Tools.src.SegmentationEvaluationTools.SIKOverlapTools import calculate_overlap_measures
 
 
 def add_dicom_tag(path):
@@ -167,8 +167,8 @@ def compare_predictions(path, out_path, excel_path):
             sitk.WriteImage(truth_handle, os.path.join(out_path, '{}_Truth.nii'.format(patient)))
         pred_stack.append(sitk.GetArrayFromImage(prediction_handle))
         truth_stack.append(sitk.GetArrayFromImage(truth_handle))
-        pat_data = identify_overlap_metrics(prediction_handle=prediction_handle, truth_handle=truth_handle,
-                                            perform_distance_measures=True)
+        pat_data = calculate_overlap_measures(prediction_handle_base=prediction_handle, truth_handle_base=truth_handle,
+                                              perform_distance_measures=True)
         for key in pat_data.keys():
             if key not in out_dict:
                 out_dict[key] = []
@@ -179,8 +179,9 @@ def compare_predictions(path, out_path, excel_path):
     combined_truth = np.concatenate(truth_stack, axis=0)
     combined_pred_handle = sitk.GetImageFromArray(combined_pred)
     combined_truth_handle = sitk.GetImageFromArray(combined_truth)
-    combined_data = identify_overlap_metrics(prediction_handle=combined_pred_handle, truth_handle=combined_truth_handle,
-                                             perform_distance_measures=False)
+    combined_data = calculate_overlap_measures(prediction_handle_base=combined_pred_handle,
+                                               truth_handle_base=combined_truth_handle,
+                                               perform_distance_measures=False)
     for key in combined_data.keys():
         if key not in out_dict:
             out_dict[key] = []

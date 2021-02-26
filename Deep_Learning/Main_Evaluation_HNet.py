@@ -161,7 +161,7 @@ def main():
         import pandas as pd
         import numpy as np
         out_path = os.path.join('.', 'Test_Output','Final_Prediction.xlsx')
-        df = pd.read_excel(out_path, engine='xlrd')
+        df = pd.read_excel(out_path, engine='openpyxl')
         volumes = df['volume'].values
         values = df['dice'].values
         values = values[volumes < 1]

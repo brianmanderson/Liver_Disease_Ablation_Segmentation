@@ -37,7 +37,7 @@ make_disease_predictions = False
 if make_disease_predictions:
     from Create_Ground_Truth import create_predictions
     prediction_path = r'L:\Clinical\Auto_Contour_Sites\Liver_Disease_Ablation_Auto_Contour\Input_3'
-    prediction_path = r'H:\AutoModels\Liver_Disease\Input_5'
+    prediction_path = r'H:\AutoModels\Liver_Disease\Input_3'
     create_predictions(prediction_path=prediction_path, image_path=dicom_path)
 
 '''
@@ -59,7 +59,7 @@ if compare_with_gt:
                         excel_path=os.path.join('.', 'Patient_Results.xlsx'))
 
 
-single_site = True
+single_site = False
 if single_site:
     from Sensitivity_and_Specificity_Measures import single_site_comparison, pd, os
     out_dict = single_site_comparison(path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')
@@ -67,9 +67,23 @@ if single_site:
     df.to_excel(os.path.join('.', 'Single_Site_Results.xlsx'), index=0)
 
 
-
 write_sensitivity_specificity = False
 if write_sensitivity_specificity:
     from Sensitivity_and_Specificity_Measures import write_sensitivity_specificity, os
     write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP.xlsx'),
+                                  nifti_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')
+
+
+write_small_site_predictions = False
+if write_small_site_predictions:
+    from French_3DCIR_Data.Create_New_Predictions import write_new_predictions
+    path = r'H:\AutoModels\Liver_Disease\Input_3'
+    niftii_path = r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files'
+    write_new_predictions(path=path, niftii_path=niftii_path, seed=0.01)
+
+
+write_sensitivity_specificity_small_site = True
+if write_sensitivity_specificity_small_site:
+    from Sensitivity_and_Specificity_Measures import write_sensitivity_specificity, os
+    write_sensitivity_specificity(excel_path=os.path.join('.', 'Sensitivity_and_FP_01.xlsx'),
                                   nifti_path=r'H:\Liver_Disease_Ablation\3Dircadb1\Niftii_Files')

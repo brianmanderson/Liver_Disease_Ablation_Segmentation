@@ -3,7 +3,7 @@ __author__ = 'Brian M Anderson'
 from plotnine import *
 import os
 import numpy as np
-from Base_Deeplearning_Code.Finding_Optimization_Parameters.History_Plotter_TF2 import create_excel_from_event, combine_hparamxlsx_and_metricxlsx
+from Deep_Learning.Base_Deeplearning_Code.Finding_Optimization_Parameters.History_Plotter_TF2 import create_excel_from_event, combine_hparamxlsx_and_metricxlsx
 import pandas as pd
 
 
@@ -15,7 +15,7 @@ def main():
     hparameters_path = r'K:\Morfeus\BMAnderson\Modular_Projects\Liver_Disease_Ablation_Segmentation_Work\parameters_list_by_trial_id.xlsx'
     combined_xlsx = os.path.join('.','combined.xlsx')
     combine_hparamxlsx_and_metricxlsx(hparameters_path, excel_out_path, combined_xlsx)
-    data = pd.read_excel(os.path.join('.','combined.xlsx'))
+    data = pd.read_excel(os.path.join('.','combined.xlsx'), engine='openpyxl')
     data = data.dropna()
     xxx = 1
     (ggplot(data) + aes(x='layers', y='epoch_loss') + facet_wrap('num_conv_blocks',

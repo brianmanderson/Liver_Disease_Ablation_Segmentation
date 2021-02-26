@@ -11,7 +11,7 @@ def main(make_excel = False, input_path = r'K:\Morfeus\BMAnderson\Modular_Projec
     if make_excel or not os.path.exists(excel_out_path):
         create_excel_from_event(input_path=input_path,excel_out_path=excel_out_path, names=['Trial_ID'])
 
-    data = pd.read_excel(excel_out_path)
+    data = pd.read_excel(excel_out_path, engine='openpyxl')
     data = data.dropna()
     xxx = 1
     (ggplot(data) + aes(x='layers',y='val_dice_coef_3D') + facet_wrap('filters',labeller='label_both') + geom_point(mapping=aes(color='max_filters')) + xlab('Layers') + ylab('Validation Dice') +

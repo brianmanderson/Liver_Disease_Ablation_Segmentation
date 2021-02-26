@@ -13,7 +13,7 @@ if make_excel:
     create_excel_from_event(input_path=input_path,excel_out_path=excel_out_path,
                             names=['Layers','Filters','Max_Filters','Atrous_Blocks','atrous_rate','max_atrous_blocks','min_lr','max_lr','step_size_factor','num_cycles'])
 
-data = pd.read_excel(excel_out_path)
+data = pd.read_excel(excel_out_path, engine='openpyxl')
 data = data.dropna()
 xxx = 1
 (ggplot(data) + aes(x='layers',y='val_dice_coef_3D') + facet_wrap('atrous_rate',labeller='label_both') + geom_point(mapping=aes(color='max_filters')) + xlab('Layers') + ylab('Validation Dice') +
