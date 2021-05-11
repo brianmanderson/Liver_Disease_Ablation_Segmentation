@@ -4,6 +4,20 @@ __author__ = 'Brian M Anderson'
 import os
 
 
+def return_patient_dictionary_list(path):
+    patient_dict_list = []
+    files = [i for i in os.listdir(path) if i.startswith('Overall_mask')]
+    for file in files:
+        index = file.split('_y')[-1].split('.nii')[0]
+        desc = file.split('mask_')[-1].split('_y')[0]
+        image = 'Overall_Data_{}_{}.nii.gz'.format(desc, index)
+        out_record = '{}_{}.tfrecord'.format(desc, index)
+        patient_dict_list.append({'image_path': os.path.join(path, image),
+                                  'annotation_path': os.path.join(path, file),
+                                  'out_name': out_record})
+    return patient_dict_list
+
+
 def run_LiTs_to_NIFTII():
     from Pre_Processing.LiTs_Into_Niftii import create_NIFTI_images
     data_path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Fuentes_Data\LiTs\Images'
@@ -13,100 +27,80 @@ def run_LiTs_to_NIFTII():
 
 
 create_niftii_images = False
+nifti_from_dicom = False
 separate_to_train_etc = False
-make_single_images = False
 make_TF2_images = True
 
 if create_niftii_images:
     run_LiTs_to_NIFTII()
+
+if nifti_from_dicom:
+    from Deep_Learning.Base_Deeplearning_Code.Dicom_RT_and_Images_to_Mask.src.DicomRTTool import DicomReaderWriter, plot_scroll_Image
+    associations = {'Liver_BMA_Program_4': 'Liver', 'Liver_BMA_Program_4og': 'Liver',
+                    'Retro_Ablation': 'Ablation', 'Ablation_For_Gary_Review': 'Ablation',
+                    'ablation_gary_review': 'Ablation'}
+    dicom_path = r'H:\Liver_Disease_Ablation\Dicom_Exports'
+    reader = DicomReaderWriter(Contour_Names=('Ablation', 'Liver'), associations=associations,
+                               arg_max=True, description='Ablation_Segmentation')
+    reader.walk_through_folders(input_path=dicom_path)
+    reader.which_indexes_lack_all_rois()
+    reader.write_parallel(out_path=r'H:\Liver_Disease_Ablation\Train',
+                          excel_file=os.path.join('.', 'Patient_Distribution.xlsx'))
+    from Pre_Processing.Fix_Disease_Liver_Labeling import fix_labelins_of_LiTs
+    fix_labelins_of_LiTs(path_base=r'H:\Liver_Disease_Ablation')
+    xxx = 1
 
 if separate_to_train_etc:
     from Pre_Processing.Separate_Into_Train_Validation_Test import separate_files
     path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
     separate_files(path)
 
-if make_single_images:
-    from Pre_Processing.Make_Single_Images.Make_Single_Images_Class import run_main
-    # path = r'K:\Morfeus\BMAnderson\CNN\Data\Data_Liver\Liver_Disease_Ablation_Segmentation\Niftii_Data'
-    path = r'H:\Liver_Disease_Ablation'
-    desired_output_spacing = (None, None, None)
-    extension = 32
-    write_images = False
-    re_write_pickle = True
-    run_main(path, desired_output_spacing,extension, write_images, re_write_pickle, file_ext='_None')
-
 if make_TF2_images:
     path = r'H:\Liver_Disease_Ablation'
-    from Pre_Processing.Make_Single_Images.Make_TFRecord_Class import write_tf_record
-    from Pre_Processing.Make_Single_Images.Image_Processors_Module.Image_Processors_TFRecord import *
+    import Deep_Learning.Base_Deeplearning_Code.Image_Processors_Module.src.Processors.MakeTFRecordProcessors as Processors
+    from Deep_Learning.Base_Deeplearning_Code.Image_Processors_Module.src.Processors.TFRecordWriter import parallel_record_writer, RecordWriter
+    import numpy as np
     thread_count = 10
-    cube_size = (16, 128, 128)
-    power_val = 2**5
-    base_normalizer = [Normalize_to_annotation(annotation_value_list=[1,2], mirror_max=True), To_Categorical(3)]
-    image_processors_train = []
-    image_processors_train += base_normalizer
-    image_processors_train += [Resampler(desired_output_spacing=(None,None,1.0), binary_annotation=False),
-                               Cast_Data({'annotation': 'float16'}),
-                               Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=2,
-                                                        min_voxel_volume=300, max_voxels=1350000),
-                               Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
-                                                  min_z=cube_size[0])]
+    cube_size = (32, 64, 64)
+    power_val = 32
+    image_processors_train = [
+        Processors.LoadNifti(nifti_path_keys=('image_path', 'annotation_path'),
+                             out_keys=('image_handle', 'annotation_handle')),
+        Processors.ResampleSITKHandles(desired_output_spacing=(0.75, 0.75, 1.0),
+                                       resample_interpolators=('Linear', 'Nearest'),
+                                       resample_keys=('image_handle', 'annotation_handle')),
+        Processors.NiftiToArray(nifti_keys=('image_handle', 'annotation_handle'),
+                                out_keys=('image', 'annotation'), dtypes=('float32', 'int8')),
+        Processors.NormalizeToAnnotation(image_key='image', annotation_key='annotation',
+                                         annotation_value_list=(1, 2), mirror_max=True),
+        Processors.ToCategorical(annotation_keys=('annotation',), num_classes=3),
+        Processors.Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=1, min_voxel_volume=300,
+                                            max_voxels=1350000, image_key='image', annotation_key='annotation'),
+        Processors.Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
+                                      min_z=cube_size[0])
+    ]
+    record_writer = RecordWriter(out_path=os.path.join(path, 'Records_1mm', 'Train_{}_Records'.format(cube_size[0])),
+                                 file_name_key='out_name', rewrite=True)
+    patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Train'))
+    parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_train,
+                           max_records=np.inf, recordwriter=record_writer, debug=False)
 
-    # write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records_1mm','Train_{}_Records'.format(cube_size[0])), image_processors=image_processors_train,
-    #                 is_3D=True, rewrite=False, thread_count=thread_count)
-    image_processors_train = []
-    image_processors_train += base_normalizer
-    image_processors_train += [Cast_Data({'annotation': 'float16'}),
-                               Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=2,
-                                                        min_voxel_volume=300, max_voxels=1350000),
-                               Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
-                                                  min_z=cube_size[0])]
-
-    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records','Train_{}_Records'.format(cube_size[0])), image_processors=image_processors_train,
-                    is_3D=True, rewrite=False, thread_count=thread_count)
-
-    image_processors_validation = []
-    image_processors_validation += base_normalizer
-    image_processors_validation += [Resampler(desired_output_spacing=(None,None,1.0), binary_annotation=False),
-                                    Cast_Data({'annotation': 'float16'}),
-                                    Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=8, power_val_r=power_val,
-                                               power_val_c=power_val),
-                                    Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False,
-                                                       desired_val=2)]
-    # write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records_1mm','Validation_Records_64'), thread_count=thread_count,
-    #                 image_processors=image_processors_validation, is_3D=True, rewrite=False)
-
-    image_processors_validation = []
-    image_processors_validation += base_normalizer
-    image_processors_validation += [Cast_Data({'annotation': 'float16'}),
-                                    Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=8, power_val_r=power_val,
-                                               power_val_c=power_val),
-                                    Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False,
-                                                       desired_val=2)]
-    write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records','Validation_Records_64'), thread_count=thread_count,
-                    image_processors=image_processors_validation, is_3D=True, rewrite=False)
-
-    image_processors_validation = []
-    image_processors_validation += base_normalizer
-    image_processors_validation += [Cast_Data({'annotation': 'int8'}),
-                                    Box_Images(wanted_vals_for_bbox=[1, 2], power_val_z=16, power_val_r=power_val,
-                                               power_val_c=power_val),
-                                    Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    write_tf_record(os.path.join(path, 'Validation'), out_path=os.path.join(path,'Records','Validation_Records'), thread_count=thread_count,
-                    image_processors=image_processors_validation,
-                    is_3D=True, rewrite=False)
-    # processors = []
-    processors = [Cast_Data({'annotation': 'int8'}),
-                  Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=8, power_val_r=power_val, power_val_c=power_val),
-                  Distribute_into_3D(max_z=64, mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    write_tf_record(os.path.join(path, 'Train'), out_path=os.path.join(path,'Records','Train_Records_64'), image_processors=processors,
-                    is_3D=True, rewrite=False, thread_count=thread_count)
-
-    # image_processors_test = []
-    # image_processors_test += base_normalizer
-    # image_processors_test += [Cast_Data({'annotation': 'int8'}),
-    #                           Box_Images(wanted_vals_for_bbox=[1,2],power_val_z=power_val, power_val_r=power_val,
-    #                                      power_val_c=power_val),
-    #                           Distribute_into_3D(mirror_small_bits=True, chop_ends=False, desired_val=2)]
-    # write_tf_record(os.path.join(path, 'Test'), out_path=os.path.join(path,'Records','Test_Records'), image_processors=image_processors_test,
-    #                 is_3D=True, rewrite=False, thread_count=thread_count)
+    image_processors_validation = [
+        Processors.LoadNifti(nifti_path_keys=('image_path', 'annotation_path'),
+                             out_keys=('image_handle', 'annotation_handle')),
+        Processors.ResampleSITKHandles(desired_output_spacing=(0.75, 0.75, 1.0),
+                                       resample_interpolators=('Linear', 'Nearest'),
+                                       resample_keys=('image_handle', 'annotation_handle')),
+        Processors.NiftiToArray(nifti_keys=('image_handle', 'annotation_handle'),
+                                out_keys=('image', 'annotation'), dtypes=('float32', 'int8')),
+        Processors.NormalizeToAnnotation(image_key='image', annotation_key='annotation',
+                                         annotation_value_list=(1, 2), mirror_max=True),
+        Processors.ToCategorical(annotation_keys=('annotation',), num_classes=3),
+        Processors.Box_Images(image_keys=('image',), annotation_key='annotation', wanted_vals_for_bbox=(1, 2),
+                              bounding_box_expansion=(0, 0, 0), power_val_z=32, power_val_c=32, power_val_r=32)
+    ]
+    record_writer = RecordWriter(out_path=os.path.join(path, 'Records_1mm', 'Validation_Records'),
+                                 file_name_key='out_name', rewrite=True)
+    patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Validation'))
+    parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_validation,
+                           max_records=np.inf, recordwriter=record_writer, debug=False)
