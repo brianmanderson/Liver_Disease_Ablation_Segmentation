@@ -4,43 +4,36 @@ __author__ = 'Brian M Anderson'
 import tensorflow as tf
 from Deep_Learning.Base_Deeplearning_Code.Plot_And_Scroll_Images.Plot_Scroll_Images import plot_scroll_Image
 from Deep_Learning.Base_Deeplearning_Code.Finding_Optimization_Parameters.LR_Finder import LearningRateFinder
+from Deep_Learning.Base_Deeplearning_Code.Finding_Optimization_Parameters.HyperParameters import is_df_within_another
 from tensorflow.keras.callbacks import TensorBoard
 from .Return_Model import return_model
 from .Return_Generators import return_generators, return_paths
 import os
 import pandas as pd
+import numpy as np
 
 
-def create_excel_values(excel_path):
-    compare_keys = ('blocks_in_dense', 'dense_conv_blocks', 'dense_layers', 'num_dense_connections',
-                    'filters', 'growth_rate', 'step_factor', 'loss', 'Optimizer', 'reduction', 'Dropout', 'global_max')
+def return_model_parameters(excel_path, iteration, out_path):
     base_df = pd.read_excel(excel_path, engine='openpyxl')
-    rewrite = False
-    guess_index = 0
-    for blocks_in_dense in [1, 2]:
-        for dense_conv_blocks in [1, 2]:
-            for dense_layers in [0, 1]:
-                for filters in [16]:
-                    for growth_rate in [16]:
-                        new_run = {'blocks_in_dense': [blocks_in_dense],
-                                   'dense_conv_blocks': [dense_conv_blocks],
-                                   'dense_layers': [dense_layers],
-                                   'filters': [filters], 'growth_rate': [growth_rate], 'run?': [-10],
-                                   'step_factor': [5000],
-                                   'Optimizer': ['Adam']}
-                        current_run_df = pd.DataFrame(new_run)
-                        contained = is_df_within_another(data_frame=base_df, current_run_df=current_run_df,
-                                                         features_list=compare_keys)
-                        if not contained:
-                            rewrite = True
-                            while guess_index in base_df['Model_Index'].values:
-                                guess_index += 1
-                            current_run_df.insert(0, column='Model_Index', value=guess_index)
-                            current_run_df.set_index('Model_Index')
-                            base_df = base_df.append(current_run_df)
-    if rewrite:
-        base_df.to_excel(excel_path, index=0)
-    return None
+    base_df.set_index('Model_Index')
+    potentially_not_run = base_df.loc[pd.isnull(base_df.Iteration) & pd.isnull(base_df.min_lr)]
+    indexes_for_not_run = potentially_not_run.index.values
+    for index in indexes_for_not_run:
+        run_df = base_df.loc[[index]]
+        model_parameters = run_df.squeeze().to_dict()
+        model_index = run_df.loc[index, 'Model_Index']
+        model_out_path = os.path.join(out_path, 'Model_Index_{}'.format(model_index),
+                                      '{}_Iteration'.format(iteration))
+        if os.path.exists(model_out_path):
+            continue
+        os.makedirs(model_out_path)
+        for key in model_parameters.keys():
+            if type(model_parameters[key]) is np.int64:
+                model_parameters[key] = int(model_parameters[key])
+            elif type(model_parameters[key]) is np.float64:
+                model_parameters[key] = float(model_parameters[key])
+        return model_parameters, model_out_path
+    return None, None
 
 
 def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(3, 3, 3), squeeze_kernel=(1, 1, 1),
@@ -94,22 +87,25 @@ def find_best_lr(batch_size=16, path_desc='', add='', cache_add='_1mm', kernel=(
                                 return None  # repeat!
 
 
-def find_best_lr_DenseNet(batch=32, all_trainable=False, weights_path=None, layers_dict=None, model_name='DenseNet121'):
+def find_best_lr_DenseNet(weights_path=None):
     min_lr = 1e-7
     max_lr = 1
-    base_path, morfeus_drive = return_paths()
+    base_path, morfeus_drive, excel_path = return_paths()
+    out_path = os.path.join(morfeus_drive, 'Learning_Rates')
     for iteration in [0, 1, 2]:
-        things = ['all_trainable_{}'.format(all_trainable)]
-        things += ['3D_Model_{}'.format(layers_dict is not None)]
-        things += ['{}_Iteration'.format(iteration)]
-        for thing in things:
-            out_path = os.path.join(out_path, thing)
-        if os.path.exists(out_path):
-            print('already done')
+        model_parameters, model_out_path = return_model_parameters(excel_path=excel_path, iteration=iteration,
+                                                                   out_path=out_path)
+        if model_parameters is None:
             continue
-        os.makedirs(out_path)
-        train_generator, validation_generator = return_generators(is_2D=True, cache=True, batch=batch)
-        model = return_model(layers_dict, weights_path=weights_path, densenet=True, all_trainable=all_trainable)
+        is_2D = model_parameters['is_2D']
+        batch_size = model_parameters['batch_size']
+        all_trainable = model_parameters['all_trainable']
+        train_generator, validation_generator = return_generators(is_2D=is_2D, cache=False, batch=batch_size)
+        if model_parameters['layers'] == 0:
+            layers_dict = None
+        else:
+            layers_dict = model_parameters
+        model = return_model(layers_dict=layers_dict, weights_path=weights_path, all_trainable=all_trainable)
         k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
         k.set_model(model)
         k.on_train_begin()

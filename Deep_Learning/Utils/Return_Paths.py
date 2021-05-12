@@ -20,8 +20,8 @@ def return_paths():
         base_path = os.path.join(base, 'Liver_GTV_Ablation')
         morfeus_drive = os.path.abspath(
             os.path.join(find_base_dir(), 'Morfeus', 'BMAnderson', 'Modular_Projects', 'Liver_Disease_Ablation_Segmentation_Work'))
-
-    return base_path, morfeus_drive
+    excel_path = os.path.join(morfeus_drive, 'Parameters_List.xlsx')
+    return base_path, morfeus_drive, excel_path
 
 
 if __name__ == '__main__':

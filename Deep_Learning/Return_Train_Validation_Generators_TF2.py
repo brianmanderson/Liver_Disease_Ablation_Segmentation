@@ -1,11 +1,11 @@
 __author__ = 'Brian M Anderson'
 # Created on 1/17/2020
 
-from Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Generator import Data_Generator_Class
-from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Image_Processors_DataSet import *
+from Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Generator import DataGeneratorClass
+from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.src.Processors.TFDataSetProcessors import *
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_Functions, return_hollow_layers_dict
 from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
-from Return_Morfeus_Base_Paths import return_paths, os
+from Utils.Return_Morfeus_Base_Paths import return_paths, os
 from _collections import OrderedDict
 import pandas as pd
 import time
@@ -628,15 +628,15 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     if train_path is None:
         train_path = [os.path.join(base_path, path_lead, 'Train{}_Records'.format(add))]
     if validation_path is None:
-        validation_path = [os.path.join(base_path, path_lead,'Validation_Records{}'.format(validation_name))]
+        validation_path = [os.path.join(base_path, path_lead, 'Validation_Records{}'.format(validation_name))]
     ext = 'Validation'
     if evaluation:
         ext += '_whole'
     if is_test:
         validation_path = [os.path.join(base_path, path_lead, 'Test_Records{}'.format(validation_name))]
 
-    train_generator = Data_Generator_Class(record_paths=train_path, debug=False)
-    validation_generator = Data_Generator_Class(record_paths=validation_path, in_parallel=True)
+    train_generator = DataGeneratorClass(record_paths=train_path, debug=False)
+    validation_generator = DataGeneratorClass(record_paths=validation_path, in_parallel=True)
     train_processors, validation_processors = [], []
     base_processors = [
         Expand_Dimensions(axis=-1, on_images=True, on_annotations=False),
@@ -644,7 +644,7 @@ def return_generators(batch_size=16, wanted_keys={'inputs':['image','mask'],'out
     train_processors += base_processors
     validation_processors += base_processors
     train_processors += [
-        Ensure_Image_Proportions(image_rows=128, image_cols=128),
+        Ensure_Image_Proportions(image_rows=64, image_cols=64),
         Return_Add_Mult_Disease(change_background=change_background),
     ]
     train_processors += [
@@ -704,13 +704,13 @@ if __name__ == '__main__':
     batch_size = 12
     squeeze_kernel = (1, 1)
 
-    add = '_16'
+    add = '_32'
     path_desc = 'TF_LR_2D_DenseNetMultiBatch'
     excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch.xlsx'
     model_name = 'DenseNetNewMultiBatch'
     cache_add = ''
-    path_lead = 'Records'
-    # base_path, morfeus_drive, train_generator, validation_generator = return_generators(
-    #     batch_size=batch_size, add=add, threshold_val=10, change_background=False,
-    #     cache_add=cache_add, path_lead=path_lead, validation_name='_64')
+    path_lead = 'Records_1mm'
+    base_path, morfeus_drive, train_generator, validation_generator = return_generators(
+        batch_size=batch_size, add=add, threshold_val=10, change_background=False,
+        cache_add=cache_add, path_lead=path_lead, validation_name='', cache=False)
     pass

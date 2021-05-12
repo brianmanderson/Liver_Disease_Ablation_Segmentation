@@ -24,12 +24,12 @@ path_desc = 'TF_LR_2D_DenseNetMultiBatch'
 excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch.xlsx'
 model_name = 'DenseNetNewMultiBatch'
 cache_add = ''
-
-find_dense_lr_densenet121_pretrained = False
+path_lead = 'Records_1mm'
+find_dense_lr_densenet121_pretrained = True
 if find_dense_lr_densenet121_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
 
-    find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+    find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead=path_lead,
                           all_trainable=False, weights_path=None, layers_dict=None, model_name=model_name)
 
 '''
@@ -54,7 +54,7 @@ if run_200_pretrained:
     all_trainable = False
     train_DenseNet(epochs=101, model_name=model_name, run_best=run_best, add=add, cache_add=cache_add,
                    batch_size=batch_size,
-                   change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
+                   change_background=False, path_lead=path_lead, validation_name='_64', all_trainable=all_trainable,
                    weights_path=None, layers_dict=None, excel_file_name=excel_file_name)
 
 '''
@@ -67,7 +67,7 @@ find_dense_lr_densenet121_retrained = False
 if find_dense_lr_densenet121_retrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
 
-    find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead='Records',
+    find_best_lr_DenseNet(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add, path_lead=path_lead,
                           all_trainable=all_trainable, weights_path=weights_path, layers_dict=None,
                           model_name=model_name)
 
@@ -91,7 +91,7 @@ if run_200_retrained:
     run_best = False
     train_DenseNet(epochs=101, model_name=model_name, run_best=run_best, add=add, cache_add=cache_add,
                    batch_size=batch_size,
-                   change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
+                   change_background=False, path_lead=path_lead, validation_name='_64', all_trainable=all_trainable,
                    weights_path=weights_path, layers_dict=None, excel_file_name=excel_file_name)
 
 excel_file_name = 'parameters_list_by_trial_id_DenseNetMultibatch3D.xlsx'
@@ -106,7 +106,7 @@ if find_dense_lr_densenet121_3D_pretrained:
     from Optimization.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet3D
 
     find_best_lr_DenseNet3D(batch_size=batch_size, path_desc=path_desc, add=add, cache_add=cache_add,
-                            path_lead='Records', all_trainable=all_trainable, weights_path=weights_path,
+                            path_lead=path_lead, all_trainable=all_trainable, weights_path=weights_path,
                             model_name=model_name)
 
 '''
@@ -129,7 +129,7 @@ if run_200_retrained:
     run_best = False
     train_DenseNet3D(epochs=31, model_name=model_name, run_best=run_best, add=add, cache_add=cache_add,
                      batch_size=batch_size,
-                     change_background=False, path_lead='Records', validation_name='_64', all_trainable=all_trainable,
+                     change_background=False, path_lead=path_lead, validation_name='_64', all_trainable=all_trainable,
                      weights_path=weights_path, excel_file_name=excel_file_name)
 
 make_opt_excel = False

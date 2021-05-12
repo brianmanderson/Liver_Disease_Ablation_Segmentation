@@ -2,7 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 5/11/2021
 from Deep_Learning.Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Generator import DataGeneratorClass, plot_scroll_Image
 import Deep_Learning.Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.src.Processors.TFDataSetProcessors as Processors
-from Return_Morfeus_Base_Paths import return_paths
+from Deep_Learning.Utils.Return_Paths import return_paths
 import os
 
 
@@ -11,7 +11,7 @@ def return_generators(is_2D=True, cache=False, batch=32):
         records_add = '2D_'
     else:
         records_add = '3D_'
-    base_path, morfeus_drive = return_paths()
+    base_path, morfeus_drive, _ = return_paths()
     train_path = os.path.join(base_path, 'Records_1mm', '{}Train_32_Records'.format(records_add))
     validation_path = os.path.join(base_path, 'Records_1mm', 'Validation_Records')
     train_generator = DataGeneratorClass(record_paths=[train_path])
