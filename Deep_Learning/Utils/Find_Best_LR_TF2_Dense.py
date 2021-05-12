@@ -28,7 +28,8 @@ def return_model_parameters(excel_path, iteration, out_path):
             continue
         os.makedirs(model_out_path)
         for key in model_parameters.keys():
-            if type(model_parameters[key]) is np.int64:
+            value = model_parameters[key]
+            if type(model_parameters[key]) is np.int64 or value == 0:
                 model_parameters[key] = int(model_parameters[key])
             elif type(model_parameters[key]) is np.float64:
                 model_parameters[key] = float(model_parameters[key])
@@ -106,15 +107,15 @@ def find_best_lr_DenseNet(weights_path=None):
         else:
             layers_dict = model_parameters
         model = return_model(layers_dict=layers_dict, weights_path=weights_path, all_trainable=all_trainable)
-        k = TensorBoard(log_dir=out_path, profile_batch=0, write_graph=True)
+        k = TensorBoard(log_dir=model_out_path, profile_batch=0, write_graph=True)
         k.set_model(model)
         k.on_train_begin()
         lr_opt = tf.keras.optimizers.Adam
-        print(out_path)
-        LearningRateFinder(epochs=10, model=model, metrics=['sparse_categorical_accuracy'],
-                           out_path=out_path, optimizer=lr_opt,
+        print(model_out_path)
+        LearningRateFinder(epochs=10, model=model, metrics=['categorical_accuracy'],
+                           out_path=model_out_path, optimizer=lr_opt,
                            loss=tf.keras.losses.CategoricalCrossentropy(),
-                           steps_per_epoch=len(train_generator),
+                           steps_per_epoch=1000,
                            train_generator=train_generator.data_set, lower_lr=min_lr, high_lr=max_lr)
         tf.keras.backend.clear_session()
         return None  # repeat!
