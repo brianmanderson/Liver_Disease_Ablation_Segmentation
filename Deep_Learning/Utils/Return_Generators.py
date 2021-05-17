@@ -65,7 +65,6 @@ def return_generators(is_2D=True, cache=False, batch_size=32):
     if cache:
         validation_processors += [{'cache': validation_path}]
     validation_processors += [
-        {'shuffle': len(validation_generator)},
         {'batch': 1},
         {'repeat'}
     ]
