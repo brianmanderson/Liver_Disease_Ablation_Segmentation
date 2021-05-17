@@ -24,7 +24,7 @@ def run_model(model, train_generator, validation_generator, min_lr, max_lr, mode
                                                  write_graph=True)
     lrate = SGDRScheduler(min_lr=min_lr, max_lr=max_lr, steps_per_epoch=len(train_generator), cycle_length=step_factor,
                           lr_decay=0.5, mult_factor=1, gentle_start_epochs=0, gentle_fraction=1.0)
-    add_lr = Add_Images_and_LR(log_dir=tensorboard_path, add_images=True, validation_data=validation_generator,
+    add_lr = Add_Images_and_LR(log_dir=tensorboard_path, add_images=True, validation_data=validation_generator.data_set,
                                number_of_images=len(validation_generator))
     # early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_AUC', patience=300, verbose=True, mode='max')
     callbacks = [tensorboard, lrate, add_lr]
@@ -43,7 +43,7 @@ def run_model(model, train_generator, validation_generator, min_lr, max_lr, mode
                   loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing), metrics=METRICS)
     model.fit(train_generator.data_set, epochs=epochs, steps_per_epoch=len(train_generator),
               validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-              validation_freq=2, callbacks=callbacks)
+              validation_freq=1, callbacks=callbacks)
     model.save(os.path.join(model_path, 'final_model.h5'))
     tf.keras.backend.clear_session()
     return None
