@@ -4,8 +4,8 @@ __author__ = 'Brian M Anderson'
 from Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Generator import DataGeneratorClass
 from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.src.Processors.TFDataSetProcessors import *
 from Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet, Return_Layer_Functions, return_hollow_layers_dict
-from MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
-from Utils.Return_Morfeus_Base_Paths import return_paths, os
+from Deep_Learning.Utils.MyHybridDenseNet.Loading_Pretrained_DenseNet import DenseNet121
+from Deep_Learning.Utils.Return_Paths import return_paths, os
 from _collections import OrderedDict
 import pandas as pd
 import time
