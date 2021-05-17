@@ -20,7 +20,7 @@ def run_model(model, train_generator, validation_generator, min_lr, max_lr, mode
     checkpoint_path = os.path.join(model_path, 'cp-best.cpkt')
     checkpoint = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, monitor='val_loss', mode='min', verbose=1,
                                                     save_freq='epoch', save_best_only=True, save_weights_only=True)
-    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path, profile_batch='400,601',
+    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path,# profile_batch='400,601',
                                                  write_graph=True)
     lrate = SGDRScheduler(min_lr=min_lr, max_lr=max_lr, steps_per_epoch=len(train_generator), cycle_length=step_factor,
                           lr_decay=0.5, mult_factor=1, gentle_start_epochs=0, gentle_fraction=1.0)
@@ -42,7 +42,7 @@ def run_model(model, train_generator, validation_generator, min_lr, max_lr, mode
                   loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing), metrics=METRICS)
     model.fit(train_generator.data_set, epochs=epochs, steps_per_epoch=len(train_generator),
               validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
-              validation_freq=5, callbacks=callbacks)
+              validation_freq=2, callbacks=callbacks)
     model.save(os.path.join(model_path, 'final_model.h5'))
     tf.keras.backend.clear_session()
     return None

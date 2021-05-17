@@ -7,7 +7,7 @@ from Deep_Learning.Base_Deeplearning_Code.Models.TF_Keras_Models import my_UNet,
 
 def return_model(layers_dict=None, all_trainable=False, weights_path=None):
     model = DenseNet121(include_top=False, classes=2, layers_dict=layers_dict)
-    if weights_path is not None:
+    if weights_path is not None and weights_path != 0:
         print('Loading weights from {}'.format(weights_path))
         if not os.path.exists(weights_path):
             model.load_weights(weights_path.replace('.h5', '.cpkt'))
