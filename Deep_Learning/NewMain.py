@@ -10,6 +10,7 @@ else:
 print('Running on {}'.format(gpu))
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
 cube_size = (32, 64, 64)
 from Deep_Learning.Utils.Return_Paths import return_paths
 base_path, morfeus_drive, _ = return_paths()
@@ -17,7 +18,7 @@ kernel = (3, 3)
 batch_size = 12
 squeeze_kernel = (1, 1)
 
-find_dense_lr_densenet121_pretrained = True
+find_dense_lr_densenet121_pretrained = False
 if find_dense_lr_densenet121_pretrained:
     from Utils.Find_Best_LR_TF2_Dense import find_best_lr_DenseNet
     find_best_lr_DenseNet()
@@ -26,26 +27,30 @@ if find_dense_lr_densenet121_pretrained:
 Plot the LR, get the min and max from the images
 '''
 plot_lr = False
+added_2d_lr = True
 if plot_lr:
     from Optimization.Plot_Best_LR import make_plots
-
-    path = os.path.join(morfeus_drive, path_desc, model_name)
-    make_plots(path)
+    from Deep_Learning.Utils.PlotLearningRates import plot_lrs, pd
+    from Deep_Learning.Utils.Return_Paths import return_paths, os
+    base_path, morfeus_drive, excel_path = return_paths()
+    df = pd.read_excel(excel_path, engine='openpyxl')
+    not_filled_df = df.loc[pd.isnull(df['min_lr'])]
+    for index in not_filled_df.index.values:
+        model_index = not_filled_df['Model_Index'][index]
+        print(model_index)
+        path = os.path.join(morfeus_drive, 'Learning_Rates', 'Model_Index_{}'.format(model_index))
+        plot_lrs(input_path=path, excel_path=excel_path, add_to_excel=True, base_df=df,
+                 save_path=os.path.join(morfeus_drive, 'Learning_Rates', 'Outputs'))
+    added_2d_lr = True
 
 '''
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200_pretrained = False
-if run_200_pretrained:
-    from Run_Model_TF2 import train_DenseNet
-
-    run_best = False
-    all_trainable = False
-    train_DenseNet(epochs=101, model_name=model_name, run_best=run_best, add=add, cache_add=cache_add,
-                   batch_size=batch_size,
-                   change_background=False, path_lead=path_lead, validation_name='_64', all_trainable=all_trainable,
-                   weights_path=None, layers_dict=None, excel_file_name=excel_file_name)
+run_200_pretrained = True
+if run_200_pretrained and added_2d_lr:
+    from Deep_Learning.Utils.Run_Model import run_2d_model
+    run_2d_model()
 
 '''
 Turn on the weights, and find a good learning rate
