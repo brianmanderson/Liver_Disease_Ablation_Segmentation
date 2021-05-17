@@ -2,8 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 1/17/2020
 
 from Base_Deeplearning_Code.Data_Generators.Keras_Generators import Data_Generator_Class
-from Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.Image_Processors_Keras_Generator import *
-from Return_Morfeus_Base_Paths import return_paths
+from Deep_Learning.Utils.Return_Paths import return_paths
 from _collections import OrderedDict
 
 
