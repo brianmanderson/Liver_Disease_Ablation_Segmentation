@@ -1,6 +1,5 @@
 __author__ = 'Brian M Anderson'
 # Created on 1/15/2020
-
 import os
 
 
@@ -56,10 +55,11 @@ if separate_to_train_etc:
     separate_files(path)
 
 if make_TF2_images:
-    path = r'H:\Liver_Disease_Ablation'
+    from Deep_Learning.Utils.Return_Paths import return_paths
     import Deep_Learning.Base_Deeplearning_Code.Image_Processors_Module.src.Processors.MakeTFRecordProcessors as Processors
     from Deep_Learning.Base_Deeplearning_Code.Image_Processors_Module.src.Processors.TFRecordWriter import parallel_record_writer, RecordWriter
     import numpy as np
+    path, _, _ = return_paths()
     thread_count = 10
     cube_size = (32, 64, 64)
     power_val = 32
@@ -79,7 +79,28 @@ if make_TF2_images:
         Processors.Distribute_into_3D(max_z=cube_size[0], max_rows=cube_size[1], max_cols=cube_size[2],
                                       min_z=cube_size[0])
     ]
-    record_writer = RecordWriter(out_path=os.path.join(path, 'Records_1mm', 'Train_{}_Records'.format(cube_size[0])),
+    record_writer = RecordWriter(out_path=os.path.join(path, 'Records_1mm', '3D_Train_{}_Records'.format(cube_size[0])),
+                                 file_name_key='out_name', rewrite=True)
+    patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Train'))
+    parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_train,
+                           max_records=np.inf, recordwriter=record_writer, debug=False)
+
+    image_processors_train = [
+        Processors.LoadNifti(nifti_path_keys=('image_path', 'annotation_path'),
+                             out_keys=('image_handle', 'annotation_handle')),
+        Processors.ResampleSITKHandles(desired_output_spacing=(0.75, 0.75, 1.0),
+                                       resample_interpolators=('Linear', 'Nearest'),
+                                       resample_keys=('image_handle', 'annotation_handle')),
+        Processors.NiftiToArray(nifti_keys=('image_handle', 'annotation_handle'),
+                                out_keys=('image', 'annotation'), dtypes=('float32', 'int8')),
+        Processors.NormalizeToAnnotation(image_key='image', annotation_key='annotation',
+                                         annotation_value_list=(1, 2), mirror_max=True),
+        Processors.ToCategorical(annotation_keys=('annotation',), num_classes=3),
+        Processors.Split_Disease_Into_Cubes(cube_size=cube_size, disease_annotation=1, min_voxel_volume=300,
+                                            max_voxels=1350000, image_key='image', annotation_key='annotation'),
+        Processors.Distribute_into_2D(image_keys=('image', 'annotation'))
+    ]
+    record_writer = RecordWriter(out_path=os.path.join(path, 'Records_1mm', '2D_Train_{}_Records'.format(cube_size[0])),
                                  file_name_key='out_name', rewrite=True)
     patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Train'))
     parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_train,
