@@ -7,8 +7,45 @@ import os
 from Deep_Learning.Utils.Return_Model import return_model
 import pandas as pd
 import tensorflow as tf
-import types
 import numpy as np
+from Deep_Learning.Base_Deeplearning_Code.Callbacks.TF2_Callbacks import Add_Images_and_LR, MeanDSC
+from Deep_Learning.Base_Deeplearning_Code.Cyclical_Learning_Rate.clr_callback_TF2 import SGDRScheduler
+from tensorflow.keras import metrics
+import os
+from tensorboard.plugins.hparams.keras import Callback
+
+
+def run_model(model, train_generator, validation_generator, min_lr, max_lr, model_path, tensorboard_path, trial_id,
+              label_smoothing=0., hparams=None, step_factor=8, epochs=120):
+    checkpoint_path = os.path.join(model_path, 'cp-best.cpkt')
+    checkpoint = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, monitor='val_loss', mode='min', verbose=1,
+                                                    save_freq='epoch', save_best_only=True, save_weights_only=True)
+    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path, profile_batch='400,601',
+                                                 write_graph=True)
+    lrate = SGDRScheduler(min_lr=min_lr, max_lr=max_lr, steps_per_epoch=len(train_generator), cycle_length=step_factor,
+                          lr_decay=0.5, mult_factor=1, gentle_start_epochs=0, gentle_fraction=1.0)
+    add_lr = Add_Images_and_LR(log_dir=tensorboard_path, add_images=False)
+    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_AUC', patience=300, verbose=True, mode='max')
+    callbacks = [tensorboard, lrate, add_lr]
+    # if epochs < 9000:
+    callbacks += [early_stop]
+    if hparams is not None:
+        hp_callback = Callback(tensorboard_path, hparams=hparams, trial_id='Trial_ID:{}'.format(trial_id))
+        callbacks += [hp_callback]
+    callbacks += [checkpoint]
+    METRICS = [
+        metrics.CategoricalAccuracy(),
+        MeanDSC(num_classes=2)
+    ]
+    print('\n\n\n\nRunning {}\n\n\n\n'.format(tensorboard_path))
+    model.compile(tf.keras.optimizers.Adam(learning_rate=min_lr),
+                  loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing), metrics=METRICS)
+    model.fit(train_generator.data_set, epochs=epochs, steps_per_epoch=len(train_generator),
+              validation_data=validation_generator.data_set, validation_steps=len(validation_generator),
+              validation_freq=5, callbacks=callbacks)
+    model.save(os.path.join(model_path, 'final_model.h5'))
+    tf.keras.backend.clear_session()
+    return None
 
 
 def write_to_excel(excel_path, iterations):
@@ -70,39 +107,27 @@ def run_2d_model():
         os.makedirs(tensorboard_path)
         features_list = ('min_lr', 'max_lr', 'Iteration', 'batch_size', 'layers', 'filters', 'growth_rate',
                          'conv_lambda', 'num_conv_blocks', 'is_2D', 'all_trainable')
-        _, _, train_generator, validation_generator = return_generators(is_2D=model_parameters['is_2D'],
-                                                                        batch_size=model_parameters['batch_size'],
-                                                                        cache=True)
+        train_generator, validation_generator = return_generators(is_2D=model_parameters['is_2D'],
+                                                                  batch_size=model_parameters['batch_size'],
+                                                                  cache=True)
         if model_parameters['is_2D']:
             layers_dict = None
         else:
             layers_dict = model_parameters
-        model_base = return_model(all_trainable=model_parameters['all_trainable'], layers_dict=layers_dict, weights_path=model_parameters['weights_path'])
+        model = return_model(all_trainable=model_parameters['all_trainable'], layers_dict=layers_dict,
+                             weights_path=model_parameters['weights_path'])
 
-        if model_parameters['loss'] == 'CosineLoss':
-            loss = CosineLoss()
-        elif model_parameters['loss'] == 'SigmoidFocal':
-            loss = SigmoidFocalCrossEntropy()
-        elif model_parameters['loss'] == 'CategoricalCrossEntropy':
-            loss = tf.keras.losses.CategoricalCrossentropy()
-        if model_parameters['Optimizer'] == 'SGD':
-            opt = tf.keras.optimizers.SGD()
-        elif model_parameters['Optimizer'] == 'Adam':
-            opt = tf.keras.optimizers.Adam()
-        if isinstance(model_base, types.FunctionType):
-            model = model_base(**model_parameters)
-        else:
-            model = model_base
-        model_path = os.path.join(base_path, 'Models', 'Model_Type_{}'.format(model_key),
-                                  'Model_Index_{}'.format(model_index))
+        model_path = os.path.join(base_path, 'Models', 'Model_Index_{}'.format(model_index))
 
         print('Saving model to {}\ntensorboard at {}'.format(model_path, tensorboard_path))
         hparams = return_hparams(model_parameters, features_list=features_list, excluded_keys=[])
         run_model(model=model, train_generator=train_generator, validation_generator=validation_generator,
                   min_lr=model_parameters['min_lr'], max_lr=model_parameters['max_lr'], model_path=model_path,
-                  tensorboard_path=tensorboard_path, trial_id=model_index, optimizer=opt, hparams=hparams,
-                  step_factor=model_parameters['step_factor'], epochs=epochs, loss=loss)
-    return None
+                  tensorboard_path=tensorboard_path, trial_id=model_index, hparams=hparams,
+                  step_factor=model_parameters['step_factor'], epochs=epochs,
+                  label_smoothing=model_parameters['label_smoothing'])
+        return False
+    return True
 
 
 if __name__ == '__main__':
