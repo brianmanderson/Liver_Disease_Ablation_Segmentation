@@ -6,7 +6,7 @@ from Deep_Learning.Utils.Return_Paths import return_paths
 import os
 
 
-def return_generators(is_2D=True, cache=False, batch=32):
+def return_generators(is_2D=True, cache=False, batch_size=32):
     if is_2D:
         records_add = '2D_'
     else:
@@ -36,8 +36,8 @@ def return_generators(is_2D=True, cache=False, batch=32):
     ]
     if is_2D:
         train_processors += [
-            {'shuffle': len(train_generator)},
-            {'batch': batch}, {'batch': 1},
+            {'shuffle': len(train_generator)//2},
+            {'batch': batch_size}, {'batch': 1},
             {'repeat'}
         ]
     else:
@@ -63,9 +63,9 @@ def return_generators(is_2D=True, cache=False, batch=32):
         Processors.ReturnOutputs(input_keys=('image', 'mask'), output_keys=('annotation',))
     ]
     if cache:
-        validation_processors += [{'cache': train_path}]
+        validation_processors += [{'cache': validation_path}]
     validation_processors += [
-        {'shuffle': len(train_generator)},
+        {'shuffle': len(validation_generator)},
         {'batch': 1},
         {'repeat'}
     ]
@@ -75,4 +75,4 @@ def return_generators(is_2D=True, cache=False, batch=32):
 
 if __name__ == '__main__':
     pass
-    # return_generators()
+    # return_generators(is_2D=True, cache=False, batch=1)
