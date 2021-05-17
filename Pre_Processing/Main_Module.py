@@ -3,6 +3,14 @@ __author__ = 'Brian M Anderson'
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
+if len(sys.argv) > 1:
+    gpu = int(sys.argv[1])
+else:
+    gpu = 0
+print('Running on {}'.format(gpu))
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+
 
 def return_patient_dictionary_list(path):
     patient_dict_list = []
