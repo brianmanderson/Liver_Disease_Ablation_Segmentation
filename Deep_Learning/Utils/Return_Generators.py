@@ -36,7 +36,7 @@ def return_generators(is_2D=True, cache=False, batch_size=32):
     ]
     if is_2D:
         train_processors += [
-            {'shuffle': 31840},
+            {'shuffle': len(train_generator)//2},
             {'batch': batch_size}, {'batch': 1},
             {'repeat'}
         ]
