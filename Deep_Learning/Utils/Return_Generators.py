@@ -2,7 +2,7 @@ __author__ = 'Brian M Anderson'
 # Created on 5/11/2021
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from Deep_Learning.Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Generator import DataGeneratorClass, plot_scroll_Image
 import Deep_Learning.Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.src.Processors.TFDataSetProcessors as Processors
 from Deep_Learning.Utils.Return_Paths import return_paths
