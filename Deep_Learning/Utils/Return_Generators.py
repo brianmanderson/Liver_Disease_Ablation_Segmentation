@@ -71,15 +71,15 @@ def return_generators(is_2D=True, cache=False, batch_size=32):
         {'repeat'}
     ]
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
-    iterator = iter(train_generator.data_set)
-    for _ in range(len(train_generator)):
-        x, y = next(iterator)
-        if x[0][0].numpy().shape[1:-1] != (64, 64):
-            file_name = os.path.split(y[1].numpy()[0][0].decode())[1]
-            print(file_name)
+    # iterator = iter(train_generator.data_set)
+    # for _ in range(len(train_generator)):
+    #     x, y = next(iterator)
+    #     if x[0][0].numpy().shape[1:-1] != (64, 64):
+    #         file_name = os.path.split(y[1].numpy()[0][0].decode())[1]
+    #         print(file_name)
     return train_generator, validation_generator
 
 
 if __name__ == '__main__':
-    return_generators(is_2D=True, cache=True, batch_size=1)
+    # return_generators(is_2D=True, cache=True, batch_size=1)
     pass
