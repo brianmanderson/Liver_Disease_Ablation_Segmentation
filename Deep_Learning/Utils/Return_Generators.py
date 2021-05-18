@@ -81,5 +81,5 @@ def return_generators(is_2D=True, cache=False, batch_size=32):
 
 
 if __name__ == '__main__':
-    return_generators(is_2D=True, cache=True, batch_size=5)
+    return_generators(is_2D=True, cache=True, batch_size=1)
     pass
