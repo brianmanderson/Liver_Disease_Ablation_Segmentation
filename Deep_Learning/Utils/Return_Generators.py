@@ -4,6 +4,7 @@ from Deep_Learning.Base_Deeplearning_Code.Data_Generators.TFRecord_to_Dataset_Ge
 import Deep_Learning.Base_Deeplearning_Code.Data_Generators.Image_Processors_Module.src.Processors.TFDataSetProcessors as Processors
 from Deep_Learning.Utils.Return_Paths import return_paths
 import os
+import numpy as np
 
 
 def return_generators(is_2D=True, cache=False, batch_size=32):
@@ -32,7 +33,7 @@ def return_generators(is_2D=True, cache=False, batch_size=32):
     train_processors += [
         Processors.Flip_Images(keys=['image', 'mask', 'annotation'], flip_lr=True, flip_up_down=True,
                                flip_3D_together=True, flip_z=True),
-        Processors.ReturnOutputs(input_keys=('image', 'mask'), output_keys=('annotation',)),
+        Processors.ReturnOutputs(input_keys=('image', 'mask'), output_keys=('annotation', 'image_path')),
     ]
     if is_2D:
         train_processors += [
@@ -69,9 +70,15 @@ def return_generators(is_2D=True, cache=False, batch_size=32):
         {'repeat'}
     ]
     validation_generator.compile_data_set(image_processors=validation_processors, debug=False)
+    iterator = iter(train_generator.data_set)
+    for _ in range(len(train_generator)):
+        x, y = next(iterator)
+        if x[0][0].numpy().shape[1:-1] != (64, 64):
+            file_name = os.path.split(y[1].numpy()[0][0].decode())[1]
+            print(file_name)
     return train_generator, validation_generator
 
 
 if __name__ == '__main__':
+    return_generators(is_2D=True, cache=True, batch_size=5)
     pass
-    # return_generators(is_2D=True, cache=False, batch=1)
