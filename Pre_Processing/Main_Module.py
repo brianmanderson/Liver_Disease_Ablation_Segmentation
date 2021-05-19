@@ -92,7 +92,7 @@ if make_TF2_images:
                                  file_name_key='out_name', rewrite=True)
     patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Train'))
     parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_train,
-                           max_records=np.inf, recordwriter=record_writer, debug=False)
+                           max_records=np.inf, recordwriter=record_writer, debug=False, thread_count=10)
 
     image_processors_train = [
         Processors.LoadNifti(nifti_path_keys=('image_path', 'annotation_path'),
@@ -113,7 +113,7 @@ if make_TF2_images:
                                  file_name_key='out_name', rewrite=True)
     patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Train'))
     parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_train,
-                           max_records=np.inf, recordwriter=record_writer, debug=False)
+                           max_records=np.inf, recordwriter=record_writer, debug=False, thread_count=10)
 
     image_processors_validation = [
         Processors.LoadNifti(nifti_path_keys=('image_path', 'annotation_path'),
@@ -133,4 +133,4 @@ if make_TF2_images:
                                  file_name_key='out_name', rewrite=True)
     patient_dict_list = return_patient_dictionary_list(path=os.path.join(path, 'Validation'))
     parallel_record_writer(dictionary_list=patient_dict_list, image_processors=image_processors_validation,
-                           max_records=np.inf, recordwriter=record_writer, debug=False)
+                           max_records=np.inf, recordwriter=record_writer, debug=False, thread_count=10)
