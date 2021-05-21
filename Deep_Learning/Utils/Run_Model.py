@@ -25,7 +25,7 @@ def run_model(model, train_generator, validation_generator, min_lr, max_lr, mode
     lrate = SGDRScheduler(min_lr=min_lr, max_lr=max_lr, steps_per_epoch=len(train_generator), cycle_length=step_factor,
                           lr_decay=0.5, mult_factor=1, gentle_start_epochs=0, gentle_fraction=1.0)
     add_lr = Add_Images_and_LR(log_dir=tensorboard_path, add_images=True, validation_data=validation_generator.data_set,
-                               number_of_images=len(validation_generator))
+                               number_of_images=len(validation_generator), image_frequency=5)
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25, verbose=True, mode='max')
     callbacks = [tensorboard, lrate, add_lr]
     # if epochs < 9000:
