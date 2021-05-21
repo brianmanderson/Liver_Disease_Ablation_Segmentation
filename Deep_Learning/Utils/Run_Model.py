@@ -26,7 +26,7 @@ def run_model(model, train_generator, validation_generator, min_lr, max_lr, mode
                           lr_decay=0.5, mult_factor=1, gentle_start_epochs=0, gentle_fraction=1.0)
     add_lr = Add_Images_and_LR(log_dir=tensorboard_path, add_images=True, validation_data=validation_generator.data_set,
                                number_of_images=len(validation_generator))
-    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, verbose=True, mode='max')
+    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25, verbose=True, mode='max')
     callbacks = [tensorboard, lrate, add_lr]
     # if epochs < 9000:
     callbacks += [early_stop]
@@ -75,7 +75,7 @@ def write_to_excel(excel_path, iterations):
         base_df.to_excel(excel_path, index=0)
     return rewrite
 
-tf.keras.models.Model().load_weights(by_name=True)
+
 def run_2d_model():
     tf.random.set_seed(3141)
     epochs = 100001
