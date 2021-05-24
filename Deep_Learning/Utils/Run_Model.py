@@ -17,6 +17,10 @@ from tensorboard.plugins.hparams.keras import Callback
 
 def run_model(model, train_generator, validation_generator, min_lr, max_lr, model_path, tensorboard_path, trial_id,
               label_smoothing=0., hparams=None, step_factor=8, epochs=120):
+    step_factor = int(step_factor)
+    epochs = int(epochs)
+    label_smoothing = float(label_smoothing)
+    min_lr, max_lr = float(min_lr), float(max_lr)
     checkpoint_path = os.path.join(model_path, 'cp-best.cpkt')
     checkpoint = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, monitor='val_loss', mode='min', verbose=1,
                                                     save_freq='epoch', save_best_only=True, save_weights_only=True)
@@ -101,7 +105,7 @@ def run_2d_model():
                 model_parameters[key] = int(model_parameters[key])
             elif type(model_parameters[key]) is np.float64:
                 model_parameters[key] = float(model_parameters[key])
-        model_index = run_df.loc[index, 'Model_Index']
+        model_index = int(run_df.loc[index, 'Model_Index'])
         tensorboard_path = os.path.join(morfeus_drive, 'Tensorflow', 'Model_Index_{}'.format(model_index))
         if os.path.exists(tensorboard_path):
             continue

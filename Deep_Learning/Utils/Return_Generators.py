@@ -9,6 +9,7 @@ from Deep_Learning.Utils.Return_Paths import return_paths
 
 
 def return_generators(is_2D=True, cache=False, batch_size=32):
+    batch_size = int(batch_size)
     if is_2D:
         records_add = '2D_'
     else:
