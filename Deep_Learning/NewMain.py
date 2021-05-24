@@ -47,15 +47,20 @@ if plot_lr:
 Now, we need to run the model for a number of epochs ~200, so we can get a nice curve to make final model
 decision based on
 '''
-run_200_pretrained = False
+run_200_pretrained = True
 if run_200_pretrained and added_2d_lr:
     from Deep_Learning.Utils.Run_Model import run_2d_model
     run_2d_model()
 
-add_to_excel = True
+add_to_excel = False
 if add_to_excel:
     from Deep_Learning.Utils.AddMetricsToExcel import add_metrics_to_excel
     add_metrics_to_excel()
+
+view_in_r = False
+if view_in_r:
+    from Deep_Learning.Utils.ViewResultsWithR import view_results_with_r
+    view_results_with_r()
 '''
 Turn on the weights, and find a good learning rate
 '''
