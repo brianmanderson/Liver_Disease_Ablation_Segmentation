@@ -19,11 +19,11 @@ def add_metrics_to_excel():
     path_base = os.path.join(morfeus_drive, 'Tensorflow')
     rewrite = False
     for index in not_filled_df.index.values:
-        rewrite = True
         model_index = not_filled_df['Model_Index'][index]
         path = os.path.join(path_base, 'Model_Index_{}'.format(model_index))
         if not os.path.exists(path):
             continue
+        rewrite = True
         iterate_paths_add_to_dictionary(path=path, all_dictionaries=base_dictionary, fraction_start=0.1,
                                         weight_smoothing=0.8,
                                         metric_name_and_criteria={'epoch_loss': np.min})
