@@ -99,16 +99,16 @@ def run_2d_model():
     np.random.shuffle(indexes_for_not_run)
     for index in indexes_for_not_run:
         run_df = base_df.loc[[index]]
+        model_index = int(run_df.loc[index, 'Model_Index'])
+        tensorboard_path = os.path.join(morfeus_drive, 'Tensorflow', 'Model_Index_{}'.format(model_index))
+        if os.path.exists(tensorboard_path):
+            continue
         model_parameters = run_df.squeeze().to_dict()
         for key in model_parameters.keys():
             if type(model_parameters[key]) is np.int64:
                 model_parameters[key] = int(model_parameters[key])
             elif type(model_parameters[key]) is np.float64:
                 model_parameters[key] = float(model_parameters[key])
-        model_index = int(run_df.loc[index, 'Model_Index'])
-        tensorboard_path = os.path.join(morfeus_drive, 'Tensorflow', 'Model_Index_{}'.format(model_index))
-        if os.path.exists(tensorboard_path):
-            continue
         os.makedirs(tensorboard_path)
         features_list = ('min_lr', 'max_lr', 'Iteration', 'batch_size', 'layers', 'filters', 'growth_rate',
                          'conv_lambda', 'num_conv_blocks', 'is_2D', 'all_trainable')
