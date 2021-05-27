@@ -1,7 +1,7 @@
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
-path = r'C:\Users\markb\OneDrive\Desktop\Margins_and_classes_{}.txt'
+path = r'.\Margins_and_classes_{}.txt'
 for desc, color in zip(['Deformed', 'Rigid'], ['Red', 'Blue']):
     prediction, truth = [], []
     fid = open(path.format(desc))
